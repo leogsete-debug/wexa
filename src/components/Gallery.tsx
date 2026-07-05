@@ -9,28 +9,28 @@ const images = [
 
 export default function Gallery() {
   return (
-    <section id="galeria" className="relative px-5 py-24 sm:px-6 lg:px-8 lg:py-32">
+    <section id="galeria" className="relative px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-32">
       <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
+        <div className="flex flex-col justify-between gap-7 lg:flex-row lg:items-end lg:gap-8">
           <div className="max-w-3xl">
-            <p className="mb-5 inline-flex rounded-full border border-[#d6b46a]/25 bg-white/70 px-4 py-2 text-[0.72rem] font-bold uppercase tracking-[0.28em] text-[#9b7a3e] shadow-[0_14px_40px_rgba(31,41,55,0.06)] backdrop-blur-xl">
+            <p className="mb-5 inline-flex max-w-full rounded-full border border-[#d6b46a]/25 bg-white/70 px-3 py-2 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-[#9b7a3e] shadow-[0_14px_40px_rgba(31,41,55,0.06)] backdrop-blur-xl sm:px-4 sm:text-[0.72rem] sm:tracking-[0.28em]">
               Galeria
             </p>
-            <h2 className="text-balance text-4xl font-semibold leading-[1.02] tracking-[-0.04em] text-[#111] md:text-6xl">
+            <h2 className="text-balance text-[2rem] font-semibold leading-[1.06] tracking-[-0.03em] text-[#111] sm:text-4xl md:text-6xl md:leading-[1.02] md:tracking-[-0.04em]">
               Imagens para uma apresentação comercial de alto impacto.
             </h2>
           </div>
 
-          <p className="max-w-md text-base leading-8 text-neutral-600">
+          <p className="max-w-xl text-[0.98rem] leading-7 text-neutral-600 lg:max-w-md lg:leading-8">
             Um recorte visual editorial para apoiar reuniões, feiras, propostas e negociações com compradores globais.
           </p>
         </div>
 
-        <div className="mt-14 grid auto-rows-[240px] gap-5 md:grid-cols-3 md:auto-rows-[260px]">
+        <div className="mt-10 grid auto-rows-[220px] gap-4 sm:mt-14 sm:auto-rows-[260px] sm:gap-5 md:grid-cols-2 lg:grid-cols-3 lg:auto-rows-[280px]">
           {images.map((image, index) => (
             <figure
               key={image.src}
-              className={`group relative overflow-hidden rounded-[2rem] border border-white/70 bg-neutral-200 shadow-[0_24px_80px_rgba(31,41,55,0.13)] ${image.className}`}
+              className={`group relative overflow-hidden rounded-[1.35rem] border border-white/70 bg-neutral-200 shadow-[0_24px_80px_rgba(31,41,55,0.13)] sm:rounded-[2rem] ${image.className}`}
             >
               <Image
                 src={image.src}

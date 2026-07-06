@@ -2,7 +2,23 @@ import Image from "next/image";
 
 const whatsapp = "https://wa.me/5500000000000";
 
-const products = [
+type PublicProduct = {
+  name: string;
+  category: string;
+  badge: string;
+  description: string;
+  image: string;
+};
+
+type SupabaseProduct = {
+  name: string | null;
+  category: string | null;
+  short_description: string | null;
+  main_image_url: string | null;
+  featured: boolean | null;
+};
+
+const fallbackProducts: PublicProduct[] = [
   {
     name: "Café verde especial",
     category: "Agronegócio",
@@ -47,7 +63,58 @@ const products = [
   },
 ];
 
-export default function Products() {
+function mapSupabaseProduct(product: SupabaseProduct): PublicProduct | null {
+  if (!product.name) {
+    return null;
+  }
+
+  return {
+    name: product.name,
+    category: product.category || "Produto",
+    badge: product.featured ? "Destaque" : "Publicado",
+    description: product.short_description || "Produto disponível para negociações internacionais.",
+    image: product.main_image_url || "/images/produto-1.jpeg",
+  };
+}
+
+async function getPublishedProducts(): Promise<PublicProduct[]> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return [];
+  }
+
+  const url = new URL("/rest/v1/products", supabaseUrl);
+  url.searchParams.set("select", "name,category,short_description,main_image_url,featured");
+  url.searchParams.set("status", "eq.published");
+  url.searchParams.set("order", "sort_order.asc,created_at.desc");
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${supabaseAnonKey}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = (await response.json()) as SupabaseProduct[];
+
+    return data.map(mapSupabaseProduct).filter((product): product is PublicProduct => Boolean(product));
+  } catch {
+    return [];
+  }
+}
+
+export default async function Products() {
+  const publishedProducts = await getPublishedProducts();
+  const products = publishedProducts.length > 0 ? publishedProducts : fallbackProducts;
+
   return (
     <section id="produtos" className="relative px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-32">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#d6b46a]/35 to-transparent" />
@@ -72,7 +139,7 @@ export default function Products() {
         <div className="mt-10 grid items-stretch gap-5 sm:mt-14 sm:gap-7 md:grid-cols-2 xl:grid-cols-3">
           {products.map((product) => (
             <article
-              key={product.name}
+              key={`${product.name}-${product.image}`}
               className="group flex h-full flex-col overflow-hidden rounded-[1.45rem] border border-white/75 bg-white/72 shadow-[0_22px_70px_rgba(31,41,55,0.09),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl transition duration-500 hover:-translate-y-3 hover:border-[#d6b46a]/55 hover:bg-white hover:shadow-[0_38px_105px_rgba(31,41,55,0.18)] sm:rounded-[2.15rem]"
             >
               <div className="relative aspect-[4/3] overflow-hidden bg-neutral-200 sm:aspect-[5/4]">
@@ -98,7 +165,9 @@ export default function Products() {
                 <h3 className="text-[1.45rem] font-semibold leading-tight tracking-[-0.025em] text-[#141414] transition duration-300 group-hover:text-[#9b7a3e] sm:text-[1.7rem] sm:tracking-[-0.035em]">
                   {product.name}
                 </h3>
-                <p className="mt-4 text-[0.95rem] leading-7 text-neutral-600 sm:mt-5 sm:text-[0.98rem]">{product.description}</p>
+                <p className="mt-4 text-[0.95rem] leading-7 text-neutral-600 sm:mt-5 sm:text-[0.98rem]">
+                  {product.description}
+                </p>
                 <a
                   href={whatsapp}
                   className="mt-6 inline-flex w-full justify-center rounded-full bg-[#111] px-5 py-3.5 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[#d6b46a] hover:text-[#111] hover:shadow-[0_18px_45px_rgba(214,180,106,0.28)] sm:mt-8 sm:w-auto sm:px-6 sm:text-[0.72rem] sm:tracking-[0.18em] md:mt-auto md:self-start"

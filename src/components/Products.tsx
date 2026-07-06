@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { createClient } from "@supabase/supabase-js";
 
 const whatsapp = "https://wa.me/5500000000000";
 
@@ -85,27 +86,35 @@ async function getPublishedProducts(): Promise<PublicProduct[]> {
     return [];
   }
 
-  const url = new URL("/rest/v1/products", supabaseUrl);
-  url.searchParams.set("select", "name,category,short_description,main_image_url,featured");
-  url.searchParams.set("status", "eq.published");
-  url.searchParams.set("order", "sort_order.asc,created_at.desc");
+  const publicSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+    global: {
+      fetch: (input, init) =>
+        fetch(input, {
+          ...init,
+          cache: "no-store",
+        }),
+    },
+  });
 
   try {
-    const response = await fetch(url, {
-      headers: {
-        apikey: supabaseAnonKey,
-        Authorization: `Bearer ${supabaseAnonKey}`,
-      },
-      cache: "no-store",
-    });
+    const { data, error } = await publicSupabase
+      .from("products")
+      .select("name, category, short_description, main_image_url, featured")
+      .eq("status", "published")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false });
 
-    if (!response.ok) {
+    if (error || !data?.length) {
       return [];
     }
 
-    const data = (await response.json()) as SupabaseProduct[];
-
-    return data.map(mapSupabaseProduct).filter((product): product is PublicProduct => Boolean(product));
+    return (data as SupabaseProduct[])
+      .map(mapSupabaseProduct)
+      .filter((product): product is PublicProduct => Boolean(product));
   } catch {
     return [];
   }

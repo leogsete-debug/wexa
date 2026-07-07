@@ -44,7 +44,7 @@ export default async function HomePage() {
       <SiteHeader settings={settings} />
       <Hero settings={settings} />
       <About content={companyContent} />
-      <Products />
+      <Products whatsappUrl={settings.whatsapp_url} />
       <PdfCatalog settings={settings} catalogPdfUrl={latestCatalog?.pdf_url} />
       <ExportProcess steps={processSteps} />
       <Markets markets={markets} />

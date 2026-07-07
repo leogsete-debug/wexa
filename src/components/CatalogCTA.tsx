@@ -1,9 +1,13 @@
 import { Mail, MessageCircle } from "lucide-react";
+import type { SiteSettings } from "@/types/site-settings";
 
-const whatsapp = "https://wa.me/5500000000000";
-const email = "mailto:comercial@topmaxexport.com";
+type CatalogCTAProps = {
+  settings: SiteSettings;
+};
 
-export default function CatalogCTA() {
+export default function CatalogCTA({ settings }: CatalogCTAProps) {
+  const emailHref = `mailto:${settings.email}`;
+
   return (
     <section className="px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
       <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[1.5rem] bg-[#111] px-5 py-11 text-white shadow-[0_34px_110px_rgba(0,0,0,0.24)] sm:rounded-[2.5rem] sm:px-10 sm:py-16 lg:px-14">
@@ -23,11 +27,11 @@ export default function CatalogCTA() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 lg:w-[13rem] lg:flex-col">
-            <a href={whatsapp} className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full bg-[#d6b46a] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-[#111] transition duration-300 hover:-translate-y-1 hover:bg-[#f0d89a] hover:shadow-[0_24px_60px_rgba(214,180,106,0.32)] sm:px-7 sm:text-xs sm:tracking-[0.18em]">
+            <a href={settings.whatsapp_url} className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full bg-[#d6b46a] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-[#111] transition duration-300 hover:-translate-y-1 hover:bg-[#f0d89a] hover:shadow-[0_24px_60px_rgba(214,180,106,0.32)] sm:px-7 sm:text-xs sm:tracking-[0.18em]">
               <MessageCircle size={18} />
               WhatsApp
             </a>
-            <a href={email} className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full border border-white/18 bg-white/10 px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:bg-white hover:text-[#111] sm:px-7 sm:text-xs sm:tracking-[0.18em]">
+            <a href={emailHref} className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full border border-white/18 bg-white/10 px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:bg-white hover:text-[#111] sm:px-7 sm:text-xs sm:tracking-[0.18em]">
               <Mail size={18} />
               Enviar e-mail
             </a>

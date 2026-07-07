@@ -1,0 +1,23 @@
+export type SiteSettings = {
+  id?: string;
+  whatsapp_url: string;
+  whatsapp_number: string;
+  email: string;
+  company_name: string;
+  hero_badge: string;
+  hero_title: string;
+  hero_subtitle: string;
+  hero_primary_button_text: string;
+  hero_primary_button_url: string;
+  hero_secondary_button_text: string;
+  hero_secondary_button_url: string;
+  hero_image_url: string;
+  hero_mobile_image_url: string;
+  show_hero_primary_button: boolean;
+  show_hero_secondary_button: boolean;
+  catalog_title: string;
+  catalog_subtitle: string;
+  catalog_pdf_url: string;
+  created_at?: string;
+  updated_at?: string;
+};

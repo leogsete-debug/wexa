@@ -1,8 +1,6 @@
 import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
 
-const whatsapp = "https://wa.me/5500000000000";
-
 type PublicProduct = {
   name: string;
   category: string;
@@ -120,7 +118,11 @@ async function getPublishedProducts(): Promise<PublicProduct[]> {
   }
 }
 
-export default async function Products() {
+type ProductsProps = {
+  whatsappUrl: string;
+};
+
+export default async function Products({ whatsappUrl }: ProductsProps) {
   const publishedProducts = await getPublishedProducts();
   const products = publishedProducts.length > 0 ? publishedProducts : fallbackProducts;
 
@@ -178,7 +180,7 @@ export default async function Products() {
                   {product.description}
                 </p>
                 <a
-                  href={whatsapp}
+                  href={whatsappUrl}
                   className="mt-6 inline-flex w-full justify-center rounded-full bg-[#111] px-5 py-3.5 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[#d6b46a] hover:text-[#111] hover:shadow-[0_18px_45px_rgba(214,180,106,0.28)] sm:mt-8 sm:w-auto sm:px-6 sm:text-[0.72rem] sm:tracking-[0.18em] md:mt-auto md:self-start"
                 >
                   Solicitar cotação

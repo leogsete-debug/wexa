@@ -1,14 +1,20 @@
 import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
+import type { CompanyContent } from "@/types/content";
 
-const stats = [
-  { value: "20+", label: "Anos de experiência" },
-  { value: "35+", label: "Países atendidos" },
-  { value: "500+", label: "Produtos no portfólio" },
-  { value: "100%", label: "Foco em qualidade" },
-];
+type AboutProps = {
+  content: CompanyContent;
+};
 
-export default function About() {
+function parseStat(value: string) {
+  const [statValue, label] = value.split("|");
+  return { value: statValue || value, label: label || "" };
+}
+
+export default function About({ content }: AboutProps) {
+  const stats = [content.stat_20, content.stat_35, content.stat_500, content.stat_100].map(parseStat);
+  const paragraphs = content.full_text.split(/\n+/).filter(Boolean);
+
   return (
     <section
       id="empresa"
@@ -22,33 +28,25 @@ export default function About() {
       <div className="mx-auto grid max-w-7xl items-center gap-8 sm:gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:gap-20">
         <div className="motion-safe:animate-[fadeUp_800ms_ease-out_both]">
           <p className="mb-5 inline-flex max-w-full rounded-full border border-[#d6b46a]/30 bg-white/75 px-3 py-2 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-[#9b7a3e] shadow-[0_14px_40px_rgba(31,41,55,0.07)] backdrop-blur-xl sm:mb-6 sm:px-4 sm:text-[0.72rem] sm:tracking-[0.28em]">
-            Sobre a TopMax Export
+            {content.section_title}
           </p>
 
           <h2 className="max-w-3xl text-balance text-[2rem] font-semibold leading-[1.06] tracking-[-0.03em] text-[#101010] sm:text-4xl md:text-6xl md:leading-[1.02] md:tracking-[-0.045em]">
-            Conectando fabricantes brasileiros ao mercado global
+            {content.section_subtitle}
           </h2>
 
           <div className="mt-6 h-px w-28 bg-gradient-to-r from-[#d6b46a] via-[#d6b46a]/60 to-transparent sm:mt-7 sm:w-32" />
 
           <div className="mt-6 max-w-2xl space-y-4 text-[0.94rem] leading-7 text-neutral-600 sm:mt-8 sm:space-y-6 sm:text-lg sm:leading-8">
-            <p>
-              A TopMax Export conecta fabricantes brasileiros a compradores internacionais por meio
-              de uma estrutura comercial de alto padrão, orientada por confiança, clareza e parcerias de
-              longo prazo.
-            </p>
-
-            <p>
-              Da seleção de fornecedores à apresentação dos produtos, alinhamento de qualidade e
-              suporte à exportação, ajudamos importadores a acessar o potencial produtivo do Brasil
-              com segurança e profissionalismo.
-            </p>
+            {paragraphs.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
           </div>
 
           <div className="mt-8 grid grid-cols-2 gap-2.5 sm:mt-12 sm:gap-3 lg:grid-cols-4 lg:gap-4">
             {stats.map((stat, index) => (
               <div
-                key={stat.label}
+                key={`${stat.value}-${stat.label}`}
                 className="group rounded-[1rem] border border-white/80 bg-white/72 p-3 shadow-[0_18px_55px_rgba(31,41,55,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl transition duration-300 hover:-translate-y-2 hover:border-[#d6b46a]/45 hover:bg-white hover:shadow-[0_28px_75px_rgba(31,41,55,0.14)] sm:rounded-[1.35rem] sm:p-5 motion-safe:animate-[fadeUp_700ms_ease-out_both]"
                 style={{ animationDelay: `${index * 90 + 160}ms` }}
               >
@@ -69,15 +67,15 @@ export default function About() {
           <div className="group relative overflow-hidden rounded-[1.25rem] border border-white/75 bg-white/30 p-2 shadow-[0_34px_110px_rgba(31,41,55,0.18),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl transition duration-500 hover:-translate-y-2 hover:shadow-[0_42px_130px_rgba(31,41,55,0.24)] sm:rounded-[2.25rem] sm:p-3">
             <div className="relative h-[19rem] overflow-hidden rounded-[1rem] bg-neutral-200 min-[380px]:h-[20.5rem] sm:h-auto sm:aspect-[5/4] sm:rounded-[1.75rem] lg:aspect-[4/5]">
               <Image
-                src="/images/galeria-2.jpeg"
-                alt="Operações internacionais da TopMax Export"
+                src={content.main_image_url}
+                alt={`Operacoes internacionais da ${content.company_name}`}
                 fill
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="object-cover transition duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-white/10" />
               <div className="absolute left-3 top-3 max-w-[calc(100%-1.5rem)] rounded-full border border-white/25 bg-black/30 px-3 py-1.5 text-[0.56rem] font-bold uppercase tracking-[0.08em] text-[#f0d89a] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl sm:left-7 sm:top-7 sm:px-4 sm:py-2 sm:text-[0.68rem] sm:tracking-[0.2em]">
-                Exportação entre empresas
+                {content.mission}
               </div>
             </div>
           </div>
@@ -86,9 +84,9 @@ export default function About() {
             <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#d6b46a] text-[#111] shadow-[0_16px_38px_rgba(214,180,106,0.36)] sm:mb-4 sm:h-11 sm:w-11">
               <CheckCircle2 size={18} strokeWidth={2.1} />
             </div>
-            <h3 className="text-sm font-semibold tracking-[-0.02em] sm:text-lg">Parceiro confiável em exportação</h3>
+            <h3 className="text-sm font-semibold tracking-[-0.02em] sm:text-lg">{content.vision}</h3>
             <p className="mt-1 text-xs leading-5 text-white/72 sm:mt-2 sm:text-sm sm:leading-6">
-              Fornecedor seguro para compradores internacionais
+              {content.differentials}
             </p>
           </div>
         </div>

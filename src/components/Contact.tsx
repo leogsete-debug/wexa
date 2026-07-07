@@ -1,9 +1,19 @@
 import { Mail, MessageCircle, PhoneCall } from "lucide-react";
+import ContactLeadForm from "@/components/ContactLeadForm";
+import type { ContactContent } from "@/types/content";
+import type { SiteSettings } from "@/types/site-settings";
 
-const whatsapp = "https://wa.me/5500000000000";
-const email = "mailto:comercial@topmaxexport.com";
+type ContactProps = {
+  settings: SiteSettings;
+  content: ContactContent;
+};
 
-export default function Contact() {
+export default function Contact({ settings, content }: ContactProps) {
+  const email = content.email || settings.email;
+  const whatsappUrl = content.whatsapp || settings.whatsapp_url;
+  const emailHref = `mailto:${email}`;
+  const location = [content.address, content.city, content.state, content.country].filter(Boolean).join(" | ");
+
   return (
     <section id="contato" className="relative px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-32">
       <div className="mx-auto grid w-full max-w-[22rem] gap-4 sm:max-w-7xl sm:gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-stretch">
@@ -12,30 +22,31 @@ export default function Contact() {
             Contato comercial
           </p>
           <h2 className="text-balance text-[1.8rem] font-semibold leading-[1.08] tracking-[-0.03em] text-[#111] sm:text-4xl md:text-6xl md:leading-[1.02] md:tracking-[-0.04em]">
-            Vamos estruturar sua próxima compra internacional.
+            Vamos estruturar sua proxima compra internacional.
           </h2>
           <p className="mt-5 max-w-2xl text-[0.94rem] leading-7 text-neutral-600 sm:mt-7 sm:text-[0.98rem] sm:leading-8">
-            Entre em contato para discutir produtos, volumes, destino, documentação, prazos e condições comerciais.
+            Entre em contato para discutir produtos, volumes, destino, documentacao, prazos e condicoes comerciais.
           </p>
+          <ContactLeadForm />
         </div>
 
         <div className="grid gap-4">
-          <a href={whatsapp} className="group h-full rounded-[1.2rem] border border-white/75 bg-[#111] p-4 text-white shadow-[0_24px_85px_rgba(0,0,0,0.18)] transition duration-300 hover:-translate-y-2 hover:bg-[#25d366] sm:rounded-[1.7rem] sm:p-7">
+          <a href={whatsappUrl} className="group h-full rounded-[1.2rem] border border-white/75 bg-[#111] p-4 text-white shadow-[0_24px_85px_rgba(0,0,0,0.18)] transition duration-300 hover:-translate-y-2 hover:bg-[#25d366] sm:rounded-[1.7rem] sm:p-7">
             <MessageCircle className="mb-5 text-[#25d366] transition duration-300 group-hover:text-white sm:mb-8" size={26} />
             <h3 className="text-[1.3rem] font-semibold tracking-[-0.03em] sm:text-2xl">WhatsApp</h3>
-            <p className="mt-3 text-sm leading-6 opacity-70">Atendimento rápido para cotações e alinhamento comercial.</p>
+            <p className="mt-3 text-sm leading-6 opacity-70">{content.business_hours}</p>
           </a>
 
-          <a href={email} className="group h-full rounded-[1.2rem] border border-white/75 bg-white/72 p-4 shadow-[0_18px_55px_rgba(31,41,55,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl transition duration-300 hover:-translate-y-2 hover:border-[#d6b46a]/45 hover:bg-white sm:rounded-[1.7rem] sm:p-7">
+          <a href={emailHref} className="group h-full rounded-[1.2rem] border border-white/75 bg-white/72 p-4 shadow-[0_18px_55px_rgba(31,41,55,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl transition duration-300 hover:-translate-y-2 hover:border-[#d6b46a]/45 hover:bg-white sm:rounded-[1.7rem] sm:p-7">
             <Mail className="mb-5 text-[#9b7a3e] sm:mb-8" size={26} />
-            <h3 className="break-words text-[1rem] font-semibold leading-snug tracking-[-0.02em] text-[#141414] [overflow-wrap:anywhere] sm:text-2xl sm:tracking-[-0.03em]">comercial@topmaxexport.com</h3>
+            <h3 className="break-words text-[1rem] font-semibold leading-snug tracking-[-0.02em] text-[#141414] [overflow-wrap:anywhere] sm:text-2xl sm:tracking-[-0.03em]">{email}</h3>
             <p className="mt-3 text-sm leading-6 text-neutral-600">Envie detalhes da sua demanda para uma proposta direcionada.</p>
           </a>
 
           <div className="h-full rounded-[1.2rem] border border-white/75 bg-white/50 p-4 shadow-[0_18px_55px_rgba(31,41,55,0.07)] backdrop-blur-xl sm:rounded-[1.7rem] sm:p-7">
             <PhoneCall className="mb-5 text-[#9b7a3e] sm:mb-8" size={26} />
-            <h3 className="text-[1.3rem] font-semibold tracking-[-0.03em] text-[#141414] sm:text-2xl">Comercial internacional</h3>
-            <p className="mt-3 text-sm leading-6 text-neutral-600">Consultoria para compradores corporativos, distribuidores e importadores.</p>
+            <h3 className="text-[1.3rem] font-semibold tracking-[-0.03em] text-[#141414] sm:text-2xl">{content.phone}</h3>
+            <p className="mt-3 text-sm leading-6 text-neutral-600">{location}</p>
           </div>
         </div>
       </div>

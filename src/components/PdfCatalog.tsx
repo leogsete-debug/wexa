@@ -1,9 +1,14 @@
 import { Download, MessageCircle } from "lucide-react";
+import type { SiteSettings } from "@/types/site-settings";
 
-const whatsapp = "https://wa.me/5500000000000";
-const catalogPdf = "/catalogo.pdf";
+type PdfCatalogProps = {
+  settings: SiteSettings;
+  catalogPdfUrl?: string | null;
+};
 
-export default function PdfCatalog() {
+export default function PdfCatalog({ settings, catalogPdfUrl }: PdfCatalogProps) {
+  const pdfUrl = catalogPdfUrl || settings.catalog_pdf_url;
+
   return (
     <section id="catalogo" className="relative px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -16,23 +21,23 @@ export default function PdfCatalog() {
                 Catálogo
               </p>
               <h2 className="text-balance text-[2rem] font-semibold leading-[1.06] tracking-[-0.03em] text-[#111] sm:text-4xl md:text-6xl md:leading-[1.02] md:tracking-[-0.04em]">
-                Catálogo Completo
+                {settings.catalog_title}
               </h2>
               <p className="mt-5 max-w-2xl text-[0.98rem] leading-7 text-neutral-600 sm:mt-6 sm:leading-8">
-                Baixe nosso catálogo completo com produtos, especificações e preços.
+                {settings.catalog_subtitle}
               </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 lg:w-[19rem] lg:flex-col">
               <a
-                href={catalogPdf}
+                href={pdfUrl}
                 className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full bg-[#111] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white transition duration-300 hover:-translate-y-1 hover:bg-[#d6b46a] hover:text-[#111] hover:shadow-[0_24px_60px_rgba(214,180,106,0.32)] sm:px-7 sm:text-xs sm:tracking-[0.18em]"
               >
                 <Download size={18} />
                 Baixar Catálogo PDF
               </a>
               <a
-                href={whatsapp}
+                href={settings.whatsapp_url}
                 className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full border border-[#25d366]/25 bg-[#25d366] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white shadow-[0_18px_45px_rgba(37,211,102,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-[#1ebe5d] hover:shadow-[0_24px_60px_rgba(37,211,102,0.34)] sm:px-7 sm:text-xs sm:tracking-[0.18em]"
               >
                 <MessageCircle size={18} />

@@ -1,17 +1,30 @@
 import Image from "next/image";
+import type { SiteSettings } from "@/types/site-settings";
 
-const whatsapp = "https://wa.me/5500000000000";
+type HeroProps = {
+  settings: SiteSettings;
+};
 
-export default function Hero() {
+export default function Hero({ settings }: HeroProps) {
+  const mobileHeroImage = settings.hero_mobile_image_url || settings.hero_image_url;
+
   return (
     <section className="relative flex min-h-[100svh] items-center overflow-hidden">
       <Image
-        src="/images/hero.jpeg"
-        alt="TopMax Export"
+        src={settings.hero_image_url}
+        alt={settings.company_name}
         fill
         priority
         sizes="100vw"
-        className="absolute inset-0 h-full w-full scale-[1.03] object-cover motion-safe:animate-[heroZoom_18s_ease-in-out_infinite_alternate]"
+        className="absolute inset-0 hidden h-full w-full scale-[1.03] object-cover motion-safe:animate-[heroZoom_18s_ease-in-out_infinite_alternate] sm:block"
+      />
+      <Image
+        src={mobileHeroImage}
+        alt={settings.company_name}
+        fill
+        priority
+        sizes="100vw"
+        className="absolute inset-0 h-full w-full scale-[1.03] object-cover motion-safe:animate-[heroZoom_18s_ease-in-out_infinite_alternate] sm:hidden"
       />
 
       <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.76)_42%,rgba(0,0,0,0.3)_72%,rgba(0,0,0,0.56)_100%)]" />
@@ -21,33 +34,38 @@ export default function Hero() {
       <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-7xl items-center px-4 pb-7 pt-24 text-white sm:px-6 sm:pb-10 sm:pt-32 lg:px-8 lg:pb-14">
         <div className="max-w-5xl motion-safe:animate-[fadeUp_900ms_ease-out_both]">
           <p className="mb-4 inline-flex max-w-full rounded-full border border-[#d6b46a]/35 bg-[#d6b46a]/10 px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.14em] text-[#f0d89a] shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] backdrop-blur-xl sm:mb-6 sm:px-4 sm:py-2 sm:text-[0.72rem] sm:tracking-[0.34em]">
-            Vitrine internacional de exportação
+            {settings.hero_badge}
           </p>
 
           <h1 className="max-w-5xl text-balance text-[2.05rem] font-semibold leading-[1.05] tracking-[-0.025em] text-white drop-shadow-[0_22px_60px_rgba(0,0,0,0.45)] min-[380px]:text-[2.35rem] sm:text-6xl sm:leading-[1] sm:tracking-[-0.03em] md:text-7xl lg:text-[5.6rem] lg:leading-[0.96] lg:tracking-[-0.04em]">
-            Conectando a excelência brasileira ao mercado global
+            {settings.hero_title}
           </h1>
 
           <p className="mt-5 max-w-2xl text-pretty text-[0.92rem] leading-6 text-white/78 sm:mt-8 sm:text-lg sm:leading-8">
-            Uma vitrine digital de alto padrão para apresentar produtos, fortalecer negociações
-            e conectar compradores ao mercado internacional.
+            {settings.hero_subtitle}
           </p>
 
-          <div className="mt-6 flex flex-col gap-2.5 sm:mt-10 sm:flex-row sm:gap-4">
-            <a
-              href={whatsapp}
-              className="rounded-full bg-[#d6b46a] px-5 py-3.5 text-center text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#111] shadow-[0_22px_60px_rgba(214,180,106,0.34)] transition duration-300 hover:-translate-y-1 hover:bg-[#f0d89a] hover:shadow-[0_28px_70px_rgba(214,180,106,0.46)] sm:px-9 sm:py-4 sm:text-xs sm:tracking-[0.2em]"
-            >
-              Solicitar cotação
-            </a>
+          {(settings.show_hero_primary_button || settings.show_hero_secondary_button) ? (
+            <div className="mt-6 flex flex-col gap-2.5 sm:mt-10 sm:flex-row sm:gap-4">
+              {settings.show_hero_primary_button ? (
+                <a
+                  href={settings.hero_primary_button_url}
+                  className="rounded-full bg-[#d6b46a] px-5 py-3.5 text-center text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#111] shadow-[0_22px_60px_rgba(214,180,106,0.34)] transition duration-300 hover:-translate-y-1 hover:bg-[#f0d89a] hover:shadow-[0_28px_70px_rgba(214,180,106,0.46)] sm:px-9 sm:py-4 sm:text-xs sm:tracking-[0.2em]"
+                >
+                  {settings.hero_primary_button_text}
+                </a>
+              ) : null}
 
-            <a
-              href="#produtos"
-              className="rounded-full border border-white/28 bg-white/10 px-5 py-3.5 text-center text-[0.7rem] font-bold uppercase tracking-[0.12em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/70 hover:bg-white hover:text-black sm:px-9 sm:py-4 sm:text-xs sm:tracking-[0.2em]"
-            >
-              Ver produtos
-            </a>
-          </div>
+              {settings.show_hero_secondary_button ? (
+                <a
+                  href={settings.hero_secondary_button_url}
+                  className="rounded-full border border-white/28 bg-white/10 px-5 py-3.5 text-center text-[0.7rem] font-bold uppercase tracking-[0.12em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/70 hover:bg-white hover:text-black sm:px-9 sm:py-4 sm:text-xs sm:tracking-[0.2em]"
+                >
+                  {settings.hero_secondary_button_text}
+                </a>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="mt-6 grid grid-cols-2 gap-2 rounded-[1.25rem] border border-white/18 bg-white/[0.105] p-2 shadow-[0_30px_100px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-2xl sm:mt-12 sm:gap-4 sm:rounded-[2rem] sm:p-4 md:grid-cols-4">
             {["20+ Anos", "35+ Países", "500+ Produtos", "100% Qualidade"].map((item) => (

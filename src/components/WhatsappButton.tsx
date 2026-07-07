@@ -1,9 +1,13 @@
-const whatsapp = "https://wa.me/5500000000000";
+import type { SiteSettings } from "@/types/site-settings";
 
-export default function WhatsappButton() {
+type WhatsappButtonProps = {
+  settings: SiteSettings;
+};
+
+export default function WhatsappButton({ settings }: WhatsappButtonProps) {
   return (
     <a
-      href={whatsapp}
+      href={settings.whatsapp_url}
       aria-label="Falar com a TopMax Export pelo WhatsApp"
       className="fixed bottom-5 right-5 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-[#25d366] text-white shadow-[0_20px_55px_rgba(37,211,102,0.42)] transition duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-[#1ebe5d] hover:shadow-[0_24px_70px_rgba(37,211,102,0.52)] motion-safe:animate-[whatsappPulse_2.8s_ease-in-out_infinite] sm:bottom-7 sm:right-7"
     >

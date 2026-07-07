@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { ImagePlus, Save, Trash2 } from "lucide-react";
+import MediaPicker from "@/components/admin/MediaPicker";
 import { createSlug, productStatuses } from "@/lib/products";
 import { supabase } from "@/lib/supabase";
 import type { Product, ProductPayload, ProductStatus } from "@/types/product";
@@ -337,6 +338,13 @@ export default function ProductForm({ mode }: ProductFormProps) {
               {imageFile ? imageFile.name : "Clique para selecionar uma imagem"}
               <input type="file" accept="image/*" className="sr-only" onChange={handleImageChange} />
             </span>
+            <MediaPicker
+              folder="images"
+              onSelect={(url) => {
+                updateField("main_image_url", url);
+                setImageFile(null);
+              }}
+            />
           </label>
 
           {form.main_image_url ? (

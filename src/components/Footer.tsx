@@ -1,19 +1,33 @@
-import { Globe2, Link, Mail, MessageCircle, Send } from "lucide-react";
-import type { FooterContent } from "@/types/content";
+"use client";
 
-const companyLinks = [
-  { label: "Empresa", href: "#empresa" },
-  { label: "Produtos", href: "#produtos" },
-  { label: "Catalogo", href: "#catalogo" },
-  { label: "Galeria", href: "#galeria" },
-  { label: "Contato", href: "#contato" },
-];
+import { Globe2, Link, Mail, MessageCircle, Send } from "lucide-react";
+import { usePathname } from "next/navigation";
+import type { FooterContent } from "@/types/content";
 
 type FooterProps = {
   content: FooterContent;
 };
 
 export default function Footer({ content }: FooterProps) {
+  const pathname = usePathname();
+  const isChinesePage = pathname?.startsWith("/zh");
+
+  const companyLinks = isChinesePage
+    ? [
+        { label: "公司", href: "#empresa" },
+        { label: "产品", href: "#produtos" },
+        { label: "产品目录", href: "#catalogo" },
+        { label: "图片库", href: "#galeria" },
+        { label: "联系我们", href: "#contato" },
+      ]
+    : [
+        { label: "Empresa", href: "#empresa" },
+        { label: "Produtos", href: "#produtos" },
+        { label: "Catálogo", href: "#catalogo" },
+        { label: "Galeria", href: "#galeria" },
+        { label: "Contato", href: "#contato" },
+      ];
+
   const socialLinks = [
     { label: "Instagram", href: content.instagram, icon: Send },
     { label: "LinkedIn", href: content.linkedin, icon: Link },
@@ -30,8 +44,11 @@ export default function Footer({ content }: FooterProps) {
           <strong className="inline-flex max-w-full rounded-full border border-white/10 bg-white/10 px-3 py-2 text-[0.64rem] font-semibold tracking-[0.2em] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] sm:px-4 sm:text-[0.72rem] sm:tracking-[0.3em]">
             TOPMAX EXPORT
           </strong>
+
           <p className="mt-5 max-w-md text-sm leading-7 text-white/58 sm:mt-6">
-            {content.institutional_text}
+            {isChinesePage
+              ? "TopMax Export 为国际买家提供专业产品展示、商业支持和长期出口合作。"
+              : content.institutional_text}
           </p>
 
           <div className="mt-6 flex gap-3 sm:mt-7">
@@ -49,10 +66,17 @@ export default function Footer({ content }: FooterProps) {
         </div>
 
         <nav>
-          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#d6b46a] sm:tracking-[0.24em]">Empresa</h3>
+          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#d6b46a] sm:tracking-[0.24em]">
+            {isChinesePage ? "公司" : "Empresa"}
+          </h3>
+
           <div className="mt-5 grid gap-3 text-sm text-white/62">
             {companyLinks.map((link) => (
-              <a key={link.href} href={link.href} className="transition duration-300 hover:text-[#d6b46a]">
+              <a
+                key={link.href}
+                href={isChinesePage ? `/zh${link.href}` : link.href}
+                className="transition duration-300 hover:text-[#d6b46a]"
+              >
                 {link.label}
               </a>
             ))}
@@ -60,31 +84,49 @@ export default function Footer({ content }: FooterProps) {
         </nav>
 
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#d6b46a] sm:tracking-[0.24em]">Contato</h3>
+          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#d6b46a] sm:tracking-[0.24em]">
+            {isChinesePage ? "联系我们" : "Contato"}
+          </h3>
+
           <div className="mt-5 grid gap-4 text-sm text-white/62">
-            <a href={content.whatsapp} className="inline-flex items-center gap-3 transition duration-300 hover:text-[#25d366]">
+            <a
+              href={content.whatsapp}
+              className="inline-flex items-center gap-3 transition duration-300 hover:text-[#25d366]"
+            >
               <MessageCircle size={17} />
-              WhatsApp comercial
+              {isChinesePage ? "商务 WhatsApp" : "WhatsApp comercial"}
             </a>
-            <a href={`mailto:${content.email}`} className="inline-flex items-center gap-3 transition duration-300 hover:text-[#d6b46a]">
+
+            <a
+              href={`mailto:${content.email}`}
+              className="inline-flex items-center gap-3 transition duration-300 hover:text-[#d6b46a]"
+            >
               <Mail size={17} />
               {content.email}
             </a>
-            <span>Brasil | Mercados internacionais</span>
+
+            <span>
+              {isChinesePage ? "巴西 | 国际市场" : "Brasil | Mercados internacionais"}
+            </span>
           </div>
         </div>
 
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#d6b46a] sm:tracking-[0.24em]">Exportacao</h3>
+          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#d6b46a] sm:tracking-[0.24em]">
+            {isChinesePage ? "出口业务" : "Exportação"}
+          </h3>
+
           <p className="mt-5 text-sm leading-7 text-white/58">
-            Curadoria de produtos, apresentacao comercial e suporte para negociacoes internacionais.
+            {isChinesePage
+              ? "提供产品展示、商业支持和国际贸易合作。"
+              : "Curadoria de produtos, apresentação comercial e suporte para negociações internacionais."}
           </p>
         </div>
       </div>
 
       <div className="relative mx-auto mt-7 flex max-w-7xl flex-col gap-3 text-[0.68rem] uppercase leading-5 tracking-[0.12em] text-white/38 sm:flex-row sm:items-center sm:justify-between sm:text-xs sm:tracking-[0.18em]">
         <span>{content.copyright}</span>
-        <span>Todos os direitos reservados</span>
+        <span>{isChinesePage ? "版权所有" : "Todos os direitos reservados"}</span>
       </div>
     </footer>
   );

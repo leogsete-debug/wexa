@@ -27,7 +27,7 @@ const companyLinks = {
 const text = {
   pt: {
     institutionalFallback:
-      "Empresa internacional de exportacao conectando produtos brasileiros a compradores globais com padrao internacional.",
+      "Empresa internacional de exportação conectando produtos brasileiros a compradores globais com padrão internacional.",
     company: "Empresa",
     contact: "Contato",
     export: "Exportação",

@@ -62,7 +62,7 @@ export default function MediaPicker({ label = "Selecionar da Biblioteca", folder
           <div className="max-h-[88vh] w-full max-w-5xl overflow-hidden rounded-[1.5rem] bg-[#fbfaf7] shadow-[0_40px_120px_rgba(0,0,0,0.32)]">
             <header className="flex items-center justify-between border-b border-black/10 px-5 py-4">
               <div>
-                <h2 className="text-xl font-semibold tracking-[-0.03em] text-[#111]">Biblioteca de Midia</h2>
+                <h2 className="text-xl font-semibold tracking-[-0.03em] text-[#111]">Biblioteca de Mídia</h2>
                 <p className="mt-1 text-sm text-neutral-500">Selecione um arquivo existente para reutilizar.</p>
               </div>
               <button
@@ -108,7 +108,7 @@ export default function MediaPicker({ label = "Selecionar da Biblioteca", folder
                     >
                       <div className="relative flex aspect-[4/3] items-center justify-center bg-neutral-100 text-neutral-400">
                         {item.file_url && isPreviewableImage(item.mime_type) ? (
-                          <Image src={item.file_url} alt={item.alt_text || item.name || "Midia"} fill sizes="16rem" className="object-cover" />
+                          <Image src={item.file_url} alt={item.alt_text || item.name || "Mídia"} fill sizes="16rem" className="object-cover" />
                         ) : (
                           <FileText size={28} />
                         )}

@@ -7,13 +7,13 @@ export default function EditCatalogPage() {
       <div className="mx-auto max-w-5xl">
         <header className="mb-8 border-b border-black/10 pb-8">
           <Link href="/admin/catalogos" className="text-sm font-semibold text-[#9b7a3e] transition hover:text-[#111]">
-            Voltar para catalogos
+            Voltar para catálogos
           </Link>
           <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-[#111] sm:text-5xl">
-            Editar Catalogo
+            Editar Catálogo
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-600">
-            Atualize PDF, capa, idioma e status do catalogo publicado no site.
+            Atualize PDF, capa, idioma e status do catálogo publicado no site.
           </p>
         </header>
 

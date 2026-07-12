@@ -10,10 +10,10 @@ type MarketsProps = {
 const text = {
   pt: {
     eyebrow: "Mercados atendidos",
-    title: "Presenca comercial para conectar o Brasil ao mundo.",
+    title: "Presença comercial para conectar o Brasil ao mundo.",
     description:
-      "Atendimento corporativo para importadores, distribuidores, redes e compradores que precisam de comunicacao clara, documentacao e operacao de exportacao confiavel.",
-    card: "Relacionamento comercial, curadoria de produtos e suporte para operacoes internacionais.",
+      "Atendimento corporativo para importadores, distribuidores, redes e compradores que precisam de comunicação clara, documentação e operação de exportação confiável.",
+    card: "Relacionamento comercial, curadoria de produtos e suporte para operações internacionais.",
   },
   zh: {
     eyebrow: "国际市场",

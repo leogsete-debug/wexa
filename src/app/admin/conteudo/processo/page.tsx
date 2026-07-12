@@ -44,7 +44,7 @@ export default function ProcessContentPage() {
       .order("created_at", { ascending: false });
 
     if (loadError) {
-      setError("Nao foi possivel carregar o processo.");
+      setError("Não foi possível carregar o processo.");
     } else {
       setSteps((data ?? []) as ProcessStepContent[]);
     }
@@ -81,7 +81,7 @@ export default function ProcessContentPage() {
     setMessage("");
 
     if (!form.title.trim()) {
-      setError("O titulo e obrigatorio.");
+      setError("O título é obrigatório.");
       return;
     }
 
@@ -100,7 +100,7 @@ export default function ProcessContentPage() {
       : await supabase.from("export_process_steps").insert(payload);
 
     if (saveError) {
-      setError("Nao foi possivel salvar a etapa.");
+      setError("Não foi possível salvar a etapa.");
       setIsSaving(false);
       return;
     }
@@ -116,7 +116,7 @@ export default function ProcessContentPage() {
 
     const { error: deleteError } = await supabase.from("export_process_steps").delete().eq("id", step.id);
     if (deleteError) {
-      setError("Nao foi possivel excluir a etapa.");
+      setError("Não foi possível excluir a etapa.");
       return;
     }
 
@@ -130,7 +130,7 @@ export default function ProcessContentPage() {
       .eq("id", step.id);
 
     if (updateError) {
-      setError("Nao foi possivel alterar a publicacao.");
+      setError("Não foi possível alterar a publicação.");
       return;
     }
 
@@ -147,7 +147,7 @@ export default function ProcessContentPage() {
             Voltar para o painel
           </Link>
           <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-[#111] sm:text-5xl">
-            Conteudo: Processo
+            Conteúdo: Processo
           </h1>
         </header>
 
@@ -155,15 +155,15 @@ export default function ProcessContentPage() {
           <form onSubmit={handleSubmit} className="grid gap-5 rounded-[1.5rem] border border-white/75 bg-white/80 p-5 shadow-[0_22px_70px_rgba(31,41,55,0.09),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl">
             <h2 className="text-xl font-semibold tracking-[-0.03em]">{form.id ? "Editar etapa" : "Adicionar etapa"}</h2>
             <label className="grid gap-2 text-sm font-semibold text-neutral-700">
-              Titulo
+              Título
               <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[#d6b46a]" />
             </label>
             <label className="grid gap-2 text-sm font-semibold text-neutral-700">
-              Descricao
+              Descrição
               <textarea value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} className="min-h-28 rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-[#d6b46a]" />
             </label>
             <label className="grid gap-2 text-sm font-semibold text-neutral-700">
-              Icone
+              Ícone
               <select value={form.icon} onChange={(event) => setForm((current) => ({ ...current, icon: event.target.value }))} className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[#d6b46a]">
                 <option value="send">Send</option>
                 <option value="clipboard">Clipboard</option>
@@ -204,15 +204,15 @@ export default function ProcessContentPage() {
                     <div>
                       <h2 className="text-lg font-semibold tracking-[-0.03em]">{step.title}</h2>
                       <p className="mt-1 text-sm leading-6 text-neutral-600">{step.description}</p>
-                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-400">Ordem {step.sort_order} | Icone {step.icon}</p>
+                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-400">Ordem {step.sort_order} | Ícone {step.icon}</p>
                     </div>
                     <span className={step.published ? "w-fit rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-emerald-700" : "w-fit rounded-full border border-neutral-500/20 bg-neutral-500/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-neutral-600"}>
                       {step.published ? "Publicado" : "Oculto"}
                     </span>
                     <div className="flex flex-wrap gap-2">
                       <button type="button" onClick={() => editStep(step)} className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-black/10 bg-white px-4 text-xs font-bold uppercase tracking-[0.12em] transition hover:bg-[#111] hover:text-white"><Edit3 size={15} />Editar</button>
-                      <button type="button" onClick={() => togglePublished(step)} className="inline-flex h-10 items-center justify-center rounded-full border border-black/10 bg-white px-3 transition hover:bg-[#d6b46a]">{step.published ? <EyeOff size={15} /> : <Eye size={15} />}</button>
-                      <button type="button" onClick={() => handleDelete(step)} className="inline-flex h-10 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10 px-3 text-red-700 transition hover:bg-red-600 hover:text-white"><Trash2 size={15} /></button>
+                      <button type="button" onClick={() => togglePublished(step)} aria-label={step.published ? "Ocultar etapa" : "Publicar etapa"} className="inline-flex h-10 items-center justify-center rounded-full border border-black/10 bg-white px-3 transition hover:bg-[#d6b46a]">{step.published ? <EyeOff size={15} /> : <Eye size={15} />}</button>
+                      <button type="button" onClick={() => handleDelete(step)} aria-label="Excluir etapa" className="inline-flex h-10 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10 px-3 text-red-700 transition hover:bg-red-600 hover:text-white"><Trash2 size={15} /></button>
                     </div>
                   </article>
                 ))}

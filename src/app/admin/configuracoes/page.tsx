@@ -30,20 +30,31 @@ const generalFields: TextFieldConfig[] = [
 
 const heroFields: TextFieldConfig[] = [
   { name: "hero_badge", label: "Texto pequeno/selo do Hero" },
-  { name: "hero_title", label: "Titulo principal", type: "textarea" },
-  { name: "hero_subtitle", label: "Subtitulo", type: "textarea" },
-  { name: "hero_primary_button_text", label: "Texto botao principal" },
-  { name: "hero_primary_button_url", label: "Link botao principal" },
-  { name: "hero_secondary_button_text", label: "Texto botao secundario" },
-  { name: "hero_secondary_button_url", label: "Link botao secundario" },
+  { name: "hero_title", label: "Título principal", type: "textarea" },
+  { name: "hero_subtitle", label: "Subtítulo", type: "textarea" },
+  { name: "hero_primary_button_text", label: "Texto botão principal" },
+  { name: "hero_primary_button_url", label: "Link botão principal" },
+  { name: "hero_secondary_button_text", label: "Texto botão secundário" },
+  { name: "hero_secondary_button_url", label: "Link botão secundário" },
   { name: "hero_image_url", label: "URL da imagem desktop" },
   { name: "hero_mobile_image_url", label: "URL da imagem mobile" },
 ];
 
+const heroZhFields: TextFieldConfig[] = [
+  { name: "company_name_zh", label: "Nome da empresa em chinês" },
+  { name: "hero_badge_zh", label: "Selo do Hero em chinês" },
+  { name: "hero_title_zh", label: "Título principal em chinês", type: "textarea" },
+  { name: "hero_subtitle_zh", label: "Subtítulo em chinês", type: "textarea" },
+  { name: "hero_primary_button_text_zh", label: "Texto botão principal em chinês" },
+  { name: "hero_secondary_button_text_zh", label: "Texto botão secundário em chinês" },
+];
+
 const catalogFields: TextFieldConfig[] = [
-  { name: "catalog_title", label: "Titulo da secao catalogo" },
-  { name: "catalog_subtitle", label: "Subtitulo da secao catalogo", type: "textarea" },
-  { name: "catalog_pdf_url", label: "Link do PDF do catalogo" },
+  { name: "catalog_title", label: "Título da seção catálogo" },
+  { name: "catalog_subtitle", label: "Subtítulo da seção catálogo", type: "textarea" },
+  { name: "catalog_title_zh", label: "Título do catálogo em chinês" },
+  { name: "catalog_subtitle_zh", label: "Subtítulo do catálogo em chinês", type: "textarea" },
+  { name: "catalog_pdf_url", label: "Link do PDF do catálogo" },
 ];
 
 const heroVisibilityFields: Array<{
@@ -53,13 +64,13 @@ const heroVisibilityFields: Array<{
 }> = [
   {
     name: "show_hero_primary_button",
-    label: "Mostrar botao principal",
-    description: "Exibe ou oculta o CTA principal do Hero no site publico.",
+    label: "Mostrar botão principal",
+    description: "Exibe ou oculta o CTA principal do Hero no site público.",
   },
   {
     name: "show_hero_secondary_button",
-    label: "Mostrar botao secundario",
-    description: "Exibe ou oculta o CTA secundario do Hero no site publico.",
+    label: "Mostrar botão secundário",
+    description: "Exibe ou oculta o CTA secundário do Hero no site público.",
   },
 ];
 
@@ -173,19 +184,27 @@ export default function AdminSettingsPage() {
       whatsapp_number: settings.whatsapp_number,
       email: settings.email,
       company_name: settings.company_name,
+      company_name_zh: settings.company_name_zh,
       hero_badge: settings.hero_badge,
+      hero_badge_zh: settings.hero_badge_zh,
       hero_title: settings.hero_title,
+      hero_title_zh: settings.hero_title_zh,
       hero_subtitle: settings.hero_subtitle,
+      hero_subtitle_zh: settings.hero_subtitle_zh,
       hero_primary_button_text: settings.hero_primary_button_text,
+      hero_primary_button_text_zh: settings.hero_primary_button_text_zh,
       hero_primary_button_url: settings.hero_primary_button_url,
       hero_secondary_button_text: settings.hero_secondary_button_text,
+      hero_secondary_button_text_zh: settings.hero_secondary_button_text_zh,
       hero_secondary_button_url: settings.hero_secondary_button_url,
       hero_image_url: settings.hero_image_url,
       hero_mobile_image_url: settings.hero_mobile_image_url,
       show_hero_primary_button: settings.show_hero_primary_button,
       show_hero_secondary_button: settings.show_hero_secondary_button,
       catalog_title: settings.catalog_title,
+      catalog_title_zh: settings.catalog_title_zh,
       catalog_subtitle: settings.catalog_subtitle,
+      catalog_subtitle_zh: settings.catalog_subtitle_zh,
       catalog_pdf_url: settings.catalog_pdf_url,
     };
 
@@ -196,14 +215,14 @@ export default function AdminSettingsPage() {
     const { data, error: saveError } = await request;
 
     if (saveError || !data) {
-      setError("Nao foi possivel salvar as configuracoes.");
+      setError("Não foi possível salvar as configurações.");
       setIsSaving(false);
       return;
     }
 
     setSettings(mergeSiteSettings(data));
     setRecordId(data.id);
-    setMessage("Configuracoes salvas com sucesso.");
+    setMessage("Configurações salvas com sucesso.");
     setIsSaving(false);
   }
 
@@ -215,16 +234,16 @@ export default function AdminSettingsPage() {
             Voltar para o painel
           </Link>
           <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-[#111] sm:text-5xl">
-            Configuracoes do Site
+            Configurações do Site
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-600">
-            Edite dados gerais, Hero, WhatsApp, e-mail e catalogo sem mexer no codigo.
+            Edite dados gerais, Hero, WhatsApp, e-mail e catálogo sem mexer no código.
           </p>
         </header>
 
         {isLoading ? (
           <div className="rounded-[1.5rem] border border-white/75 bg-white/80 p-8 text-sm font-semibold uppercase tracking-[0.18em] text-neutral-500 shadow-[0_22px_70px_rgba(31,41,55,0.09)]">
-            Carregando configuracoes
+            Carregando configurações
           </div>
         ) : (
           <form className="grid gap-6" onSubmit={handleSubmit}>
@@ -232,7 +251,7 @@ export default function AdminSettingsPage() {
               <div className="mb-6">
                 <h2 className="text-xl font-semibold tracking-[-0.03em] text-[#111]">Dados gerais</h2>
                 <p className="mt-2 text-sm leading-6 text-neutral-500">
-                  Informacoes principais de contato e identificacao da empresa.
+                  Informações principais de contato e identificação da empresa.
                 </p>
               </div>
               <div className="grid gap-5 lg:grid-cols-2">
@@ -246,7 +265,7 @@ export default function AdminSettingsPage() {
               <div className="mb-6">
                 <h2 className="text-xl font-semibold tracking-[-0.03em] text-[#111]">Hero Principal</h2>
                 <p className="mt-2 text-sm leading-6 text-neutral-500">
-                  Controle textos, imagens, links e exibicao dos botoes principais da primeira dobra.
+                  Controle textos, imagens, links e exibição dos botões principais da primeira dobra.
                 </p>
               </div>
 
@@ -254,6 +273,15 @@ export default function AdminSettingsPage() {
                 {heroFields.map((field) => (
                   <SettingsTextField key={field.name} field={field} settings={settings} onChange={updateField} />
                 ))}
+              </div>
+
+              <div className="mt-7 border-t border-black/10 pt-6">
+                <h3 className="text-base font-semibold tracking-[-0.02em] text-[#111]">Versão chinesa</h3>
+                <div className="mt-5 grid gap-5 lg:grid-cols-2">
+                  {heroZhFields.map((field) => (
+                    <SettingsTextField key={field.name} field={field} settings={settings} onChange={updateField} />
+                  ))}
+                </div>
               </div>
 
               <div className="mt-6 grid gap-4 lg:grid-cols-2">
@@ -279,9 +307,9 @@ export default function AdminSettingsPage() {
 
             <section className="rounded-[1.5rem] border border-white/75 bg-white/80 p-5 shadow-[0_22px_70px_rgba(31,41,55,0.09),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl sm:p-7">
               <div className="mb-6">
-                <h2 className="text-xl font-semibold tracking-[-0.03em] text-[#111]">Catalogo</h2>
+                <h2 className="text-xl font-semibold tracking-[-0.03em] text-[#111]">Catálogo</h2>
                 <p className="mt-2 text-sm leading-6 text-neutral-500">
-                  Ajuste o convite e o arquivo usado na secao de catalogo do site publico.
+                  Ajuste o convite e o arquivo usado na seção de catálogo do site público.
                 </p>
               </div>
               <div className="grid gap-5 lg:grid-cols-2">
@@ -310,7 +338,7 @@ export default function AdminSettingsPage() {
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#111] px-7 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:-translate-y-0.5 hover:bg-[#d6b46a] hover:text-[#111] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Save size={17} />
-                {isSaving ? "Salvando..." : "Salvar alteracoes"}
+                {isSaving ? "Salvando..." : "Salvar alterações"}
               </button>
             </div>
           </form>

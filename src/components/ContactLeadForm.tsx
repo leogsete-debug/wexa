@@ -41,7 +41,7 @@ const text = {
     sending: "Enviando...",
     required: "Informe nome e email para enviar sua mensagem.",
     success: "Mensagem enviada com sucesso.",
-    error: "Nao foi possivel enviar agora. Tente novamente em instantes.",
+    error: "Não foi possível enviar agora. Tente novamente em instantes.",
   },
   zh: {
     name: "姓名",

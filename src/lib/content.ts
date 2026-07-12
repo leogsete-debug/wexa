@@ -12,34 +12,34 @@ export const fallbackCompanyContent: CompanyContent = {
   section_title: "Sobre a TopMax Export",
   section_subtitle: "Conectando fabricantes brasileiros ao mercado global",
   full_text:
-    "A TopMax Export conecta fabricantes brasileiros a compradores internacionais por meio de uma estrutura comercial de alto padrao, orientada por confianca, clareza e parcerias de longo prazo.\n\nDa selecao de fornecedores a apresentacao dos produtos, alinhamento de qualidade e suporte a exportacao, ajudamos importadores a acessar o potencial produtivo do Brasil com seguranca e profissionalismo.",
+    "A TopMax Export conecta fabricantes brasileiros a compradores internacionais por meio de uma estrutura comercial de alto padrão, orientada por confiança, clareza e parcerias de longo prazo.\n\nDa seleção de fornecedores à apresentação dos produtos, alinhamento de qualidade e suporte à exportação, ajudamos importadores a acessar o potencial produtivo do Brasil com segurança e profissionalismo.",
   mission: "Conectar fabricantes brasileiros a compradores internacionais com clareza e confianca.",
   vision: "Ser referencia em curadoria comercial para exportacao brasileira.",
   values: "Confianca, qualidade, transparencia e relacionamento de longo prazo.",
   differentials: "Fornecedor seguro para compradores internacionais",
-  stat_20: "20+|Anos de experiencia",
-  stat_35: "35+|Paises atendidos",
-  stat_500: "500+|Produtos no portfolio",
+  stat_20: "20+|Anos de experiência",
+  stat_35: "35+|Países atendidos",
+  stat_500: "500+|Produtos no portfólio",
   stat_100: "100%|Foco em qualidade",
   main_image_url: "/images/galeria-2.jpeg",
   secondary_image_url: "/images/galeria-2.jpeg",
 };
 
 export const fallbackMarkets: MarketContent[] = [
-  { id: "brasil", name: "Brasil", country: "Brasil", continent: "America do Sul", image_url: null, sort_order: 0, published: true, created_at: "", updated_at: "" },
-  { id: "latam", name: "America Latina", country: null, continent: "America Latina", image_url: null, sort_order: 1, published: true, created_at: "", updated_at: "" },
+  { id: "brasil", name: "Brasil", country: "Brasil", continent: "América do Sul", image_url: null, sort_order: 0, published: true, created_at: "", updated_at: "" },
+  { id: "latam", name: "América Latina", country: null, continent: "América Latina", image_url: null, sort_order: 1, published: true, created_at: "", updated_at: "" },
   { id: "europa", name: "Europa", country: null, continent: "Europa", image_url: null, sort_order: 2, published: true, created_at: "", updated_at: "" },
-  { id: "america-norte", name: "America do Norte", country: null, continent: "America do Norte", image_url: null, sort_order: 3, published: true, created_at: "", updated_at: "" },
-  { id: "asia", name: "Asia", country: null, continent: "Asia", image_url: null, sort_order: 4, published: true, created_at: "", updated_at: "" },
+  { id: "america-norte", name: "América do Norte", country: null, continent: "América do Norte", image_url: null, sort_order: 3, published: true, created_at: "", updated_at: "" },
+  { id: "asia", name: "Ásia", country: null, continent: "Ásia", image_url: null, sort_order: 4, published: true, created_at: "", updated_at: "" },
 ];
 
 export const fallbackProcessSteps: ProcessStepContent[] = [
-  { id: "solicitacao", title: "Solicitacao", description: "Recebemos a demanda, destino, volume e requisitos comerciais.", icon: "send", sort_order: 0, published: true, created_at: "", updated_at: "" },
-  { id: "cotacao", title: "Cotacao", description: "Estruturamos preco, prazos, condicoes e escopo de fornecimento.", icon: "clipboard", sort_order: 1, published: true, created_at: "", updated_at: "" },
-  { id: "producao", title: "Producao", description: "Coordenamos producao ou separacao com fornecedores qualificados.", icon: "factory", sort_order: 2, published: true, created_at: "", updated_at: "" },
-  { id: "qualidade", title: "Controle de qualidade", description: "Validamos padroes, documentacao e consistencia do pedido.", icon: "shield", sort_order: 3, published: true, created_at: "", updated_at: "" },
-  { id: "embarque", title: "Embarque", description: "Organizamos logistica, exportacao e acompanhamento operacional.", icon: "ship", sort_order: 4, published: true, created_at: "", updated_at: "" },
-  { id: "entrega", title: "Entrega", description: "Acompanhamos a chegada e o pos-venda com visao de longo prazo.", icon: "package", sort_order: 5, published: true, created_at: "", updated_at: "" },
+  { id: "solicitacao", title: "Solicitação", description: "Recebemos a demanda, destino, volume e requisitos comerciais.", icon: "send", sort_order: 0, published: true, created_at: "", updated_at: "" },
+  { id: "cotacao", title: "Cotação", description: "Estruturamos preço, prazos, condições e escopo de fornecimento.", icon: "clipboard", sort_order: 1, published: true, created_at: "", updated_at: "" },
+  { id: "producao", title: "Produção", description: "Coordenamos produção ou separação com fornecedores qualificados.", icon: "factory", sort_order: 2, published: true, created_at: "", updated_at: "" },
+  { id: "qualidade", title: "Controle de qualidade", description: "Validamos padrões, documentação e consistência do pedido.", icon: "shield", sort_order: 3, published: true, created_at: "", updated_at: "" },
+  { id: "embarque", title: "Embarque", description: "Organizamos logística, exportação e acompanhamento operacional.", icon: "ship", sort_order: 4, published: true, created_at: "", updated_at: "" },
+  { id: "entrega", title: "Entrega", description: "Acompanhamos a chegada e o pós-venda com visão de longo prazo.", icon: "package", sort_order: 5, published: true, created_at: "", updated_at: "" },
 ];
 
 export const fallbackContactContent: ContactContent = {
@@ -63,7 +63,7 @@ export const fallbackFooterContent: FooterContent = {
   whatsapp: "https://wa.me/5500000000000",
   email: "comercial@topmaxexport.com",
   institutional_text:
-    "Empresa internacional de exportacao conectando produtos brasileiros a compradores globais com padrao internacional.",
+    "Empresa internacional de exportação conectando produtos brasileiros a compradores globais com padrão internacional.",
 };
 
 function createPublicClient() {

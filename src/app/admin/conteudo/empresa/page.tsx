@@ -16,8 +16,8 @@ type Field = {
 
 const fields: Field[] = [
   { name: "company_name", label: "Nome da empresa" },
-  { name: "section_title", label: "Titulo da secao" },
-  { name: "section_subtitle", label: "Subtitulo", textarea: true },
+  { name: "section_title", label: "Título da seção" },
+  { name: "section_subtitle", label: "Subtítulo", textarea: true },
   { name: "full_text", label: "Texto completo", textarea: true },
   { name: "mission", label: "Missao", textarea: true },
   { name: "vision", label: "Visao", textarea: true },
@@ -92,14 +92,14 @@ export default function CompanyContentPage() {
     const { data, error: saveError } = await request;
 
     if (saveError || !data) {
-      setError("Nao foi possivel salvar o conteudo da empresa.");
+      setError("Não foi possível salvar o conteúdo da empresa.");
       setIsSaving(false);
       return;
     }
 
     setForm({ ...fallbackCompanyContent, ...data });
     setRecordId(data.id);
-    setMessage("Conteudo salvo com sucesso.");
+    setMessage("Conteúdo salvo com sucesso.");
     setIsSaving(false);
   }
 
@@ -111,16 +111,16 @@ export default function CompanyContentPage() {
             Voltar para o painel
           </Link>
           <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-[#111] sm:text-5xl">
-            Conteudo: Empresa
+            Conteúdo: Empresa
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-600">
-            Edite textos, estatisticas e imagens da secao institucional.
+            Edite textos, estatísticas e imagens da seção institucional.
           </p>
         </header>
 
         {isLoading ? (
           <div className="rounded-[1.5rem] border border-white/75 bg-white/80 p-8 text-sm font-semibold uppercase tracking-[0.18em] text-neutral-500 shadow-[0_22px_70px_rgba(31,41,55,0.09)]">
-            Carregando conteudo
+            Carregando conteúdo
           </div>
         ) : (
           <form className="grid gap-6" onSubmit={handleSubmit}>

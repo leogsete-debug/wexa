@@ -12,8 +12,11 @@ type PublicProduct = {
 
 type SupabaseProduct = {
   name: string | null;
+  name_zh?: string | null;
   category: string | null;
+  category_zh?: string | null;
   short_description: string | null;
+  short_description_zh?: string | null;
   main_image_url: string | null;
   featured: boolean | null;
 };
@@ -141,10 +144,13 @@ function mapSupabaseProduct(product: SupabaseProduct, locale: SiteLocale): Publi
   const labels = text[locale];
 
   return {
-    name: product.name,
-    category: product.category || labels.product,
+    name: locale === "zh" ? product.name_zh || product.name : product.name,
+    category: locale === "zh" ? product.category_zh || product.category || labels.product : product.category || labels.product,
     badge: product.featured ? labels.featured : labels.published,
-    description: product.short_description || labels.fallbackDescription,
+    description:
+      locale === "zh"
+        ? product.short_description_zh || product.short_description || labels.fallbackDescription
+        : product.short_description || labels.fallbackDescription,
     image: product.main_image_url || "/images/produto-1.jpeg",
   };
 }
@@ -174,7 +180,7 @@ async function getPublishedProducts(locale: SiteLocale): Promise<PublicProduct[]
   try {
     const { data, error } = await publicSupabase
       .from("products")
-      .select("name, category, short_description, main_image_url, featured")
+      .select("*")
       .eq("status", "published")
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });

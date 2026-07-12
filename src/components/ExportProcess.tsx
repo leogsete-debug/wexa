@@ -19,8 +19,8 @@ type ExportProcessProps = {
 
 const text = {
   pt: {
-    eyebrow: "Processo de exportacao",
-    title: "Da primeira conversa ao embarque com padrao internacional.",
+    eyebrow: "Processo de exportação",
+    title: "Da primeira conversa ao embarque com padrão internacional.",
   },
   zh: {
     eyebrow: "出口流程",

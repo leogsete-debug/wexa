@@ -49,7 +49,7 @@ export default function MediaLibraryPage() {
     const { data, error: loadError } = await query;
 
     if (loadError) {
-      setError("Nao foi possivel carregar a biblioteca.");
+      setError("Não foi possível carregar a biblioteca.");
       setItems([]);
     } else {
       setItems((data ?? []) as MediaItem[]);
@@ -80,7 +80,7 @@ export default function MediaLibraryPage() {
     const { error: deleteError } = await supabase.from("media_library").delete().eq("id", item.id);
 
     if (deleteError) {
-      setError("Nao foi possivel excluir o arquivo.");
+      setError("Não foi possível excluir o arquivo.");
       return;
     }
 
@@ -108,7 +108,7 @@ export default function MediaLibraryPage() {
     });
 
     if (uploadError) {
-      setError("Nao foi possivel enviar o arquivo.");
+      setError("Não foi possível enviar o arquivo.");
       setIsUploading(false);
       return;
     }
@@ -131,7 +131,7 @@ export default function MediaLibraryPage() {
     const { error: insertError } = await supabase.from("media_library").insert(payload);
 
     if (insertError) {
-      setError("Arquivo enviado, mas nao foi possivel registrar na biblioteca.");
+      setError("Arquivo enviado, mas não foi possível registrar na biblioteca.");
       setIsUploading(false);
       return;
     }
@@ -150,7 +150,7 @@ export default function MediaLibraryPage() {
               Biblioteca
             </p>
             <h1 className="text-3xl font-semibold tracking-[-0.04em] text-[#111] sm:text-5xl">
-              Biblioteca de Midia
+              Biblioteca de Mídia
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-600">
               Centralize imagens, videos, PDFs e logos reutilizaveis em todo o CMS.
@@ -227,7 +227,7 @@ export default function MediaLibraryPage() {
                     className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-neutral-100 text-neutral-400"
                   >
                     {item.file_url && isPreviewableImage(item.mime_type) ? (
-                      <Image src={item.file_url} alt={item.alt_text || item.name || "Midia"} fill sizes="5rem" className="object-cover" />
+                      <Image src={item.file_url} alt={item.alt_text || item.name || "Mídia"} fill sizes="5rem" className="object-cover" />
                     ) : (
                       <FileText size={24} />
                     )}
@@ -276,7 +276,7 @@ export default function MediaLibraryPage() {
             <div className="p-5">
               <div className="relative flex min-h-[18rem] items-center justify-center overflow-hidden rounded-2xl bg-neutral-100">
                 {selected.file_url && isPreviewableImage(selected.mime_type) ? (
-                  <Image src={selected.file_url} alt={selected.alt_text || selected.name || "Midia"} width={1200} height={800} className="max-h-[58vh] w-auto object-contain" />
+                  <Image src={selected.file_url} alt={selected.alt_text || selected.name || "Mídia"} width={1200} height={800} className="max-h-[58vh] w-auto object-contain" />
                 ) : (
                   <FileText size={56} className="text-neutral-400" />
                 )}

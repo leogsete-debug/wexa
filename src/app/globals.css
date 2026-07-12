@@ -53,6 +53,15 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(214, 180, 106, 0.85);
+  outline-offset: 3px;
+}
+
 p,
 h1,
 h2,

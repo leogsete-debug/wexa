@@ -47,7 +47,7 @@ export default function MarketsContentPage() {
       .order("created_at", { ascending: false });
 
     if (loadError) {
-      setError("Nao foi possivel carregar os mercados.");
+      setError("Não foi possível carregar os mercados.");
     } else {
       setMarkets((data ?? []) as MarketContent[]);
     }
@@ -85,7 +85,7 @@ export default function MarketsContentPage() {
     setMessage("");
 
     if (!form.name.trim()) {
-      setError("O nome do mercado e obrigatorio.");
+      setError("O nome do mercado é obrigatório.");
       return;
     }
 
@@ -105,7 +105,7 @@ export default function MarketsContentPage() {
       : await supabase.from("markets").insert(payload);
 
     if (saveError) {
-      setError("Nao foi possivel salvar o mercado.");
+      setError("Não foi possível salvar o mercado.");
       setIsSaving(false);
       return;
     }
@@ -121,7 +121,7 @@ export default function MarketsContentPage() {
 
     const { error: deleteError } = await supabase.from("markets").delete().eq("id", market.id);
     if (deleteError) {
-      setError("Nao foi possivel excluir o mercado.");
+      setError("Não foi possível excluir o mercado.");
       return;
     }
 
@@ -135,7 +135,7 @@ export default function MarketsContentPage() {
       .eq("id", market.id);
 
     if (updateError) {
-      setError("Nao foi possivel alterar a publicacao.");
+      setError("Não foi possível alterar a publicação.");
       return;
     }
 
@@ -152,7 +152,7 @@ export default function MarketsContentPage() {
             Voltar para o painel
           </Link>
           <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-[#111] sm:text-5xl">
-            Conteudo: Mercados
+            Conteúdo: Mercados
           </h1>
         </header>
 
@@ -161,7 +161,7 @@ export default function MarketsContentPage() {
             <h2 className="text-xl font-semibold tracking-[-0.03em]">{form.id ? "Editar mercado" : "Adicionar mercado"}</h2>
             {[
               ["name", "Nome"],
-              ["country", "Pais"],
+              ["country", "País"],
               ["continent", "Continente"],
               ["image_url", "Imagem"],
               ["sort_order", "Ordem"],
@@ -207,7 +207,7 @@ export default function MarketsContentPage() {
                   <article key={market.id} className="grid gap-4 px-5 py-5 lg:grid-cols-[1fr_8rem_12rem] lg:items-center">
                     <div>
                       <h2 className="text-lg font-semibold tracking-[-0.03em]">{market.name}</h2>
-                      <p className="mt-1 text-sm text-neutral-500">{[market.country, market.continent].filter(Boolean).join(" | ") || "Sem regiao"}</p>
+                      <p className="mt-1 text-sm text-neutral-500">{[market.country, market.continent].filter(Boolean).join(" | ") || "Sem região"}</p>
                       <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-400">Ordem {market.sort_order}</p>
                     </div>
                     <span className={market.published ? "w-fit rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-emerald-700" : "w-fit rounded-full border border-neutral-500/20 bg-neutral-500/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-neutral-600"}>
@@ -215,8 +215,8 @@ export default function MarketsContentPage() {
                     </span>
                     <div className="flex flex-wrap gap-2">
                       <button type="button" onClick={() => editMarket(market)} className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-black/10 bg-white px-4 text-xs font-bold uppercase tracking-[0.12em] transition hover:bg-[#111] hover:text-white"><Edit3 size={15} />Editar</button>
-                      <button type="button" onClick={() => togglePublished(market)} className="inline-flex h-10 items-center justify-center rounded-full border border-black/10 bg-white px-3 transition hover:bg-[#d6b46a]">{market.published ? <EyeOff size={15} /> : <Eye size={15} />}</button>
-                      <button type="button" onClick={() => handleDelete(market)} className="inline-flex h-10 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10 px-3 text-red-700 transition hover:bg-red-600 hover:text-white"><Trash2 size={15} /></button>
+                      <button type="button" onClick={() => togglePublished(market)} aria-label={market.published ? "Ocultar mercado" : "Publicar mercado"} className="inline-flex h-10 items-center justify-center rounded-full border border-black/10 bg-white px-3 transition hover:bg-[#d6b46a]">{market.published ? <EyeOff size={15} /> : <Eye size={15} />}</button>
+                      <button type="button" onClick={() => handleDelete(market)} aria-label="Excluir mercado" className="inline-flex h-10 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10 px-3 text-red-700 transition hover:bg-red-600 hover:text-white"><Trash2 size={15} /></button>
                     </div>
                   </article>
                 ))}

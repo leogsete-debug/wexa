@@ -51,7 +51,7 @@ export default function CrmLeadsPage() {
     const { data, error: loadError } = await query;
 
     if (loadError) {
-      setError("Nao foi possivel carregar os leads.");
+      setError("Não foi possível carregar os leads.");
       setLeads([]);
     } else {
       setLeads((data ?? []) as Lead[]);
@@ -71,7 +71,7 @@ export default function CrmLeadsPage() {
   const metrics = useMemo(
     () => [
       { title: "Novos Leads", value: getLeadMetric(leads, "Novo"), icon: UserPlus },
-      { title: "Em negociacao", value: getLeadMetric(leads, "Negociacao"), icon: Users },
+      { title: "Em negociação", value: getLeadMetric(leads, "Negociacao"), icon: Users },
       { title: "Clientes", value: getLeadMetric(leads, "Cliente"), icon: UserCheck },
       { title: "Perdidos", value: getLeadMetric(leads, "Perdido"), icon: XCircle },
     ],
@@ -100,7 +100,7 @@ export default function CrmLeadsPage() {
       .single<Lead>();
 
     if (updateError || !data) {
-      setError("Nao foi possivel atualizar o lead.");
+      setError("Não foi possível atualizar o lead.");
       return;
     }
 
@@ -127,7 +127,7 @@ export default function CrmLeadsPage() {
             Leads
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-600">
-            Acompanhe contatos recebidos pelo site, funil comercial, responsaveis e historico.
+            Acompanhe contatos recebidos pelo site, funil comercial, responsáveis e histórico.
           </p>
         </header>
 
@@ -172,7 +172,7 @@ export default function CrmLeadsPage() {
               value={country}
               onChange={(event) => setCountry(event.target.value)}
               className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none"
-              placeholder="Pais"
+              placeholder="País"
             />
 
             <input
@@ -202,7 +202,7 @@ export default function CrmLeadsPage() {
           <div className="hidden grid-cols-[1fr_10rem_10rem_9rem_8rem] gap-4 border-b border-black/10 px-5 py-4 text-xs font-bold uppercase tracking-[0.16em] text-neutral-500 lg:grid">
             <span>Lead</span>
             <span>Status</span>
-            <span>Pais</span>
+            <span>País</span>
             <span>Produto</span>
             <span>Data</span>
           </div>
@@ -267,7 +267,7 @@ export default function CrmLeadsPage() {
                 ["Telefone", selectedLead.phone],
                 ["Email", selectedLead.email],
                 ["Produto", selectedLead.product_interest],
-                ["Pais", selectedLead.country],
+                ["País", selectedLead.country],
                 ["Cidade", selectedLead.city],
                 ["Origem", selectedLead.source],
               ].map(([label, value]) => (
@@ -297,7 +297,7 @@ export default function CrmLeadsPage() {
               </label>
 
               <label className="grid gap-2 text-sm font-semibold text-neutral-700">
-                Responsavel
+                Responsável
                 <input
                   value={assignedTo}
                   onChange={(event) => setAssignedTo(event.target.value)}
@@ -308,27 +308,27 @@ export default function CrmLeadsPage() {
             </div>
 
             <div className="grid gap-4 rounded-[1.25rem] border border-white/75 bg-white/80 p-5 shadow-[0_16px_50px_rgba(31,41,55,0.08)]">
-              <h3 className="text-lg font-semibold tracking-[-0.03em] text-[#111]">Observacoes</h3>
+              <h3 className="text-lg font-semibold tracking-[-0.03em] text-[#111]">Observações</h3>
               <textarea
                 value={noteDraft}
                 onChange={(event) => setNoteDraft(event.target.value)}
                 className="min-h-28 rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm leading-6 outline-none"
-                placeholder="Adicionar observacao"
+                placeholder="Adicionar observação"
               />
               <button
                 type="button"
                 onClick={addNote}
                 className="h-11 rounded-full bg-[#111] px-5 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-[#d6b46a] hover:text-[#111]"
               >
-                Adicionar observacao
+                Adicionar observação
               </button>
               <pre className="max-h-56 whitespace-pre-wrap rounded-2xl bg-neutral-100 p-4 text-sm leading-6 text-neutral-600">
-                {selectedLead.notes || "Sem observacoes."}
+                {selectedLead.notes || "Sem observações."}
               </pre>
             </div>
 
             <div className="rounded-[1.25rem] border border-white/75 bg-white/80 p-5 shadow-[0_16px_50px_rgba(31,41,55,0.08)]">
-              <h3 className="text-lg font-semibold tracking-[-0.03em] text-[#111]">Historico</h3>
+              <h3 className="text-lg font-semibold tracking-[-0.03em] text-[#111]">Histórico</h3>
               <div className="mt-3 grid gap-2 text-sm leading-6 text-neutral-600">
                 <p>Criado em {selectedLead.created_at ? new Date(selectedLead.created_at).toLocaleString("pt-BR") : "-"}</p>
                 <p>Atualizado em {selectedLead.updated_at ? new Date(selectedLead.updated_at).toLocaleString("pt-BR") : "-"}</p>

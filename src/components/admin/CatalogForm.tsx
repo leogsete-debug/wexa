@@ -64,7 +64,7 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
         .single<Catalog>();
 
       if (loadError || !data) {
-        setError("Nao foi possivel carregar este catalogo.");
+        setError("Não foi possível carregar este catálogo.");
         setIsLoading(false);
         return;
       }
@@ -105,7 +105,7 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
     });
 
     if (uploadError) {
-      throw new Error("Nao foi possivel enviar o arquivo.");
+      throw new Error("Não foi possível enviar o arquivo.");
     }
 
     const {
@@ -136,7 +136,7 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
     setError("");
 
     if (!form.title.trim()) {
-      setError("O titulo do catalogo e obrigatorio.");
+      setError("O título do catálogo é obrigatório.");
       return;
     }
 
@@ -167,13 +167,13 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
       router.replace(`/admin/catalogos?success=${mode === "edit" ? "updated" : "created"}`);
       router.refresh();
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Nao foi possivel salvar o catalogo.");
+      setError(saveError instanceof Error ? saveError.message : "Não foi possível salvar o catálogo.");
       setIsSaving(false);
     }
   }
 
   async function handleDelete() {
-    if (!catalogId || !window.confirm("Tem certeza que deseja excluir este catalogo?")) {
+    if (!catalogId || !window.confirm("Tem certeza que deseja excluir este catálogo?")) {
       return;
     }
 
@@ -181,7 +181,7 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
     const { error: deleteError } = await supabase.from("catalogs").delete().eq("id", catalogId);
 
     if (deleteError) {
-      setError("Nao foi possivel excluir o catalogo.");
+      setError("Não foi possível excluir o catálogo.");
       setIsDeleting(false);
       return;
     }
@@ -193,7 +193,7 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
   if (isLoading) {
     return (
       <div className="rounded-[1.5rem] border border-white/75 bg-white/80 p-8 text-sm font-semibold uppercase tracking-[0.18em] text-neutral-500 shadow-[0_22px_70px_rgba(31,41,55,0.09)]">
-        Carregando catalogo
+        Carregando catálogo
       </div>
     );
   }
@@ -203,12 +203,12 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
       <section className="rounded-[1.5rem] border border-white/75 bg-white/80 p-5 shadow-[0_22px_70px_rgba(31,41,55,0.09),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl sm:p-7">
         <div className="grid gap-5 lg:grid-cols-2">
           <label className="grid gap-2 text-sm font-semibold text-neutral-700">
-            Titulo *
+            Título *
             <input
               value={form.title}
               onChange={(event) => updateField("title", event.target.value)}
               className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[#d6b46a]"
-              placeholder="Catalogo comercial TopMax"
+              placeholder="Catálogo comercial TopMax"
               required
             />
           </label>
@@ -239,12 +239,12 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
           </label>
 
           <label className="grid gap-2 text-sm font-semibold text-neutral-700 lg:col-span-2">
-            Descricao
+            Descrição
             <textarea
               value={form.description}
               onChange={(event) => updateField("description", event.target.value)}
               className="min-h-32 rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-[#d6b46a]"
-              placeholder="Resumo do catalogo para uso interno"
+              placeholder="Resumo do catálogo para uso interno"
             />
           </label>
         </div>
@@ -260,7 +260,7 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
               <input type="file" accept="application/pdf" className="sr-only" onChange={handlePdfChange} />
             </span>
             {form.pdf_url ? (
-              <a href={form.pdf_url} target="_blank" className="text-xs font-semibold text-[#9b7a3e] underline">
+              <a href={form.pdf_url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-[#9b7a3e] underline">
                 Ver PDF atual
               </a>
             ) : null}
@@ -295,7 +295,7 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
           <div className="relative mt-5 aspect-[16/9] max-w-md overflow-hidden rounded-2xl bg-neutral-200">
             <Image
               src={form.cover_image_url}
-              alt={form.title || "Capa do catalogo"}
+              alt={form.title || "Capa do catálogo"}
               fill
               sizes="28rem"
               className="object-cover"
@@ -319,7 +319,7 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
             className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-6 text-xs font-bold uppercase tracking-[0.16em] text-red-700 transition hover:bg-red-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Trash2 size={17} />
-            {isDeleting ? "Excluindo..." : "Excluir catalogo"}
+            {isDeleting ? "Excluindo..." : "Excluir catálogo"}
           </button>
         ) : (
           <span />

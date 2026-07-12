@@ -14,7 +14,7 @@ const fields: Array<{ name: keyof ContactContent; label: string; textarea?: bool
   { name: "address", label: "Endereco", textarea: true },
   { name: "city", label: "Cidade" },
   { name: "state", label: "Estado" },
-  { name: "country", label: "Pais" },
+  { name: "country", label: "País" },
   { name: "google_maps", label: "Google Maps", textarea: true },
   { name: "business_hours", label: "Horario", textarea: true },
 ];
@@ -75,7 +75,7 @@ export default function ContactContentPage() {
     const { data, error: saveError } = await request;
 
     if (saveError || !data) {
-      setError("Nao foi possivel salvar o contato.");
+      setError("Não foi possível salvar o contato.");
       setIsSaving(false);
       return;
     }
@@ -94,7 +94,7 @@ export default function ContactContentPage() {
             Voltar para o painel
           </Link>
           <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-[#111] sm:text-5xl">
-            Conteudo: Contato
+            Conteúdo: Contato
           </h1>
         </header>
 

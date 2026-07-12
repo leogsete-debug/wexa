@@ -1,6 +1,7 @@
 "use client";
 
 import { Menu, Settings, X } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import type { SiteLocale } from "@/components/HomePage";
 import type { SiteSettings } from "@/types/site-settings";
@@ -50,13 +51,13 @@ function LanguageSelector({ locale }: { locale: SiteLocale }) {
 
   return (
     <div className="inline-flex shrink-0 items-center rounded-full border border-white/15 bg-white/10 px-1.5 py-1 text-[0.56rem] font-bold uppercase tracking-[0.08em] shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] sm:text-[0.66rem] sm:tracking-[0.14em]">
-      <a className={linkClass("pt")} href="/">
+      <Link className={linkClass("pt")} href="/">
         PT
-      </a>
+      </Link>
       <span className="text-white/24">|</span>
-      <a className={linkClass("zh")} href="/zh">
+      <Link className={linkClass("zh")} href="/zh">
         中文
-      </a>
+      </Link>
     </div>
   );
 }

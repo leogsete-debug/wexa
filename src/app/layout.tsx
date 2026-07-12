@@ -4,7 +4,14 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "TopMax Export | Exportação brasileira de alto padrão",
   description:
-    "Vitrine internacional de exportação conectando produtos brasileiros a compradores globais.",
+    "Vitrine internacional de exportação conectando produtos brasileiros a compradores globais com apresentação comercial premium.",
+  alternates: {
+    canonical: "/",
+    languages: {
+      "pt-BR": "/",
+      "zh-CN": "/zh",
+    },
+  },
 };
 
 export default function RootLayout({

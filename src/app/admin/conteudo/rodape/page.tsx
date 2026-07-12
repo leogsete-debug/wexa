@@ -73,7 +73,7 @@ export default function FooterContentPage() {
     const { data, error: saveError } = await request;
 
     if (saveError || !data) {
-      setError("Nao foi possivel salvar o rodape.");
+      setError("Não foi possível salvar o rodapé.");
       setIsSaving(false);
       return;
     }
@@ -92,12 +92,12 @@ export default function FooterContentPage() {
             Voltar para o painel
           </Link>
           <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-[#111] sm:text-5xl">
-            Conteudo: Rodape
+            Conteúdo: Rodapé
           </h1>
         </header>
 
         {isLoading ? (
-          <div className="rounded-[1.5rem] border border-white/75 bg-white/80 p-8 text-sm font-semibold uppercase tracking-[0.18em] text-neutral-500 shadow-[0_22px_70px_rgba(31,41,55,0.09)]">Carregando rodape</div>
+          <div className="rounded-[1.5rem] border border-white/75 bg-white/80 p-8 text-sm font-semibold uppercase tracking-[0.18em] text-neutral-500 shadow-[0_22px_70px_rgba(31,41,55,0.09)]">Carregando rodapé</div>
         ) : (
           <form className="grid gap-6" onSubmit={handleSubmit}>
             <section className="rounded-[1.5rem] border border-white/75 bg-white/80 p-5 shadow-[0_22px_70px_rgba(31,41,55,0.09),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl sm:p-7">

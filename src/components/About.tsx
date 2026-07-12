@@ -92,7 +92,7 @@ export default function About({ content, locale = "pt" }: AboutProps) {
             <div className="relative h-[19rem] overflow-hidden rounded-[1rem] bg-neutral-200 min-[380px]:h-[20.5rem] sm:h-auto sm:aspect-[5/4] sm:rounded-[1.75rem] lg:aspect-[4/5]">
               <Image
                 src={translatedContent.main_image_url}
-                alt={isZh ? `${translatedContent.company_name} 国际业务` : `Operacoes internacionais da ${translatedContent.company_name}`}
+                alt={isZh ? `${translatedContent.company_name} 国际业务` : `Operações internacionais da ${translatedContent.company_name}`}
                 fill
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="object-cover transition duration-700 group-hover:scale-105"

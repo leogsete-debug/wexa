@@ -1,33 +1,57 @@
-"use client";
-
 import { Globe2, Link, Mail, MessageCircle, Send } from "lucide-react";
-import { usePathname } from "next/navigation";
+import type { SiteLocale } from "@/components/HomePage";
 import type { FooterContent } from "@/types/content";
 
 type FooterProps = {
   content: FooterContent;
+  locale?: SiteLocale;
 };
 
-export default function Footer({ content }: FooterProps) {
-  const pathname = usePathname();
-  const isChinesePage = pathname?.startsWith("/zh");
+const companyLinks = {
+  pt: [
+    { label: "Empresa", href: "#empresa" },
+    { label: "Produtos", href: "#produtos" },
+    { label: "Catálogo", href: "#catalogo" },
+    { label: "Galeria", href: "#galeria" },
+    { label: "Contato", href: "#contato" },
+  ],
+  zh: [
+    { label: "公司", href: "#empresa" },
+    { label: "产品", href: "#produtos" },
+    { label: "产品目录", href: "#catalogo" },
+    { label: "图片库", href: "#galeria" },
+    { label: "联系我们", href: "#contato" },
+  ],
+};
 
-  const companyLinks = isChinesePage
-    ? [
-        { label: "公司", href: "#empresa" },
-        { label: "产品", href: "#produtos" },
-        { label: "产品目录", href: "#catalogo" },
-        { label: "图片库", href: "#galeria" },
-        { label: "联系我们", href: "#contato" },
-      ]
-    : [
-        { label: "Empresa", href: "#empresa" },
-        { label: "Produtos", href: "#produtos" },
-        { label: "Catálogo", href: "#catalogo" },
-        { label: "Galeria", href: "#galeria" },
-        { label: "Contato", href: "#contato" },
-      ];
+const text = {
+  pt: {
+    institutionalFallback:
+      "Empresa internacional de exportacao conectando produtos brasileiros a compradores globais com padrao internacional.",
+    company: "Empresa",
+    contact: "Contato",
+    export: "Exportação",
+    whatsapp: "WhatsApp comercial",
+    market: "Brasil | Mercados internacionais",
+    exportText:
+      "Curadoria de produtos, apresentação comercial e suporte para negociações internacionais.",
+    rights: "Todos os direitos reservados",
+  },
+  zh: {
+    institutionalFallback:
+      "TopMax Export 为国际买家提供专业产品展示、商务支持和长期出口合作。",
+    company: "公司",
+    contact: "联系我们",
+    export: "出口业务",
+    whatsapp: "商务 WhatsApp",
+    market: "巴西 | 国际市场",
+    exportText: "提供产品展示、商务支持和国际贸易合作。",
+    rights: "版权所有",
+  },
+};
 
+export default function Footer({ content, locale = "pt" }: FooterProps) {
+  const labels = text[locale];
   const socialLinks = [
     { label: "Instagram", href: content.instagram, icon: Send },
     { label: "LinkedIn", href: content.linkedin, icon: Link },
@@ -46,9 +70,7 @@ export default function Footer({ content }: FooterProps) {
           </strong>
 
           <p className="mt-5 max-w-md text-sm leading-7 text-white/58 sm:mt-6">
-            {isChinesePage
-              ? "TopMax Export 为国际买家提供专业产品展示、商业支持和长期出口合作。"
-              : content.institutional_text}
+            {locale === "zh" ? labels.institutionalFallback : content.institutional_text || labels.institutionalFallback}
           </p>
 
           <div className="mt-6 flex gap-3 sm:mt-7">
@@ -67,14 +89,14 @@ export default function Footer({ content }: FooterProps) {
 
         <nav>
           <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#d6b46a] sm:tracking-[0.24em]">
-            {isChinesePage ? "公司" : "Empresa"}
+            {labels.company}
           </h3>
 
           <div className="mt-5 grid gap-3 text-sm text-white/62">
-            {companyLinks.map((link) => (
+            {companyLinks[locale].map((link) => (
               <a
                 key={link.href}
-                href={isChinesePage ? `/zh${link.href}` : link.href}
+                href={locale === "zh" ? `/zh${link.href}` : link.href}
                 className="transition duration-300 hover:text-[#d6b46a]"
               >
                 {link.label}
@@ -85,7 +107,7 @@ export default function Footer({ content }: FooterProps) {
 
         <div>
           <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#d6b46a] sm:tracking-[0.24em]">
-            {isChinesePage ? "联系我们" : "Contato"}
+            {labels.contact}
           </h3>
 
           <div className="mt-5 grid gap-4 text-sm text-white/62">
@@ -94,7 +116,7 @@ export default function Footer({ content }: FooterProps) {
               className="inline-flex items-center gap-3 transition duration-300 hover:text-[#25d366]"
             >
               <MessageCircle size={17} />
-              {isChinesePage ? "商务 WhatsApp" : "WhatsApp comercial"}
+              {labels.whatsapp}
             </a>
 
             <a
@@ -105,28 +127,22 @@ export default function Footer({ content }: FooterProps) {
               {content.email}
             </a>
 
-            <span>
-              {isChinesePage ? "巴西 | 国际市场" : "Brasil | Mercados internacionais"}
-            </span>
+            <span>{labels.market}</span>
           </div>
         </div>
 
         <div>
           <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#d6b46a] sm:tracking-[0.24em]">
-            {isChinesePage ? "出口业务" : "Exportação"}
+            {labels.export}
           </h3>
 
-          <p className="mt-5 text-sm leading-7 text-white/58">
-            {isChinesePage
-              ? "提供产品展示、商业支持和国际贸易合作。"
-              : "Curadoria de produtos, apresentação comercial e suporte para negociações internacionais."}
-          </p>
+          <p className="mt-5 text-sm leading-7 text-white/58">{labels.exportText}</p>
         </div>
       </div>
 
       <div className="relative mx-auto mt-7 flex max-w-7xl flex-col gap-3 text-[0.68rem] uppercase leading-5 tracking-[0.12em] text-white/38 sm:flex-row sm:items-center sm:justify-between sm:text-xs sm:tracking-[0.18em]">
         <span>{content.copyright}</span>
-        <span>{isChinesePage ? "版权所有" : "Todos os direitos reservados"}</span>
+        <span>{labels.rights}</span>
       </div>
     </footer>
   );

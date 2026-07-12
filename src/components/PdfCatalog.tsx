@@ -1,13 +1,29 @@
 import { Download, MessageCircle } from "lucide-react";
+import type { SiteLocale } from "@/components/HomePage";
 import type { SiteSettings } from "@/types/site-settings";
 
 type PdfCatalogProps = {
   settings: SiteSettings;
   catalogPdfUrl?: string | null;
+  locale?: SiteLocale;
 };
 
-export default function PdfCatalog({ settings, catalogPdfUrl }: PdfCatalogProps) {
+const text = {
+  pt: {
+    eyebrow: "Catálogo",
+    download: "Baixar Catálogo PDF",
+    whatsapp: "Solicitar pelo WhatsApp",
+  },
+  zh: {
+    eyebrow: "产品目录",
+    download: "下载目录",
+    whatsapp: "申请产品报价",
+  },
+};
+
+export default function PdfCatalog({ settings, catalogPdfUrl, locale = "pt" }: PdfCatalogProps) {
   const pdfUrl = catalogPdfUrl || settings.catalog_pdf_url;
+  const labels = text[locale];
 
   return (
     <section id="catalogo" className="relative px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
@@ -18,7 +34,7 @@ export default function PdfCatalog({ settings, catalogPdfUrl }: PdfCatalogProps)
           <div className="relative grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10">
             <div className="max-w-3xl">
               <p className="mb-5 inline-flex max-w-full rounded-full border border-[#d6b46a]/25 bg-[#d6b46a]/10 px-3 py-2 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-[#9b7a3e] sm:px-4 sm:text-[0.72rem] sm:tracking-[0.28em]">
-                Catálogo
+                {labels.eyebrow}
               </p>
               <h2 className="text-balance text-[2rem] font-semibold leading-[1.06] tracking-[-0.03em] text-[#111] sm:text-4xl md:text-6xl md:leading-[1.02] md:tracking-[-0.04em]">
                 {settings.catalog_title}
@@ -34,14 +50,14 @@ export default function PdfCatalog({ settings, catalogPdfUrl }: PdfCatalogProps)
                 className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full bg-[#111] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white transition duration-300 hover:-translate-y-1 hover:bg-[#d6b46a] hover:text-[#111] hover:shadow-[0_24px_60px_rgba(214,180,106,0.32)] sm:px-7 sm:text-xs sm:tracking-[0.18em]"
               >
                 <Download size={18} />
-                Baixar Catálogo PDF
+                {labels.download}
               </a>
               <a
                 href={settings.whatsapp_url}
                 className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full border border-[#25d366]/25 bg-[#25d366] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white shadow-[0_18px_45px_rgba(37,211,102,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-[#1ebe5d] hover:shadow-[0_24px_60px_rgba(37,211,102,0.34)] sm:px-7 sm:text-xs sm:tracking-[0.18em]"
               >
                 <MessageCircle size={18} />
-                Solicitar pelo WhatsApp
+                {labels.whatsapp}
               </a>
             </div>
           </div>

@@ -1,12 +1,18 @@
 import Image from "next/image";
+import type { SiteLocale } from "@/components/HomePage";
 import type { SiteSettings } from "@/types/site-settings";
 
 type HeroProps = {
   settings: SiteSettings;
+  locale?: SiteLocale;
 };
 
-export default function Hero({ settings }: HeroProps) {
+export default function Hero({ settings, locale = "pt" }: HeroProps) {
   const mobileHeroImage = settings.hero_mobile_image_url || settings.hero_image_url;
+  const stats =
+    locale === "zh"
+      ? ["20+ 行业经验", "35+ 合作国家", "500+ 产品选择", "100% 质量承诺"]
+      : ["20+ Anos", "35+ Países", "500+ Produtos", "100% Qualidade"];
 
   return (
     <section className="relative flex min-h-[100svh] items-center overflow-hidden">
@@ -68,7 +74,7 @@ export default function Hero({ settings }: HeroProps) {
           ) : null}
 
           <div className="mt-6 grid grid-cols-2 gap-2 rounded-[1.25rem] border border-white/18 bg-white/[0.105] p-2 shadow-[0_30px_100px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-2xl sm:mt-12 sm:gap-4 sm:rounded-[2rem] sm:p-4 md:grid-cols-4">
-            {["20+ Anos", "35+ Países", "500+ Produtos", "100% Qualidade"].map((item) => (
+            {stats.map((item) => (
               <div
                 key={item}
                 className="rounded-xl border border-white/10 bg-white/[0.08] p-3 transition duration-300 hover:-translate-y-1 hover:bg-white/[0.14] sm:rounded-3xl sm:p-6"

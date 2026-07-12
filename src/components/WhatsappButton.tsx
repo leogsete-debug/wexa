@@ -1,14 +1,20 @@
 import type { SiteSettings } from "@/types/site-settings";
+import type { SiteLocale } from "@/components/HomePage";
 
 type WhatsappButtonProps = {
   settings: SiteSettings;
+  locale?: SiteLocale;
 };
 
-export default function WhatsappButton({ settings }: WhatsappButtonProps) {
+export default function WhatsappButton({ settings, locale = "pt" }: WhatsappButtonProps) {
+  const label =
+    locale === "zh" ? "通过 WhatsApp 联系我们" : "Falar com a TopMax Export pelo WhatsApp";
+
   return (
     <a
       href={settings.whatsapp_url}
-      aria-label="Falar com a TopMax Export pelo WhatsApp"
+      aria-label={label}
+      title={label}
       className="fixed bottom-5 right-5 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-[#25d366] text-white shadow-[0_20px_55px_rgba(37,211,102,0.42)] transition duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-[#1ebe5d] hover:shadow-[0_24px_70px_rgba(37,211,102,0.52)] motion-safe:animate-[whatsappPulse_2.8s_ease-in-out_infinite] sm:bottom-7 sm:right-7"
     >
       <svg

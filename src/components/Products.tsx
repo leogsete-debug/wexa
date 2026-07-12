@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
+import type { SiteLocale } from "@/components/HomePage";
 
 type PublicProduct = {
   name: string;
@@ -62,21 +63,93 @@ const fallbackProducts: PublicProduct[] = [
   },
 ];
 
-function mapSupabaseProduct(product: SupabaseProduct): PublicProduct | null {
+const fallbackProductsZh: PublicProduct[] = [
+  {
+    name: "精品巴西绿咖啡",
+    category: "农业商务",
+    badge: "出口精选",
+    description: "为国际买家、烘焙商和企业分销商精选的优质咖啡豆。",
+    image: "/images/produto-1.jpeg",
+  },
+  {
+    name: "巴西特色食品",
+    category: "食品出口",
+    badge: "高需求",
+    description: "面向严苛市场、具备商业展示能力的巴西产品。",
+    image: "/images/produto-2.jpeg",
+  },
+  {
+    name: "天然原料",
+    category: "大宗商品",
+    badge: "可追溯",
+    description: "注重一致性、可追溯性和商业规模的天然原料。",
+    image: "/images/produto-3.jpeg",
+  },
+  {
+    name: "工业供应品",
+    category: "企业解决方案",
+    badge: "稳定供应",
+    description: "为寻求巴西可靠供应商的进口商提供解决方案。",
+    image: "/images/produto-4.jpeg",
+  },
+  {
+    name: "自有品牌产品",
+    category: "零售就绪",
+    badge: "自有品牌",
+    description: "适合自有品牌、批发和分销网络的产品。",
+    image: "/images/galeria-1.jpeg",
+  },
+  {
+    name: "出口产品精选",
+    category: "精选组合",
+    badge: "按需供应",
+    description: "面向商务运营、展会和国际谈判的按需产品组合。",
+    image: "/images/galeria-2.jpeg",
+  },
+];
+
+const text = {
+  pt: {
+    eyebrow: "Catálogo de alto padrão",
+    title: "Produtos preparados para negociações internacionais.",
+    description:
+      "Uma seleção comercial para compradores, distribuidores e importadores que exigem qualidade, apresentação e segurança no fornecimento.",
+    button: "Solicitar cotação",
+    product: "Produto",
+    featured: "Destaque",
+    published: "Publicado",
+    fallbackDescription: "Produto disponível para negociações internacionais.",
+  },
+  zh: {
+    eyebrow: "高端产品目录",
+    title: "为国际商务洽谈准备的产品",
+    description:
+      "面向采购商、分销商和进口商的商业精选，注重质量、展示效果和供应安全。",
+    button: "申请报价",
+    product: "产品",
+    featured: "重点推荐",
+    published: "已发布",
+    fallbackDescription: "该产品可用于国际商务洽谈和出口合作。",
+  },
+};
+
+function mapSupabaseProduct(product: SupabaseProduct, locale: SiteLocale): PublicProduct | null {
   if (!product.name) {
     return null;
   }
 
+  const labels = text[locale];
+
   return {
     name: product.name,
-    category: product.category || "Produto",
-    badge: product.featured ? "Destaque" : "Publicado",
-    description: product.short_description || "Produto disponível para negociações internacionais.",
+    category: product.category || labels.product,
+    badge: product.featured ? labels.featured : labels.published,
+    description: product.short_description || labels.fallbackDescription,
     image: product.main_image_url || "/images/produto-1.jpeg",
   };
 }
 
-async function getPublishedProducts(): Promise<PublicProduct[]> {
+async function getPublishedProducts(locale: SiteLocale): Promise<PublicProduct[]> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -111,7 +184,7 @@ async function getPublishedProducts(): Promise<PublicProduct[]> {
     }
 
     return (data as SupabaseProduct[])
-      .map(mapSupabaseProduct)
+      .map((product) => mapSupabaseProduct(product, locale))
       .filter((product): product is PublicProduct => Boolean(product));
   } catch {
     return [];
@@ -120,11 +193,13 @@ async function getPublishedProducts(): Promise<PublicProduct[]> {
 
 type ProductsProps = {
   whatsappUrl: string;
+  locale?: SiteLocale;
 };
 
-export default async function Products({ whatsappUrl }: ProductsProps) {
-  const publishedProducts = await getPublishedProducts();
-  const products = publishedProducts.length > 0 ? publishedProducts : fallbackProducts;
+export default async function Products({ whatsappUrl, locale = "pt" }: ProductsProps) {
+  const labels = text[locale];
+  const publishedProducts = await getPublishedProducts(locale);
+  const products = publishedProducts.length > 0 ? publishedProducts : locale === "zh" ? fallbackProductsZh : fallbackProducts;
 
   return (
     <section id="produtos" className="relative px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-32">
@@ -134,16 +209,15 @@ export default async function Products({ whatsappUrl }: ProductsProps) {
         <div className="flex flex-col justify-between gap-7 lg:flex-row lg:items-end lg:gap-8">
           <div className="max-w-3xl">
             <p className="mb-5 inline-flex max-w-full rounded-full border border-[#d6b46a]/25 bg-white/70 px-3 py-2 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-[#9b7a3e] shadow-[0_14px_40px_rgba(31,41,55,0.06)] backdrop-blur-xl sm:px-4 sm:text-[0.72rem] sm:tracking-[0.28em]">
-              Catálogo de alto padrão
+              {labels.eyebrow}
             </p>
             <h2 className="text-balance text-[2rem] font-semibold leading-[1.06] tracking-[-0.03em] text-[#111] sm:text-4xl md:text-6xl md:leading-[1.02] md:tracking-[-0.04em]">
-              Produtos preparados para negociações internacionais.
+              {labels.title}
             </h2>
           </div>
 
           <p className="max-w-xl text-[0.98rem] leading-7 text-neutral-600 lg:max-w-md lg:leading-8">
-            Uma seleção comercial para compradores, distribuidores e importadores que exigem qualidade,
-            apresentação e segurança no fornecimento.
+            {labels.description}
           </p>
         </div>
 
@@ -183,7 +257,7 @@ export default async function Products({ whatsappUrl }: ProductsProps) {
                   href={whatsappUrl}
                   className="mt-6 inline-flex w-full justify-center rounded-full bg-[#111] px-5 py-3.5 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[#d6b46a] hover:text-[#111] hover:shadow-[0_18px_45px_rgba(214,180,106,0.28)] sm:mt-8 sm:w-auto sm:px-6 sm:text-[0.72rem] sm:tracking-[0.18em] md:mt-auto md:self-start"
                 >
-                  Solicitar cotação
+                  {labels.button}
                 </a>
               </div>
             </article>

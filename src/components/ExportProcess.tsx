@@ -1,5 +1,6 @@
 import { ClipboardCheck, Factory, PackageCheck, Send, ShieldCheck, Ship } from "lucide-react";
 import type { ComponentType } from "react";
+import type { SiteLocale } from "@/components/HomePage";
 import type { ProcessStepContent } from "@/types/content";
 
 const icons: Record<string, ComponentType<{ size?: number; strokeWidth?: number }>> = {
@@ -13,18 +14,40 @@ const icons: Record<string, ComponentType<{ size?: number; strokeWidth?: number 
 
 type ExportProcessProps = {
   steps: ProcessStepContent[];
+  locale?: SiteLocale;
 };
 
-export default function ExportProcess({ steps }: ExportProcessProps) {
+const text = {
+  pt: {
+    eyebrow: "Processo de exportacao",
+    title: "Da primeira conversa ao embarque com padrao internacional.",
+  },
+  zh: {
+    eyebrow: "出口流程",
+    title: "从首次沟通到国际装运",
+  },
+};
+
+const zhSteps = [
+  { title: "需求分析", description: "了解采购需求、目的地、数量和商业条件。" },
+  { title: "产品选择", description: "根据市场定位筛选适合出口合作的产品。" },
+  { title: "报价", description: "准备价格、交期、付款方式和供应范围。" },
+  { title: "质量确认", description: "确认产品标准、包装、文件和订单一致性。" },
+  { title: "文件准备", description: "组织出口所需的商业和物流文件。" },
+  { title: "国际运输", description: "协调装运、物流跟进和长期合作支持。" },
+];
+
+export default function ExportProcess({ steps, locale = "pt" }: ExportProcessProps) {
+  const labels = text[locale];
   return (
     <section className="relative px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-32">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-3xl">
           <p className="mb-5 inline-flex max-w-full rounded-full border border-[#d6b46a]/25 bg-white/70 px-3 py-2 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-[#9b7a3e] shadow-[0_14px_40px_rgba(31,41,55,0.06)] backdrop-blur-xl sm:px-4 sm:text-[0.72rem] sm:tracking-[0.28em]">
-            Processo de exportacao
+            {labels.eyebrow}
           </p>
           <h2 className="text-balance text-[2rem] font-semibold leading-[1.06] tracking-[-0.03em] text-[#111] sm:text-4xl md:text-6xl md:leading-[1.02] md:tracking-[-0.04em]">
-            Da primeira conversa ao embarque com padrao internacional.
+            {labels.title}
           </h2>
         </div>
 
@@ -33,6 +56,7 @@ export default function ExportProcess({ steps }: ExportProcessProps) {
 
           {steps.map(({ id, title, icon, description }, index) => {
             const Icon = icons[icon || ""] ?? Send;
+            const translatedStep = locale === "zh" ? zhSteps[index] : null;
 
             return (
               <article
@@ -48,8 +72,12 @@ export default function ExportProcess({ steps }: ExportProcessProps) {
                   </span>
                 </div>
 
-                <h3 className="text-xl font-semibold tracking-[-0.03em] text-[#141414]">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-neutral-600 sm:mt-4">{description}</p>
+                <h3 className="text-xl font-semibold tracking-[-0.03em] text-[#141414]">
+                  {translatedStep?.title || title}
+                </h3>
+                <p className="mt-3 text-sm leading-6 text-neutral-600 sm:mt-4">
+                  {translatedStep?.description || description}
+                </p>
               </article>
             );
           })}

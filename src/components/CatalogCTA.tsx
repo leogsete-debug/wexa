@@ -1,12 +1,33 @@
 import { Mail, MessageCircle } from "lucide-react";
+import type { SiteLocale } from "@/components/HomePage";
 import type { SiteSettings } from "@/types/site-settings";
 
 type CatalogCTAProps = {
   settings: SiteSettings;
+  locale?: SiteLocale;
 };
 
-export default function CatalogCTA({ settings }: CatalogCTAProps) {
+const text = {
+  pt: {
+    eyebrow: "Solicitar catálogo",
+    title: "Receba uma seleção de produtos para sua operação.",
+    description:
+      "Fale com a TopMax Export e solicite um catálogo comercial alinhado ao seu mercado, volume e perfil de compra.",
+    whatsapp: "WhatsApp",
+    email: "Enviar e-mail",
+  },
+  zh: {
+    eyebrow: "产品目录",
+    title: "下载完整产品目录",
+    description: "查看产品、规格和商业信息，并申请适合您市场的产品报价。",
+    whatsapp: "申请产品报价",
+    email: "发送电子邮件",
+  },
+};
+
+export default function CatalogCTA({ settings, locale = "pt" }: CatalogCTAProps) {
   const emailHref = `mailto:${settings.email}`;
+  const labels = text[locale];
 
   return (
     <section className="px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
@@ -16,24 +37,24 @@ export default function CatalogCTA({ settings }: CatalogCTAProps) {
         <div className="relative grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10">
           <div className="max-w-3xl">
             <p className="mb-5 text-[0.62rem] font-bold uppercase tracking-[0.18em] text-[#f0d89a] sm:text-[0.72rem] sm:tracking-[0.3em]">
-              Solicitar catálogo
+              {labels.eyebrow}
             </p>
             <h2 className="text-balance text-[2rem] font-semibold leading-[1.06] tracking-[-0.03em] sm:text-4xl md:text-6xl md:leading-[1.02] md:tracking-[-0.04em]">
-              Receba uma seleção de produtos para sua operação.
+              {labels.title}
             </h2>
             <p className="mt-5 max-w-2xl text-[0.98rem] leading-7 text-white/66 sm:mt-6 sm:leading-8">
-              Fale com a TopMax Export e solicite um catálogo comercial alinhado ao seu mercado, volume e perfil de compra.
+              {labels.description}
             </p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 lg:w-[13rem] lg:flex-col">
             <a href={settings.whatsapp_url} className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full bg-[#d6b46a] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-[#111] transition duration-300 hover:-translate-y-1 hover:bg-[#f0d89a] hover:shadow-[0_24px_60px_rgba(214,180,106,0.32)] sm:px-7 sm:text-xs sm:tracking-[0.18em]">
               <MessageCircle size={18} />
-              WhatsApp
+              {labels.whatsapp}
             </a>
             <a href={emailHref} className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full border border-white/18 bg-white/10 px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:bg-white hover:text-[#111] sm:px-7 sm:text-xs sm:tracking-[0.18em]">
               <Mail size={18} />
-              Enviar e-mail
+              {labels.email}
             </a>
           </div>
         </div>

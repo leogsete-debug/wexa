@@ -1,13 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Catalog, CatalogStatus } from "@/types/catalog";
 
+export const CATALOG_BUCKET = "catalogs";
+export const CATALOG_MAX_FILE_SIZE = 30 * 1024 * 1024;
+
 export const catalogStatuses: Array<{
   value: CatalogStatus;
   label: string;
 }> = [
   { value: "draft", label: "Rascunho" },
   { value: "published", label: "Publicado" },
-  { value: "hidden", label: "Oculto" },
+  { value: "archived", label: "Arquivado" },
 ];
 
 export function getCatalogStatusLabel(status: CatalogStatus) {
@@ -19,7 +22,7 @@ export function getCatalogStatusClasses(status: CatalogStatus) {
     return "border-emerald-500/20 bg-emerald-500/10 text-emerald-700";
   }
 
-  if (status === "hidden") {
+  if (status === "archived") {
     return "border-neutral-500/20 bg-neutral-500/10 text-neutral-600";
   }
 
@@ -33,6 +36,33 @@ export function sanitizeCatalogFileName(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9.]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+export function isValidCatalogPdfUrl(value?: string | null) {
+  if (!value) return false;
+
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+
+  try {
+    const url = new URL(trimmed, "https://topmaxexport.local");
+    return url.pathname.toLowerCase().endsWith(".pdf");
+  } catch {
+    return false;
+  }
+}
+
+export function getCatalogStoragePathFromUrl(value?: string | null) {
+  if (!value) return null;
+
+  const marker = `/storage/v1/object/public/${CATALOG_BUCKET}/`;
+  const markerIndex = value.indexOf(marker);
+
+  if (markerIndex < 0) {
+    return null;
+  }
+
+  return decodeURIComponent(value.slice(markerIndex + marker.length));
 }
 
 export async function getLatestPublishedCatalog(): Promise<Catalog | null> {
@@ -61,11 +91,14 @@ export async function getLatestPublishedCatalog(): Promise<Catalog | null> {
     .from("catalogs")
     .select("*")
     .eq("status", "published")
+    .eq("is_active", true)
+    .not("pdf_url", "is", null)
+    .order("updated_at", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle<Catalog>();
 
-  if (error || !data) {
+  if (error || !data || !isValidCatalogPdfUrl(data.pdf_url)) {
     return null;
   }
 

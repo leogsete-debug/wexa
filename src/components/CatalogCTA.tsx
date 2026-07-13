@@ -1,9 +1,11 @@
-import { Mail, MessageCircle } from "lucide-react";
+import { Download, MessageCircle } from "lucide-react";
 import type { SiteLocale } from "@/components/HomePage";
+import { isValidCatalogPdfUrl } from "@/lib/catalogs";
 import type { SiteSettings } from "@/types/site-settings";
 
 type CatalogCTAProps = {
   settings: SiteSettings;
+  catalogPdfUrl?: string | null;
   locale?: SiteLocale;
 };
 
@@ -25,9 +27,16 @@ const text = {
   },
 };
 
-export default function CatalogCTA({ settings, locale = "pt" }: CatalogCTAProps) {
-  const emailHref = `mailto:${settings.email}`;
+export default function CatalogCTA({ settings, catalogPdfUrl, locale = "pt" }: CatalogCTAProps) {
+  // catalogs.pdf_url is the source of truth; site_settings.catalog_pdf_url remains only as a legacy fallback.
+  const pdfUrl = isValidCatalogPdfUrl(catalogPdfUrl)
+    ? catalogPdfUrl
+    : isValidCatalogPdfUrl(settings.catalog_pdf_url)
+      ? settings.catalog_pdf_url
+      : null;
   const labels = text[locale];
+  const downloadLabel = locale === "zh" ? "下载目录" : "Baixar catálogo";
+  const unavailableLabel = locale === "zh" ? "目录暂不可用" : "Catálogo indisponível";
 
   return (
     <section className="px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
@@ -52,10 +61,16 @@ export default function CatalogCTA({ settings, locale = "pt" }: CatalogCTAProps)
               <MessageCircle size={18} />
               {labels.whatsapp}
             </a>
-            <a href={emailHref} className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full border border-white/18 bg-white/10 px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:bg-white hover:text-[#111] sm:px-7 sm:text-xs sm:tracking-[0.18em]">
-              <Mail size={18} />
-              {labels.email}
-            </a>
+            {pdfUrl ? (
+              <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full border border-white/18 bg-white/10 px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:bg-white hover:text-[#111] sm:px-7 sm:text-xs sm:tracking-[0.18em]">
+                <Download size={18} />
+                {downloadLabel}
+              </a>
+            ) : (
+              <span className="inline-flex min-h-[3.25rem] items-center justify-center rounded-full border border-white/18 bg-white/10 px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white/60 sm:px-7 sm:text-xs sm:tracking-[0.18em]">
+                {unavailableLabel}
+              </span>
+            )}
           </div>
         </div>
       </div>

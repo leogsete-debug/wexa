@@ -79,7 +79,7 @@ export default async function HomePage({ locale = "pt" }: HomePageProps) {
       <ExportProcess steps={processSteps} locale={locale} />
       <Markets markets={markets} locale={locale} />
       <Gallery locale={locale} />
-      <CatalogCTA settings={translatedSettings} locale={locale} />
+      <CatalogCTA settings={translatedSettings} catalogPdfUrl={latestCatalog?.pdf_url} locale={locale} />
       <Contact settings={translatedSettings} content={contactContent} locale={locale} />
       <Footer content={footerContent} locale={locale} />
       <WhatsappButton settings={settings} locale={locale} />

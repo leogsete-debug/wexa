@@ -1,5 +1,6 @@
 import { Download, MessageCircle } from "lucide-react";
 import type { SiteLocale } from "@/components/HomePage";
+import { isValidCatalogPdfUrl } from "@/lib/catalogs";
 import type { SiteSettings } from "@/types/site-settings";
 
 type PdfCatalogProps = {
@@ -22,8 +23,15 @@ const text = {
 };
 
 export default function PdfCatalog({ settings, catalogPdfUrl, locale = "pt" }: PdfCatalogProps) {
-  const pdfUrl = catalogPdfUrl || settings.catalog_pdf_url;
+  // catalogs.pdf_url is the source of truth; site_settings.catalog_pdf_url remains only as a legacy fallback.
+  const pdfUrl = isValidCatalogPdfUrl(catalogPdfUrl)
+    ? catalogPdfUrl
+    : isValidCatalogPdfUrl(settings.catalog_pdf_url)
+      ? settings.catalog_pdf_url
+      : null;
   const labels = text[locale];
+  const unavailableMessage =
+    locale === "zh" ? "暂无已发布的 PDF 产品目录。" : "Nenhum catálogo PDF publicado no momento.";
 
   return (
     <section id="catalogo" className="relative px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
@@ -45,13 +53,21 @@ export default function PdfCatalog({ settings, catalogPdfUrl, locale = "pt" }: P
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 lg:w-[19rem] lg:flex-col">
-              <a
-                href={pdfUrl}
-                className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full bg-[#111] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white transition duration-300 hover:-translate-y-1 hover:bg-[#d6b46a] hover:text-[#111] hover:shadow-[0_24px_60px_rgba(214,180,106,0.32)] sm:px-7 sm:text-xs sm:tracking-[0.18em]"
-              >
-                <Download size={18} />
-                {labels.download}
-              </a>
+              {pdfUrl ? (
+                <a
+                  href={pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full bg-[#111] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white transition duration-300 hover:-translate-y-1 hover:bg-[#d6b46a] hover:text-[#111] hover:shadow-[0_24px_60px_rgba(214,180,106,0.32)] sm:px-7 sm:text-xs sm:tracking-[0.18em]"
+                >
+                  <Download size={18} />
+                  {labels.download}
+                </a>
+              ) : (
+                <p className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-semibold leading-6 text-neutral-600">
+                  {unavailableMessage}
+                </p>
+              )}
               <a
                 href={settings.whatsapp_url}
                 className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full border border-[#25d366]/25 bg-[#25d366] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white shadow-[0_18px_45px_rgba(37,211,102,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-[#1ebe5d] hover:shadow-[0_24px_60px_rgba(37,211,102,0.34)] sm:px-7 sm:text-xs sm:tracking-[0.18em]"

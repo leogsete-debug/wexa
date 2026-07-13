@@ -3,9 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Edit3, Eye, EyeOff, FileText, Plus, Trash2 } from "lucide-react";
+import { Copy, Edit3, Eye, EyeOff, FileText, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { getCatalogStatusClasses, getCatalogStatusLabel } from "@/lib/catalogs";
+import {
+  CATALOG_BUCKET,
+  getCatalogStatusClasses,
+  getCatalogStatusLabel,
+  getCatalogStoragePathFromUrl,
+  isValidCatalogPdfUrl,
+} from "@/lib/catalogs";
+import { formatFileSize } from "@/lib/media";
 import { supabase } from "@/lib/supabase";
 import type { Catalog, CatalogStatus } from "@/types/catalog";
 
@@ -20,6 +27,7 @@ export default function AdminCatalogsPage() {
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const success = searchParams.get("success");
 
   async function loadCatalogs() {
@@ -63,14 +71,30 @@ export default function AdminCatalogsPage() {
       return;
     }
 
+    const storagePath = getCatalogStoragePathFromUrl(catalog.pdf_url);
+    if (storagePath) {
+      await supabase.storage.from(CATALOG_BUCKET).remove([storagePath]);
+    }
+
     setCatalogs((current) => current.filter((item) => item.id !== catalog.id));
   }
 
   async function handleToggleStatus(catalog: Catalog) {
-    const nextStatus: CatalogStatus = catalog.status === "published" ? "hidden" : "published";
+    const nextStatus: CatalogStatus = catalog.status === "published" ? "archived" : "published";
+    const nextIsActive = nextStatus === "published";
+
+    if (nextIsActive && !isValidCatalogPdfUrl(catalog.pdf_url)) {
+      setError("Envie um PDF valido antes de publicar o catálogo.");
+      return;
+    }
+
+    if (nextIsActive) {
+      await supabase.from("catalogs").update({ is_active: false }).neq("id", catalog.id);
+    }
+
     const { error: updateError } = await supabase
       .from("catalogs")
-      .update({ status: nextStatus })
+      .update({ status: nextStatus, is_active: nextIsActive })
       .eq("id", catalog.id);
 
     if (updateError) {
@@ -79,8 +103,20 @@ export default function AdminCatalogsPage() {
     }
 
     setCatalogs((current) =>
-      current.map((item) => (item.id === catalog.id ? { ...item, status: nextStatus } : item)),
+      current.map((item) =>
+        item.id === catalog.id
+          ? { ...item, status: nextStatus, is_active: nextIsActive }
+          : nextIsActive
+            ? { ...item, is_active: false }
+            : item,
+      ),
     );
+  }
+
+  async function copyUrl(url?: string | null) {
+    if (!url) return;
+    await navigator.clipboard.writeText(url);
+    setMessage("Link do PDF copiado.");
   }
 
   return (
@@ -114,6 +150,12 @@ export default function AdminCatalogsPage() {
           </div>
         ) : null}
 
+        {message ? (
+          <div className="mt-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-700">
+            {message}
+          </div>
+        ) : null}
+
         {error ? (
           <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-700">
             {error}
@@ -121,10 +163,11 @@ export default function AdminCatalogsPage() {
         ) : null}
 
         <section className="mt-8 overflow-hidden rounded-[1.5rem] border border-white/75 bg-white/80 shadow-[0_22px_70px_rgba(31,41,55,0.09),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl">
-          <div className="hidden grid-cols-[5rem_1fr_9rem_10rem_12rem] gap-4 border-b border-black/10 px-5 py-4 text-xs font-bold uppercase tracking-[0.16em] text-neutral-500 lg:grid">
+          <div className="hidden grid-cols-[5rem_1fr_9rem_8rem_9rem_13rem] gap-4 border-b border-black/10 px-5 py-4 text-xs font-bold uppercase tracking-[0.16em] text-neutral-500 lg:grid">
             <span>Capa</span>
             <span>Catálogo</span>
             <span>Status</span>
+            <span>Ativo</span>
             <span>Idioma</span>
             <span>Ações</span>
           </div>
@@ -142,7 +185,7 @@ export default function AdminCatalogsPage() {
               {visibleCatalogs.map((catalog) => (
                 <article
                   key={catalog.id}
-                  className="grid gap-4 px-5 py-5 lg:grid-cols-[5rem_1fr_9rem_10rem_12rem] lg:items-center"
+                  className="grid gap-4 px-5 py-5 lg:grid-cols-[5rem_1fr_9rem_8rem_9rem_13rem] lg:items-center"
                 >
                   <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-neutral-100 text-neutral-400">
                     {catalog.cover_image_url ? (
@@ -165,6 +208,12 @@ export default function AdminCatalogsPage() {
                     <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-600">
                       {catalog.description || "Sem descrição"}
                     </p>
+                    {catalog.file_name ? (
+                      <p className="mt-1 text-xs text-neutral-500">
+                        {catalog.file_name}
+                        {catalog.file_size ? ` - ${formatFileSize(catalog.file_size)}` : ""}
+                      </p>
+                    ) : null}
                     {catalog.pdf_url ? (
                       <a href={catalog.pdf_url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex text-xs font-semibold text-[#9b7a3e] underline">
                         Ver PDF
@@ -175,6 +224,8 @@ export default function AdminCatalogsPage() {
                   <span className={`w-fit rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] ${getCatalogStatusClasses(catalog.status)}`}>
                     {getCatalogStatusLabel(catalog.status)}
                   </span>
+
+                  <span className="text-sm font-semibold text-neutral-600">{catalog.is_active ? "Sim" : "Não"}</span>
 
                   <span className="text-sm font-semibold text-neutral-600">{catalog.language}</span>
 
@@ -194,6 +245,16 @@ export default function AdminCatalogsPage() {
                     >
                       {catalog.status === "published" ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
+                    {catalog.pdf_url ? (
+                      <button
+                        type="button"
+                        onClick={() => copyUrl(catalog.pdf_url)}
+                        className="inline-flex h-10 items-center justify-center rounded-full border border-black/10 bg-white px-3 text-[#111] transition hover:bg-[#d6b46a]"
+                        aria-label="Copiar link"
+                      >
+                        <Copy size={15} />
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => handleDelete(catalog)}

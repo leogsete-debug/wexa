@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { Save } from "lucide-react";
 import MediaPicker from "@/components/admin/MediaPicker";
+import { normalizeCatalogPdfUrl } from "@/lib/catalogs";
 import { fallbackSiteSettings, mergeSiteSettings } from "@/lib/site-settings";
 import { supabase } from "@/lib/supabase";
 import type { SiteSettings } from "@/types/site-settings";
@@ -179,6 +180,7 @@ export default function AdminSettingsPage() {
     setMessage("");
     setError("");
 
+    const catalogPdfUrl = normalizeCatalogPdfUrl(settings.catalog_pdf_url);
     const payload = {
       whatsapp_url: settings.whatsapp_url,
       whatsapp_number: settings.whatsapp_number,
@@ -205,7 +207,7 @@ export default function AdminSettingsPage() {
       catalog_title_zh: settings.catalog_title_zh,
       catalog_subtitle: settings.catalog_subtitle,
       catalog_subtitle_zh: settings.catalog_subtitle_zh,
-      catalog_pdf_url: settings.catalog_pdf_url,
+      catalog_pdf_url: catalogPdfUrl,
     };
 
     const request = recordId

@@ -426,7 +426,7 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
               folder="pdfs"
               onSelect={(url) => {
                 updateField("pdf_url", url);
-                updateField("file_name", decodeURIComponent(url.split("/").pop() ?? "catalogo.pdf"));
+                updateField("file_name", decodeURIComponent(url.split("/").pop() ?? "arquivo.pdf"));
                 updateField("file_size", null);
                 setPdfFile(null);
               }}

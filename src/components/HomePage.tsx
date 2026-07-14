@@ -10,7 +10,7 @@ import CatalogCTA from "@/components/CatalogCTA";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import WhatsappButton from "@/components/WhatsappButton";
-import { getLatestPublishedCatalog } from "@/lib/catalogs";
+import { getLatestPublishedCatalog, resolveCatalogPdfUrl } from "@/lib/catalogs";
 import {
   getPublicCompanyContent,
   getPublicContactContent,
@@ -68,6 +68,7 @@ export default async function HomePage({ locale = "pt" }: HomePageProps) {
   ]);
 
   const translatedSettings = localizeSettings(settings, locale);
+  const catalogPdfUrl = resolveCatalogPdfUrl(latestCatalog?.pdf_url, settings.catalog_pdf_url);
 
   return (
     <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(214,180,106,0.14),_transparent_32rem),linear-gradient(180deg,_#fbfaf7_0%,_#f4f1eb_48%,_#ffffff_100%)] text-[#161616] selection:bg-[#d7b46a]/30">
@@ -75,11 +76,11 @@ export default async function HomePage({ locale = "pt" }: HomePageProps) {
       <Hero settings={translatedSettings} locale={locale} />
       <About content={companyContent} locale={locale} />
       <Products whatsappUrl={settings.whatsapp_url} locale={locale} />
-      <PdfCatalog settings={translatedSettings} catalogPdfUrl={latestCatalog?.pdf_url} locale={locale} />
+      <PdfCatalog settings={translatedSettings} catalogPdfUrl={catalogPdfUrl} locale={locale} />
       <ExportProcess steps={processSteps} locale={locale} />
       <Markets markets={markets} locale={locale} />
       <Gallery locale={locale} />
-      <CatalogCTA settings={translatedSettings} catalogPdfUrl={latestCatalog?.pdf_url} locale={locale} />
+      <CatalogCTA settings={translatedSettings} catalogPdfUrl={catalogPdfUrl} locale={locale} />
       <Contact settings={translatedSettings} content={contactContent} locale={locale} />
       <Footer content={footerContent} locale={locale} />
       <WhatsappButton settings={settings} locale={locale} />

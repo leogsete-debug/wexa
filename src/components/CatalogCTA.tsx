@@ -1,6 +1,6 @@
 import { Download, MessageCircle } from "lucide-react";
 import type { SiteLocale } from "@/components/HomePage";
-import { isValidCatalogPdfUrl } from "@/lib/catalogs";
+import { normalizeCatalogPdfUrl } from "@/lib/catalogs";
 import type { SiteSettings } from "@/types/site-settings";
 
 type CatalogCTAProps = {
@@ -28,15 +28,10 @@ const text = {
 };
 
 export default function CatalogCTA({ settings, catalogPdfUrl, locale = "pt" }: CatalogCTAProps) {
-  // catalogs.pdf_url is the source of truth; site_settings.catalog_pdf_url remains only as a legacy fallback.
-  const pdfUrl = isValidCatalogPdfUrl(catalogPdfUrl)
-    ? catalogPdfUrl
-    : isValidCatalogPdfUrl(settings.catalog_pdf_url)
-      ? settings.catalog_pdf_url
-      : null;
+  const pdfUrl = normalizeCatalogPdfUrl(catalogPdfUrl);
   const labels = text[locale];
   const downloadLabel = locale === "zh" ? "下载目录" : "Baixar catálogo";
-  const unavailableLabel = locale === "zh" ? "目录暂不可用" : "Catálogo indisponível";
+  const unavailableLabel = locale === "zh" ? "产品目录暂不可用" : "Catálogo ainda não disponível";
 
   return (
     <section className="px-4 py-14 sm:px-6 sm:py-20 lg:px-8">

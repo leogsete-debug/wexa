@@ -1,6 +1,6 @@
 import { Download, MessageCircle } from "lucide-react";
 import type { SiteLocale } from "@/components/HomePage";
-import { isValidCatalogPdfUrl } from "@/lib/catalogs";
+import { normalizeCatalogPdfUrl } from "@/lib/catalogs";
 import type { SiteSettings } from "@/types/site-settings";
 
 type PdfCatalogProps = {
@@ -23,15 +23,9 @@ const text = {
 };
 
 export default function PdfCatalog({ settings, catalogPdfUrl, locale = "pt" }: PdfCatalogProps) {
-  // catalogs.pdf_url is the source of truth; site_settings.catalog_pdf_url remains only as a legacy fallback.
-  const pdfUrl = isValidCatalogPdfUrl(catalogPdfUrl)
-    ? catalogPdfUrl
-    : isValidCatalogPdfUrl(settings.catalog_pdf_url)
-      ? settings.catalog_pdf_url
-      : null;
+  const pdfUrl = normalizeCatalogPdfUrl(catalogPdfUrl);
   const labels = text[locale];
-  const unavailableMessage =
-    locale === "zh" ? "暂无已发布的 PDF 产品目录。" : "Nenhum catálogo PDF publicado no momento.";
+  const unavailableMessage = locale === "zh" ? "产品目录暂不可用" : "Catálogo ainda não disponível";
 
   return (
     <section id="catalogo" className="relative px-4 py-14 sm:px-6 sm:py-20 lg:px-8">

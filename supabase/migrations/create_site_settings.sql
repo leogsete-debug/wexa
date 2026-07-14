@@ -82,7 +82,7 @@ select
   true,
   'Catálogo Completo',
   'Baixe nosso catálogo completo com produtos, especificações e preços.',
-  '/catalogo.pdf'
+  null
 where not exists (select 1 from public.site_settings);
 
 alter table public.site_settings enable row level security;

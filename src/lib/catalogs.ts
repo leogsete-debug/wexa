@@ -38,18 +38,30 @@ export function sanitizeCatalogFileName(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-export function isValidCatalogPdfUrl(value?: string | null) {
-  if (!value) return false;
+export function normalizeCatalogPdfUrl(value?: string | null) {
+  if (!value) return null;
 
   const trimmed = value.trim();
-  if (!trimmed) return false;
+  if (!trimmed) return null;
 
   try {
-    const url = new URL(trimmed, "https://topmaxexport.local");
-    return url.pathname.toLowerCase().endsWith(".pdf");
+    const url = new URL(trimmed);
+    if (url.protocol !== "https:" && url.protocol !== "http:") {
+      return null;
+    }
+
+    return url.pathname.toLowerCase().endsWith(".pdf") ? url.toString() : null;
   } catch {
-    return false;
+    return null;
   }
+}
+
+export function isValidCatalogPdfUrl(value?: string | null) {
+  return Boolean(normalizeCatalogPdfUrl(value));
+}
+
+export function resolveCatalogPdfUrl(latestCatalogPdfUrl?: string | null, settingsCatalogPdfUrl?: string | null) {
+  return normalizeCatalogPdfUrl(latestCatalogPdfUrl) ?? normalizeCatalogPdfUrl(settingsCatalogPdfUrl);
 }
 
 export function getCatalogStoragePathFromUrl(value?: string | null) {

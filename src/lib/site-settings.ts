@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { normalizeCatalogPdfUrl } from "@/lib/catalogs";
 import type { SiteSettings } from "@/types/site-settings";
 
 export const fallbackSiteSettings: SiteSettings = {
@@ -20,15 +21,20 @@ export const fallbackSiteSettings: SiteSettings = {
   show_hero_secondary_button: true,
   catalog_title: "Catálogo Completo",
   catalog_subtitle: "Baixe nosso catálogo completo com produtos, especificações e preços.",
-  catalog_pdf_url: "/catalogo.pdf",
+  catalog_pdf_url: "",
 };
 
 export function mergeSiteSettings(settings?: Partial<SiteSettings> | null): SiteSettings {
-  return {
+  const merged = {
     ...fallbackSiteSettings,
     ...Object.fromEntries(
       Object.entries(settings ?? {}).filter(([, value]) => value !== null && value !== ""),
     ),
+  };
+
+  return {
+    ...merged,
+    catalog_pdf_url: normalizeCatalogPdfUrl(merged.catalog_pdf_url) ?? "",
   };
 }
 

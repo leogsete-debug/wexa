@@ -46,7 +46,7 @@ select
   '#',
   '#',
   '#',
-  'https://wa.me/5500000000000',
+  '',
   'comercial@topmaxexport.com',
-  'Empresa internacional de exportacao conectando produtos brasileiros a compradores globais com padrao internacional.'
+  'A Top Max conecta empresas brasileiras a fabricantes internacionais, oferecendo solucoes de importacao, desenvolvimento de produtos e fornecimento em escala.'
 where not exists (select 1 from public.footer_content);

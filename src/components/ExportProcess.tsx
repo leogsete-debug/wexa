@@ -1,7 +1,9 @@
 import { ClipboardCheck, Factory, PackageCheck, Send, ShieldCheck, Ship } from "lucide-react";
 import type { ComponentType } from "react";
 import type { SiteLocale } from "@/components/HomePage";
+import { sectionText } from "@/lib/site-content";
 import type { ProcessStepContent } from "@/types/content";
+import type { SiteSection } from "@/types/content";
 
 const icons: Record<string, ComponentType<{ size?: number; strokeWidth?: number }>> = {
   send: Send,
@@ -15,30 +17,29 @@ const icons: Record<string, ComponentType<{ size?: number; strokeWidth?: number 
 type ExportProcessProps = {
   steps: ProcessStepContent[];
   locale?: SiteLocale;
+  section?: SiteSection;
 };
 
 const text = {
   pt: {
-    eyebrow: "Processo de exportação",
-    title: "Da primeira conversa ao embarque com padrão internacional.",
+    eyebrow: "PROCESSO DE IMPORTACAO",
+    title: "Da fabrica internacional ate sua empresa.",
+    subtitle: "Acompanhamos cada etapa para garantir seguranca, qualidade e previsibilidade na operacao.",
   },
   zh: {
-    eyebrow: "出口流程",
-    title: "从首次沟通到国际装运",
+    eyebrow: "进口流程",
+    title: "从国际工厂到您的企业",
+    subtitle: "我们跟进每个环节，确保进口业务的安全、质量和可控性。",
   },
 };
 
-const zhSteps = [
-  { title: "需求分析", description: "了解采购需求、目的地、数量和商业条件。" },
-  { title: "产品选择", description: "根据市场定位筛选适合出口合作的产品。" },
-  { title: "报价", description: "准备价格、交期、付款方式和供应范围。" },
-  { title: "质量确认", description: "确认产品标准、包装、文件和订单一致性。" },
-  { title: "文件准备", description: "组织出口所需的商业和物流文件。" },
-  { title: "国际运输", description: "协调装运、物流跟进和长期合作支持。" },
-];
-
-export default function ExportProcess({ steps, locale = "pt" }: ExportProcessProps) {
-  const labels = text[locale];
+export default function ExportProcess({ steps, locale = "pt", section }: ExportProcessProps) {
+  const fallbackLabels = text[locale];
+  const labels = {
+    eyebrow: sectionText(section, "eyebrow", locale, fallbackLabels.eyebrow),
+    title: sectionText(section, "title", locale, fallbackLabels.title),
+    subtitle: sectionText(section, "subtitle", locale, fallbackLabels.subtitle),
+  };
   return (
     <section className="relative px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-32">
       <div className="mx-auto max-w-7xl">
@@ -49,14 +50,17 @@ export default function ExportProcess({ steps, locale = "pt" }: ExportProcessPro
           <h2 className="text-balance text-[2rem] font-semibold leading-[1.06] tracking-[-0.03em] text-[#111] sm:text-4xl md:text-6xl md:leading-[1.02] md:tracking-[-0.04em]">
             {labels.title}
           </h2>
+          <p className="mt-5 max-w-2xl text-[0.98rem] leading-7 text-neutral-600 sm:mt-6 sm:leading-8">
+            {labels.subtitle}
+          </p>
         </div>
 
         <div className="relative mt-10 grid items-stretch gap-4 sm:mt-14 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
           <div className="absolute left-8 right-8 top-16 hidden h-px bg-gradient-to-r from-transparent via-[#d6b46a]/60 to-transparent 2xl:block" />
 
-          {steps.map(({ id, title, icon, description }, index) => {
+          {steps.map(({ id, title, title_zh, icon, description, description_zh }, index) => {
             const Icon = icons[icon || ""] ?? Send;
-            const translatedStep = locale === "zh" ? zhSteps[index] : null;
+            const translatedStep = locale === "zh" ? { title: title_zh || title, description: description_zh || description } : null;
 
             return (
               <article

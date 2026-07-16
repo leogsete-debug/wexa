@@ -10,7 +10,7 @@ add column if not exists show_hero_secondary_button boolean default true;
 
 update public.site_settings
 set
-  hero_primary_button_url = coalesce(hero_primary_button_url, whatsapp_url, 'https://wa.me/5500000000000'),
+  hero_primary_button_url = coalesce(hero_primary_button_url, whatsapp_url),
   hero_secondary_button_url = coalesce(hero_secondary_button_url, '#produtos'),
   hero_mobile_image_url = coalesce(hero_mobile_image_url, hero_image_url, '/images/hero.jpeg'),
   show_hero_primary_button = coalesce(show_hero_primary_button, true),

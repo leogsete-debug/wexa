@@ -8,6 +8,12 @@ import { supabase } from "@/lib/supabase";
 import type { ContactContent } from "@/types/content";
 
 const fields: Array<{ name: keyof ContactContent; label: string; textarea?: boolean }> = [
+  { name: "section_eyebrow", label: "Selo da seção" },
+  { name: "section_eyebrow_zh", label: "Selo da seção em chinês" },
+  { name: "section_title", label: "Título da seção", textarea: true },
+  { name: "section_title_zh", label: "Título da seção em chinês", textarea: true },
+  { name: "section_subtitle", label: "Subtítulo da seção", textarea: true },
+  { name: "section_subtitle_zh", label: "Subtítulo da seção em chinês", textarea: true },
   { name: "phone", label: "Telefone" },
   { name: "whatsapp", label: "WhatsApp" },
   { name: "email", label: "Email" },
@@ -17,6 +23,10 @@ const fields: Array<{ name: keyof ContactContent; label: string; textarea?: bool
   { name: "country", label: "País" },
   { name: "google_maps", label: "Google Maps", textarea: true },
   { name: "business_hours", label: "Horario", textarea: true },
+  { name: "whatsapp_card_title", label: "Título do card WhatsApp" },
+  { name: "whatsapp_card_title_zh", label: "Título do card WhatsApp em chinês" },
+  { name: "email_card_text", label: "Texto do card de e-mail", textarea: true },
+  { name: "email_card_text_zh", label: "Texto do card de e-mail em chinês", textarea: true },
 ];
 
 export default function ContactContentPage() {
@@ -57,6 +67,12 @@ export default function ContactContentPage() {
     setError("");
 
     const payload = {
+      section_eyebrow: form.section_eyebrow,
+      section_eyebrow_zh: form.section_eyebrow_zh,
+      section_title: form.section_title,
+      section_title_zh: form.section_title_zh,
+      section_subtitle: form.section_subtitle,
+      section_subtitle_zh: form.section_subtitle_zh,
       phone: form.phone,
       whatsapp: form.whatsapp,
       email: form.email,
@@ -66,6 +82,10 @@ export default function ContactContentPage() {
       country: form.country,
       google_maps: form.google_maps,
       business_hours: form.business_hours,
+      whatsapp_card_title: form.whatsapp_card_title,
+      whatsapp_card_title_zh: form.whatsapp_card_title_zh,
+      email_card_text: form.email_card_text,
+      email_card_text_zh: form.email_card_text_zh,
     };
 
     const request = recordId

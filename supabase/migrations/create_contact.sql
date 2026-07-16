@@ -43,7 +43,7 @@ on public.contact_content for all to authenticated using (true) with check (true
 insert into public.contact_content (phone, whatsapp, email, address, city, state, country, google_maps, business_hours)
 select
   'Comercial internacional',
-  'https://wa.me/5500000000000',
+  '',
   'comercial@topmaxexport.com',
   'Brasil | Mercados internacionais',
   '',

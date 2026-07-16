@@ -1,31 +1,43 @@
 import { Download, MessageCircle } from "lucide-react";
 import type { SiteLocale } from "@/components/HomePage";
+import TrackedWhatsappLink from "@/components/TrackedWhatsappLink";
+import TrackedCatalogDownloadLink from "@/components/TrackedCatalogDownloadLink";
 import { normalizeCatalogPdfUrl } from "@/lib/catalogs";
+import { sectionText } from "@/lib/site-content";
+import type { SiteSection } from "@/types/content";
 import type { SiteSettings } from "@/types/site-settings";
 
 type PdfCatalogProps = {
   settings: SiteSettings;
   catalogPdfUrl?: string | null;
   locale?: SiteLocale;
+  section?: SiteSection;
 };
 
 const text = {
   pt: {
-    eyebrow: "Catálogo",
-    download: "Baixar Catálogo PDF",
-    whatsapp: "Solicitar pelo WhatsApp",
+    eyebrow: "CATALOGO DE PRODUTOS",
+    download: "Baixar catalogo",
+    whatsapp: "Solicitar cotacao",
   },
   zh: {
     eyebrow: "产品目录",
-    download: "下载目录",
-    whatsapp: "申请产品报价",
+    download: "下载产品目录",
+    whatsapp: "申请报价",
   },
 };
 
-export default function PdfCatalog({ settings, catalogPdfUrl, locale = "pt" }: PdfCatalogProps) {
+export default function PdfCatalog({ settings, catalogPdfUrl, locale = "pt", section }: PdfCatalogProps) {
   const pdfUrl = normalizeCatalogPdfUrl(catalogPdfUrl);
-  const labels = text[locale];
+  const fallbackLabels = text[locale];
+  const labels = {
+    eyebrow: sectionText(section, "eyebrow", locale, fallbackLabels.eyebrow),
+    download: sectionText(section, "download_button", locale, fallbackLabels.download),
+    whatsapp: sectionText(section, "whatsapp_button", locale, fallbackLabels.whatsapp),
+  };
   const unavailableMessage = locale === "zh" ? "产品目录暂不可用" : "Catálogo ainda não disponível";
+  const catalogTitle = locale === "zh" ? settings.catalog_title_zh || settings.catalog_title : settings.catalog_title;
+  const catalogSubtitle = locale === "zh" ? settings.catalog_subtitle_zh || settings.catalog_subtitle : settings.catalog_subtitle;
 
   return (
     <section id="catalogo" className="relative px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
@@ -39,36 +51,35 @@ export default function PdfCatalog({ settings, catalogPdfUrl, locale = "pt" }: P
                 {labels.eyebrow}
               </p>
               <h2 className="text-balance text-[2rem] font-semibold leading-[1.06] tracking-[-0.03em] text-[#111] sm:text-4xl md:text-6xl md:leading-[1.02] md:tracking-[-0.04em]">
-                {settings.catalog_title}
+                {catalogTitle}
               </h2>
               <p className="mt-5 max-w-2xl text-[0.98rem] leading-7 text-neutral-600 sm:mt-6 sm:leading-8">
-                {settings.catalog_subtitle}
+                {catalogSubtitle}
               </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 lg:w-[19rem] lg:flex-col">
               {pdfUrl ? (
-                <a
+                <TrackedCatalogDownloadLink
                   href={pdfUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full bg-[#111] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white transition duration-300 hover:-translate-y-1 hover:bg-[#d6b46a] hover:text-[#111] hover:shadow-[0_24px_60px_rgba(214,180,106,0.32)] sm:px-7 sm:text-xs sm:tracking-[0.18em]"
                 >
                   <Download size={18} />
                   {labels.download}
-                </a>
+                </TrackedCatalogDownloadLink>
               ) : (
                 <p className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-semibold leading-6 text-neutral-600">
                   {unavailableMessage}
                 </p>
               )}
-              <a
+              <TrackedWhatsappLink
                 href={settings.whatsapp_url}
+                source="catalog"
                 className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full border border-[#25d366]/25 bg-[#25d366] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white shadow-[0_18px_45px_rgba(37,211,102,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-[#1ebe5d] hover:shadow-[0_24px_60px_rgba(37,211,102,0.34)] sm:px-7 sm:text-xs sm:tracking-[0.18em]"
               >
                 <MessageCircle size={18} />
                 {labels.whatsapp}
-              </a>
+              </TrackedWhatsappLink>
             </div>
           </div>
         </div>

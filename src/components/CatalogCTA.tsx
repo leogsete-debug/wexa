@@ -1,36 +1,47 @@
 import { Download, MessageCircle } from "lucide-react";
 import type { SiteLocale } from "@/components/HomePage";
+import TrackedWhatsappLink from "@/components/TrackedWhatsappLink";
+import TrackedCatalogDownloadLink from "@/components/TrackedCatalogDownloadLink";
 import { normalizeCatalogPdfUrl } from "@/lib/catalogs";
+import { sectionText } from "@/lib/site-content";
+import type { SiteSection } from "@/types/content";
 import type { SiteSettings } from "@/types/site-settings";
 
 type CatalogCTAProps = {
   settings: SiteSettings;
   catalogPdfUrl?: string | null;
   locale?: SiteLocale;
+  section?: SiteSection;
 };
 
 const text = {
   pt: {
-    eyebrow: "Solicitar catálogo",
-    title: "Receba uma seleção de produtos para sua operação.",
+    eyebrow: "SOLUCOES DE IMPORTACAO",
+    title: "Encontre produtos e fornecedores para sua operacao.",
     description:
-      "Fale com a TopMax Export e solicite um catálogo comercial alinhado ao seu mercado, volume e perfil de compra.",
-    whatsapp: "WhatsApp",
-    email: "Enviar e-mail",
+      "Conte o que sua empresa procura. Nossa equipe apresentara solucoes de importacao adequadas ao seu mercado, volume e objetivo comercial.",
+    whatsapp: "Falar com a Top Max",
+    email: "Baixar catalogo",
   },
   zh: {
-    eyebrow: "产品目录",
-    title: "下载完整产品目录",
-    description: "查看产品、规格和商业信息，并申请适合您市场的产品报价。",
-    whatsapp: "申请产品报价",
-    email: "发送电子邮件",
+    eyebrow: "进口解决方案",
+    title: "为您的业务寻找合适的产品与供应商",
+    description: "告诉我们您的采购需求，我们将根据市场、数量和商业目标提供合适的进口解决方案。",
+    whatsapp: "联系 Top Max",
+    email: "下载产品目录",
   },
 };
 
-export default function CatalogCTA({ settings, catalogPdfUrl, locale = "pt" }: CatalogCTAProps) {
+export default function CatalogCTA({ settings, catalogPdfUrl, locale = "pt", section }: CatalogCTAProps) {
   const pdfUrl = normalizeCatalogPdfUrl(catalogPdfUrl);
-  const labels = text[locale];
-  const downloadLabel = locale === "zh" ? "下载目录" : "Baixar catálogo";
+  const fallbackLabels = text[locale];
+  const labels = {
+    eyebrow: sectionText(section, "eyebrow", locale, fallbackLabels.eyebrow),
+    title: sectionText(section, "title", locale, fallbackLabels.title),
+    description: sectionText(section, "description", locale, fallbackLabels.description),
+    whatsapp: sectionText(section, "primary_button", locale, fallbackLabels.whatsapp),
+  };
+  const downloadLabel = sectionText(section, "secondary_button", locale, fallbackLabels.email);
   const unavailableLabel = locale === "zh" ? "产品目录暂不可用" : "Catálogo ainda não disponível";
 
   return (
@@ -52,15 +63,15 @@ export default function CatalogCTA({ settings, catalogPdfUrl, locale = "pt" }: C
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 lg:w-[13rem] lg:flex-col">
-            <a href={settings.whatsapp_url} className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full bg-[#d6b46a] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-[#111] transition duration-300 hover:-translate-y-1 hover:bg-[#f0d89a] hover:shadow-[0_24px_60px_rgba(214,180,106,0.32)] sm:px-7 sm:text-xs sm:tracking-[0.18em]">
+            <TrackedWhatsappLink href={settings.whatsapp_url} source="cta" className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full bg-[#d6b46a] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-[#111] transition duration-300 hover:-translate-y-1 hover:bg-[#f0d89a] hover:shadow-[0_24px_60px_rgba(214,180,106,0.32)] sm:px-7 sm:text-xs sm:tracking-[0.18em]">
               <MessageCircle size={18} />
               {labels.whatsapp}
-            </a>
+            </TrackedWhatsappLink>
             {pdfUrl ? (
-              <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full border border-white/18 bg-white/10 px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:bg-white hover:text-[#111] sm:px-7 sm:text-xs sm:tracking-[0.18em]">
+              <TrackedCatalogDownloadLink href={pdfUrl} className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full border border-white/18 bg-white/10 px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:bg-white hover:text-[#111] sm:px-7 sm:text-xs sm:tracking-[0.18em]">
                 <Download size={18} />
                 {downloadLabel}
-              </a>
+              </TrackedCatalogDownloadLink>
             ) : (
               <span className="inline-flex min-h-[3.25rem] items-center justify-center rounded-full border border-white/18 bg-white/10 px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white/60 sm:px-7 sm:text-xs sm:tracking-[0.18em]">
                 {unavailableLabel}

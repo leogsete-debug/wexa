@@ -15,28 +15,48 @@ type ProductFormProps = {
 
 type ProductFormState = {
   name: string;
+  name_zh: string;
   category: string;
+  category_zh: string;
   short_description: string;
+  short_description_zh: string;
   full_description: string;
+  full_description_zh: string;
+  specifications: string;
+  specifications_zh: string;
   material: string;
   origin: string;
   status: ProductStatus;
   featured: boolean;
   sort_order: string;
   main_image_url: string;
+  gallery_urls: string;
+  video_url: string;
+  pdf_url: string;
+  show_quote_button: boolean;
 };
 
 const initialState: ProductFormState = {
   name: "",
+  name_zh: "",
   category: "",
+  category_zh: "",
   short_description: "",
+  short_description_zh: "",
   full_description: "",
+  full_description_zh: "",
+  specifications: "",
+  specifications_zh: "",
   material: "",
   origin: "",
   status: "draft",
   featured: false,
   sort_order: "0",
   main_image_url: "",
+  gallery_urls: "",
+  video_url: "",
+  pdf_url: "",
+  show_quote_button: true,
 };
 
 function toNullable(value: string) {
@@ -89,15 +109,25 @@ export default function ProductForm({ mode }: ProductFormProps) {
 
       setForm({
         name: data.name ?? "",
+        name_zh: data.name_zh ?? "",
         category: data.category ?? "",
+        category_zh: data.category_zh ?? "",
         short_description: data.short_description ?? "",
+        short_description_zh: data.short_description_zh ?? "",
         full_description: data.full_description ?? "",
+        full_description_zh: data.full_description_zh ?? "",
+        specifications: data.specifications ?? "",
+        specifications_zh: data.specifications_zh ?? "",
         material: data.material ?? "",
         origin: data.origin ?? "",
         status: data.status ?? "draft",
         featured: data.featured ?? false,
         sort_order: String(data.sort_order ?? 0),
         main_image_url: data.main_image_url ?? "",
+        gallery_urls: (data.gallery_urls ?? []).join("\n"),
+        video_url: data.video_url ?? "",
+        pdf_url: data.pdf_url ?? "",
+        show_quote_button: data.show_quote_button ?? true,
       });
       setIsLoading(false);
     }
@@ -160,16 +190,29 @@ export default function ProductForm({ mode }: ProductFormProps) {
       const imageUrl = await uploadImage();
       const payload: ProductPayload = {
         name: form.name.trim(),
+        name_zh: toNullable(form.name_zh),
         slug,
         category: toNullable(form.category),
+        category_zh: toNullable(form.category_zh),
         short_description: toNullable(form.short_description),
+        short_description_zh: toNullable(form.short_description_zh),
         full_description: toNullable(form.full_description),
+        full_description_zh: toNullable(form.full_description_zh),
+        specifications: toNullable(form.specifications),
+        specifications_zh: toNullable(form.specifications_zh),
         material: toNullable(form.material),
         origin: toNullable(form.origin),
         status: form.status || "draft",
         featured: form.featured,
         sort_order: Number.isFinite(Number(form.sort_order)) ? Number(form.sort_order) : 0,
         main_image_url: imageUrl,
+        gallery_urls: form.gallery_urls
+          .split(/\n+/)
+          .map((url) => url.trim())
+          .filter(Boolean),
+        video_url: toNullable(form.video_url),
+        pdf_url: toNullable(form.pdf_url),
+        show_quote_button: form.show_quote_button,
       };
 
       const request =
@@ -238,7 +281,7 @@ export default function ProductForm({ mode }: ProductFormProps) {
               value={form.category}
               onChange={(event) => updateField("category", event.target.value)}
               className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[#d6b46a]"
-              placeholder="Ex.: Agronegócio"
+              placeholder="Ex.: Cama, mesa e banho"
             />
           </label>
 
@@ -248,6 +291,26 @@ export default function ProductForm({ mode }: ProductFormProps) {
               value={slug}
               readOnly
               className="h-12 rounded-2xl border border-black/10 bg-neutral-100 px-4 text-sm text-neutral-500 outline-none"
+            />
+          </label>
+
+          <label className="grid gap-2 text-sm font-semibold text-neutral-700">
+            Nome em chines
+            <input
+              value={form.name_zh}
+              onChange={(event) => updateField("name_zh", event.target.value)}
+              className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[#d6b46a]"
+              placeholder="Nome para /zh"
+            />
+          </label>
+
+          <label className="grid gap-2 text-sm font-semibold text-neutral-700">
+            Categoria em chines
+            <input
+              value={form.category_zh}
+              onChange={(event) => updateField("category_zh", event.target.value)}
+              className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[#d6b46a]"
+              placeholder="Categoria para /zh"
             />
           </label>
 
@@ -262,12 +325,52 @@ export default function ProductForm({ mode }: ProductFormProps) {
           </label>
 
           <label className="grid gap-2 text-sm font-semibold text-neutral-700 lg:col-span-2">
+            Descricao curta em chines
+            <textarea
+              value={form.short_description_zh}
+              onChange={(event) => updateField("short_description_zh", event.target.value)}
+              className="min-h-28 rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-[#d6b46a]"
+              placeholder="Resumo comercial para /zh"
+            />
+          </label>
+
+          <label className="grid gap-2 text-sm font-semibold text-neutral-700 lg:col-span-2">
             Descrição completa
             <textarea
               value={form.full_description}
               onChange={(event) => updateField("full_description", event.target.value)}
               className="min-h-40 rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-[#d6b46a]"
               placeholder="Detalhes, diferenciais, uso comercial e informações adicionais"
+            />
+          </label>
+
+          <label className="grid gap-2 text-sm font-semibold text-neutral-700 lg:col-span-2">
+            Descricao completa em chines
+            <textarea
+              value={form.full_description_zh}
+              onChange={(event) => updateField("full_description_zh", event.target.value)}
+              className="min-h-40 rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-[#d6b46a]"
+              placeholder="Detalhes para /zh"
+            />
+          </label>
+
+          <label className="grid gap-2 text-sm font-semibold text-neutral-700 lg:col-span-2">
+            Especificacoes
+            <textarea
+              value={form.specifications}
+              onChange={(event) => updateField("specifications", event.target.value)}
+              className="min-h-28 rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-[#d6b46a]"
+              placeholder="Especificacoes tecnicas ou comerciais"
+            />
+          </label>
+
+          <label className="grid gap-2 text-sm font-semibold text-neutral-700 lg:col-span-2">
+            Especificacoes em chines
+            <textarea
+              value={form.specifications_zh}
+              onChange={(event) => updateField("specifications_zh", event.target.value)}
+              className="min-h-28 rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-[#d6b46a]"
+              placeholder="Especificacoes para /zh"
             />
           </label>
 
@@ -326,6 +429,16 @@ export default function ProductForm({ mode }: ProductFormProps) {
             />
             Produto em destaque
           </label>
+
+          <label className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white px-4 py-4 text-sm font-semibold text-neutral-700">
+            <input
+              type="checkbox"
+              checked={form.show_quote_button}
+              onChange={(event) => updateField("show_quote_button", event.target.checked)}
+              className="h-4 w-4 accent-[#d6b46a]"
+            />
+            Mostrar botao de cotacao
+          </label>
         </div>
       </section>
 
@@ -346,6 +459,46 @@ export default function ProductForm({ mode }: ProductFormProps) {
               }}
             />
           </label>
+
+          <div className="grid gap-5">
+            <label className="grid gap-2 text-sm font-semibold text-neutral-700">
+              Galeria do produto
+              <textarea
+                value={form.gallery_urls}
+                onChange={(event) => updateField("gallery_urls", event.target.value)}
+                className="min-h-28 rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-[#d6b46a]"
+                placeholder="Uma URL por linha"
+              />
+              <MediaPicker
+                folder="images"
+                onSelect={(url) =>
+                  updateField("gallery_urls", [form.gallery_urls, url].filter(Boolean).join("\n"))
+                }
+              />
+            </label>
+
+            <label className="grid gap-2 text-sm font-semibold text-neutral-700">
+              Video
+              <input
+                value={form.video_url}
+                onChange={(event) => updateField("video_url", event.target.value)}
+                className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[#d6b46a]"
+                placeholder="URL do video"
+              />
+              <MediaPicker folder="videos" onSelect={(url) => updateField("video_url", url)} />
+            </label>
+
+            <label className="grid gap-2 text-sm font-semibold text-neutral-700">
+              PDF
+              <input
+                value={form.pdf_url}
+                onChange={(event) => updateField("pdf_url", event.target.value)}
+                className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[#d6b46a]"
+                placeholder="URL do PDF"
+              />
+              <MediaPicker folder="pdfs" onSelect={(url) => updateField("pdf_url", url)} />
+            </label>
+          </div>
 
           {form.main_image_url ? (
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-neutral-200">

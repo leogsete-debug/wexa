@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Save } from "lucide-react";
 import MediaPicker from "@/components/admin/MediaPicker";
 import { normalizeCatalogPdfUrl } from "@/lib/catalogs";
-import { fallbackSiteSettings, mergeSiteSettings } from "@/lib/site-settings";
+import { buildWhatsappUrl, fallbackSiteSettings, normalizeWhatsappNumber, mergeSiteSettings } from "@/lib/site-settings";
 import { supabase } from "@/lib/supabase";
 import type { SiteSettings } from "@/types/site-settings";
 
@@ -24,8 +24,9 @@ type TextFieldConfig = {
 
 const generalFields: TextFieldConfig[] = [
   { name: "company_name", label: "Nome da empresa" },
-  { name: "whatsapp_number", label: "WhatsApp" },
-  { name: "whatsapp_url", label: "Link do WhatsApp" },
+  { name: "whatsapp_number", label: "Número do WhatsApp" },
+  { name: "floating_whatsapp_message", label: "Mensagem automática", type: "textarea" },
+  { name: "whatsapp_url", label: "URL gerada automaticamente" },
   { name: "email", label: "E-mail" },
 ];
 
@@ -56,6 +57,18 @@ const catalogFields: TextFieldConfig[] = [
   { name: "catalog_title_zh", label: "Título do catálogo em chinês" },
   { name: "catalog_subtitle_zh", label: "Subtítulo do catálogo em chinês", type: "textarea" },
   { name: "catalog_pdf_url", label: "Link do PDF do catálogo" },
+];
+
+const seoFields: TextFieldConfig[] = [
+  { name: "seo_title", label: "Título SEO" },
+  { name: "seo_description", label: "Descrição SEO", type: "textarea" },
+  { name: "seo_keywords", label: "Palavras-chave SEO", type: "textarea" },
+  { name: "seo_title_zh", label: "Título SEO em chinês" },
+  { name: "seo_description_zh", label: "Descrição SEO em chinês", type: "textarea" },
+  { name: "seo_og_title", label: "Título Open Graph" },
+  { name: "seo_og_description", label: "Descrição Open Graph", type: "textarea" },
+  { name: "seo_image_url", label: "Imagem SEO/Open Graph" },
+  { name: "seo_canonical", label: "URL canônica" },
 ];
 
 const heroVisibilityFields: Array<{
@@ -92,7 +105,7 @@ function SettingsTextField({
   const pickerFolder =
     field.name === "catalog_pdf_url"
       ? "pdfs"
-      : field.name === "hero_image_url" || field.name === "hero_mobile_image_url"
+      : field.name === "hero_image_url" || field.name === "hero_mobile_image_url" || field.name === "seo_image_url"
         ? "images"
         : null;
 
@@ -103,15 +116,22 @@ function SettingsTextField({
         <textarea
           value={String(settings[field.name] ?? "")}
           onChange={(event) => onChange(field.name, event.target.value)}
+          readOnly={field.name === "whatsapp_url"}
           className="min-h-28 rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-[#d6b46a]"
         />
       ) : (
         <input
           value={String(settings[field.name] ?? "")}
           onChange={(event) => onChange(field.name, event.target.value)}
-          className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[#d6b46a]"
+          readOnly={field.name === "whatsapp_url"}
+          className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[#d6b46a] read-only:bg-neutral-50 read-only:text-neutral-500"
         />
       )}
+      {field.name === "whatsapp_url" ? (
+        <span className="text-xs font-medium leading-5 text-neutral-500">
+          Gerada automaticamente a partir do número e da mensagem.
+        </span>
+      ) : null}
       {pickerFolder ? (
         <MediaPicker
           folder={pickerFolder}
@@ -167,7 +187,23 @@ export default function AdminSettingsPage() {
   }, []);
 
   function updateField(field: TextSettingField, value: string) {
-    setSettings((current) => ({ ...current, [field]: value }));
+    setSettings((current) => {
+      const next = { ...current, [field]: value };
+
+      if (field === "whatsapp_number" || field === "floating_whatsapp_message") {
+        const whatsappNumber = normalizeWhatsappNumber(field === "whatsapp_number" ? value : next.whatsapp_number);
+        const whatsappMessage = String(
+          field === "floating_whatsapp_message" ? value : next.floating_whatsapp_message,
+        );
+
+        next.whatsapp_number = whatsappNumber;
+        next.floating_whatsapp_number = whatsappNumber;
+        next.floating_whatsapp_message = whatsappMessage;
+        next.whatsapp_url = buildWhatsappUrl(whatsappNumber, whatsappMessage);
+      }
+
+      return next;
+    });
   }
 
   function updateBooleanField(field: BooleanSettingField, value: boolean) {
@@ -181,9 +217,20 @@ export default function AdminSettingsPage() {
     setError("");
 
     const catalogPdfUrl = normalizeCatalogPdfUrl(settings.catalog_pdf_url);
+    const whatsappNumber = normalizeWhatsappNumber(settings.whatsapp_number);
+    const whatsappMessage = String(settings.floating_whatsapp_message ?? "");
+    const whatsappUrl = buildWhatsappUrl(whatsappNumber, whatsappMessage);
     const payload = {
-      whatsapp_url: settings.whatsapp_url,
-      whatsapp_number: settings.whatsapp_number,
+      whatsapp_url: whatsappUrl,
+      whatsapp_number: whatsappNumber,
+      floating_whatsapp_number: whatsappNumber,
+      floating_whatsapp_message: whatsappMessage,
+      floating_whatsapp_message_zh: settings.floating_whatsapp_message_zh,
+      floating_whatsapp_aria_label: settings.floating_whatsapp_aria_label,
+      floating_whatsapp_aria_label_zh: settings.floating_whatsapp_aria_label_zh,
+      show_floating_whatsapp: settings.show_floating_whatsapp,
+      floating_whatsapp_position: settings.floating_whatsapp_position,
+      floating_whatsapp_size: settings.floating_whatsapp_size,
       email: settings.email,
       company_name: settings.company_name,
       company_name_zh: settings.company_name_zh,
@@ -208,6 +255,16 @@ export default function AdminSettingsPage() {
       catalog_subtitle: settings.catalog_subtitle,
       catalog_subtitle_zh: settings.catalog_subtitle_zh,
       catalog_pdf_url: catalogPdfUrl,
+      seo_title: settings.seo_title,
+      seo_title_zh: settings.seo_title_zh,
+      seo_description: settings.seo_description,
+      seo_description_zh: settings.seo_description_zh,
+      seo_keywords: settings.seo_keywords,
+      seo_og_title: settings.seo_og_title,
+      seo_og_description: settings.seo_og_description,
+      seo_image_url: settings.seo_image_url,
+      seo_canonical: settings.seo_canonical,
+      seo_indexable: settings.seo_indexable,
     };
 
     const request = recordId
@@ -258,6 +315,20 @@ export default function AdminSettingsPage() {
               </div>
               <div className="grid gap-5 lg:grid-cols-2">
                 {generalFields.map((field) => (
+                  <SettingsTextField key={field.name} field={field} settings={settings} onChange={updateField} />
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-[1.5rem] border border-white/75 bg-white/80 p-5 shadow-[0_22px_70px_rgba(31,41,55,0.09),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl sm:p-7">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold tracking-[-0.03em] text-[#111]">SEO</h2>
+                <p className="mt-2 text-sm leading-6 text-neutral-500">
+                  Ajuste títulos, descrições, palavras-chave e compartilhamento social.
+                </p>
+              </div>
+              <div className="grid gap-5 lg:grid-cols-2">
+                {seoFields.map((field) => (
                   <SettingsTextField key={field.name} field={field} settings={settings} onChange={updateField} />
                 ))}
               </div>

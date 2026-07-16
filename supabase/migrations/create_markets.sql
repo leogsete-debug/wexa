@@ -45,21 +45,17 @@ create policy "Authenticated users can manage markets"
 on public.markets for all to authenticated using (true) with check (true);
 
 insert into public.markets (name, country, continent, sort_order, published)
-select 'Brasil', 'Brasil', 'America do Sul', 0, true
+select 'China', 'China', 'Asia', 0, true
 where not exists (select 1 from public.markets);
 
 insert into public.markets (name, country, continent, sort_order, published)
-select 'America Latina', null, 'America Latina', 1, true
-where not exists (select 1 from public.markets where name = 'America Latina');
+select 'India', 'India', 'Asia', 1, true
+where not exists (select 1 from public.markets where name = 'India');
 
 insert into public.markets (name, country, continent, sort_order, published)
-select 'Europa', null, 'Europa', 2, true
-where not exists (select 1 from public.markets where name = 'Europa');
+select 'Sudeste Asiatico', null, 'Asia', 2, true
+where not exists (select 1 from public.markets where name = 'Sudeste Asiatico');
 
 insert into public.markets (name, country, continent, sort_order, published)
-select 'America do Norte', null, 'America do Norte', 3, true
-where not exists (select 1 from public.markets where name = 'America do Norte');
-
-insert into public.markets (name, country, continent, sort_order, published)
-select 'Asia', null, 'Asia', 4, true
-where not exists (select 1 from public.markets where name = 'Asia');
+select 'Outros mercados estrategicos', null, null, 3, true
+where not exists (select 1 from public.markets where name = 'Outros mercados estrategicos');

@@ -1,9 +1,12 @@
 import { Globe2, Link, Mail, MessageCircle, Send } from "lucide-react";
 import type { SiteLocale } from "@/components/HomePage";
+import TrackedWhatsappLink from "@/components/TrackedWhatsappLink";
 import type { FooterContent } from "@/types/content";
+import type { SiteSettings } from "@/types/site-settings";
 
 type FooterProps = {
   content: FooterContent;
+  settings: SiteSettings;
   locale?: SiteLocale;
 };
 
@@ -27,31 +30,42 @@ const companyLinks = {
 const text = {
   pt: {
     institutionalFallback:
-      "Empresa internacional de exportação conectando produtos brasileiros a compradores globais com padrão internacional.",
+      "A Top Max conecta empresas brasileiras a fabricantes internacionais, oferecendo solucoes de importacao, desenvolvimento de produtos e fornecimento em escala.",
     company: "Empresa",
     contact: "Contato",
-    export: "Exportação",
+    export: "Importacao",
     whatsapp: "WhatsApp comercial",
-    market: "Brasil | Mercados internacionais",
+    market: "Brasil | Fornecimento internacional",
     exportText:
-      "Curadoria de produtos, apresentação comercial e suporte para negociações internacionais.",
+      "Selecao de fornecedores, negociacao, qualidade, logistica internacional e suporte para entrada dos produtos no Brasil.",
     rights: "Todos os direitos reservados",
   },
   zh: {
     institutionalFallback:
-      "TopMax Export 为国际买家提供专业产品展示、商务支持和长期出口合作。",
+      "Top Max 将巴西企业与国际制造商连接起来，提供进口、产品开发和规模化供应解决方案。",
     company: "公司",
     contact: "联系我们",
-    export: "出口业务",
+    export: "进口业务",
     whatsapp: "商务 WhatsApp",
-    market: "巴西 | 国际市场",
-    exportText: "提供产品展示、商务支持和国际贸易合作。",
+    market: "巴西 | 全球供应",
+    exportText: "供应商选择、商务谈判、质量控制、国际物流以及产品进入巴西市场的支持服务。",
     rights: "版权所有",
   },
 };
 
-export default function Footer({ content, locale = "pt" }: FooterProps) {
+export default function Footer({ content, settings, locale = "pt" }: FooterProps) {
   const labels = text[locale];
+  const institutionalText =
+    locale === "zh"
+      ? content.institutional_text_zh || content.institutional_text || labels.institutionalFallback
+      : content.institutional_text || labels.institutionalFallback;
+  const columnTitles = {
+    company: locale === "zh" ? content.company_column_title_zh || content.company_column_title || labels.company : content.company_column_title || labels.company,
+    contact: locale === "zh" ? content.contact_column_title_zh || content.contact_column_title || labels.contact : content.contact_column_title || labels.contact,
+    export: locale === "zh" ? content.export_column_title_zh || content.export_column_title || labels.export : content.export_column_title || labels.export,
+  };
+  const exportText = locale === "zh" ? content.export_text_zh || content.export_text || labels.exportText : content.export_text || labels.exportText;
+  const rightsText = locale === "zh" ? content.rights_text_zh || content.rights_text || labels.rights : content.rights_text || labels.rights;
   const socialLinks = [
     { label: "Instagram", href: content.instagram, icon: Send },
     { label: "LinkedIn", href: content.linkedin, icon: Link },
@@ -70,7 +84,7 @@ export default function Footer({ content, locale = "pt" }: FooterProps) {
           </strong>
 
           <p className="mt-5 max-w-md text-sm leading-7 text-white/58 sm:mt-6">
-            {locale === "zh" ? labels.institutionalFallback : content.institutional_text || labels.institutionalFallback}
+            {institutionalText}
           </p>
 
           <div className="mt-6 flex gap-3 sm:mt-7">
@@ -89,7 +103,7 @@ export default function Footer({ content, locale = "pt" }: FooterProps) {
 
         <nav>
           <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#d6b46a] sm:tracking-[0.24em]">
-            {labels.company}
+            {columnTitles.company}
           </h3>
 
           <div className="mt-5 grid gap-3 text-sm text-white/62">
@@ -107,17 +121,18 @@ export default function Footer({ content, locale = "pt" }: FooterProps) {
 
         <div>
           <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#d6b46a] sm:tracking-[0.24em]">
-            {labels.contact}
+            {columnTitles.contact}
           </h3>
 
           <div className="mt-5 grid gap-4 text-sm text-white/62">
-            <a
-              href={content.whatsapp}
+            <TrackedWhatsappLink
+              href={settings.whatsapp_url}
+              source="footer"
               className="inline-flex items-center gap-3 transition duration-300 hover:text-[#25d366]"
             >
               <MessageCircle size={17} />
               {labels.whatsapp}
-            </a>
+            </TrackedWhatsappLink>
 
             <a
               href={`mailto:${content.email}`}
@@ -133,16 +148,16 @@ export default function Footer({ content, locale = "pt" }: FooterProps) {
 
         <div>
           <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#d6b46a] sm:tracking-[0.24em]">
-            {labels.export}
+            {columnTitles.export}
           </h3>
 
-          <p className="mt-5 text-sm leading-7 text-white/58">{labels.exportText}</p>
+          <p className="mt-5 text-sm leading-7 text-white/58">{exportText}</p>
         </div>
       </div>
 
       <div className="relative mx-auto mt-7 flex max-w-7xl flex-col gap-3 text-[0.68rem] uppercase leading-5 tracking-[0.12em] text-white/38 sm:flex-row sm:items-center sm:justify-between sm:text-xs sm:tracking-[0.18em]">
         <span>{content.copyright}</span>
-        <span>{labels.rights}</span>
+        <span>{rightsText}</span>
       </div>
     </footer>
   );

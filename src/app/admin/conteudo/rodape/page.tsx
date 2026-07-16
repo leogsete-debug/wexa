@@ -16,6 +16,15 @@ const fields: Array<{ name: keyof FooterContent; label: string; textarea?: boole
   { name: "whatsapp", label: "WhatsApp" },
   { name: "email", label: "Email" },
   { name: "institutional_text", label: "Texto institucional", textarea: true },
+  { name: "institutional_text_zh", label: "Texto institucional em chines", textarea: true },
+  { name: "company_column_title", label: "Titulo da coluna Empresa" },
+  { name: "company_column_title_zh", label: "Titulo da coluna Empresa em chines" },
+  { name: "contact_column_title", label: "Titulo da coluna Contato" },
+  { name: "contact_column_title_zh", label: "Titulo da coluna Contato em chines" },
+  { name: "export_column_title", label: "Titulo da coluna Importacao" },
+  { name: "export_column_title_zh", label: "Titulo da coluna Importacao em chines" },
+  { name: "export_text", label: "Texto da coluna Importacao", textarea: true },
+  { name: "export_text_zh", label: "Texto da coluna Importacao em chines", textarea: true },
 ];
 
 export default function FooterContentPage() {
@@ -64,6 +73,15 @@ export default function FooterContentPage() {
       whatsapp: form.whatsapp,
       email: form.email,
       institutional_text: form.institutional_text,
+      institutional_text_zh: form.institutional_text_zh,
+      company_column_title: form.company_column_title,
+      company_column_title_zh: form.company_column_title_zh,
+      contact_column_title: form.contact_column_title,
+      contact_column_title_zh: form.contact_column_title_zh,
+      export_column_title: form.export_column_title,
+      export_column_title_zh: form.export_column_title_zh,
+      export_text: form.export_text,
+      export_text_zh: form.export_text_zh,
     };
 
     const request = recordId

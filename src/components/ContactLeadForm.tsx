@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { Send } from "lucide-react";
 import type { SiteLocale } from "@/components/HomePage";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import { supabase } from "@/lib/supabase";
 
 type LeadForm = {
@@ -13,6 +14,9 @@ type LeadForm = {
   country: string;
   city: string;
   product_interest: string;
+  estimated_volume: string;
+  recurring_purchase: string;
+  private_label: string;
   message: string;
 };
 
@@ -24,6 +28,9 @@ const initialForm: LeadForm = {
   country: "",
   city: "",
   product_interest: "",
+  estimated_volume: "",
+  recurring_purchase: "",
+  private_label: "",
   message: "",
 };
 
@@ -32,10 +39,13 @@ const text = {
     name: "Nome",
     company: "Empresa",
     email: "Email",
-    phone: "Telefone",
-    country: "País",
-    city: "Cidade",
-    product: "Produto de interesse",
+    phone: "Telefone/WhatsApp",
+    country: "Cidade",
+    city: "Estado",
+    product: "Produto procurado",
+    volume: "Volume estimado",
+    recurring: "Compra recorrente?",
+    privateLabel: "Personalizacao ou marca propria?",
     message: "Mensagem",
     send: "Enviar mensagem",
     sending: "Enviando...",
@@ -50,7 +60,10 @@ const text = {
     phone: "电话",
     country: "国家",
     city: "城市",
-    product: "感兴趣的产品",
+    product: "采购产品",
+    volume: "预计数量",
+    recurring: "是否长期采购？",
+    privateLabel: "是否需要定制或自有品牌？",
     message: "留言",
     send: "发送信息",
     sending: "发送中...",
@@ -63,6 +76,17 @@ const text = {
 function toNullable(value: string) {
   const trimmed = value.trim();
   return trimmed ? trimmed : null;
+}
+
+function buildLeadMessage(form: LeadForm) {
+  const details = [
+    form.estimated_volume.trim() ? `Volume estimado: ${form.estimated_volume.trim()}` : null,
+    form.recurring_purchase.trim() ? `Compra recorrente: ${form.recurring_purchase.trim()}` : null,
+    form.private_label.trim() ? `Personalizacao ou marca propria: ${form.private_label.trim()}` : null,
+    form.message.trim() ? `Mensagem: ${form.message.trim()}` : null,
+  ].filter(Boolean);
+
+  return details.length ? details.join("\n") : null;
 }
 
 export default function ContactLeadForm({ locale = "pt" }: { locale?: SiteLocale }) {
@@ -96,7 +120,7 @@ export default function ContactLeadForm({ locale = "pt" }: { locale?: SiteLocale
       country: toNullable(form.country),
       city: toNullable(form.city),
       product_interest: toNullable(form.product_interest),
-      message: toNullable(form.message),
+      message: buildLeadMessage(form),
       source: "site_contact",
       status: "Novo",
       assigned_to: null,
@@ -108,6 +132,14 @@ export default function ContactLeadForm({ locale = "pt" }: { locale?: SiteLocale
       setIsSaving(false);
       return;
     }
+
+    trackAnalyticsEvent({
+      eventName: "lead_submit",
+      source: "lead_form",
+      locale,
+      productName: toNullable(form.product_interest) || "Lead",
+      debug: false,
+    });
 
     setForm(initialForm);
     setMessage(labels.success);
@@ -164,6 +196,27 @@ export default function ContactLeadForm({ locale = "pt" }: { locale?: SiteLocale
         className="h-12 rounded-2xl border border-black/10 bg-white/75 px-4 text-sm outline-none transition focus:border-[#d6b46a]"
         placeholder={labels.product}
       />
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <input
+          value={form.estimated_volume}
+          onChange={(event) => updateField("estimated_volume", event.target.value)}
+          className="h-12 rounded-2xl border border-black/10 bg-white/75 px-4 text-sm outline-none transition focus:border-[#d6b46a]"
+          placeholder={labels.volume}
+        />
+        <input
+          value={form.recurring_purchase}
+          onChange={(event) => updateField("recurring_purchase", event.target.value)}
+          className="h-12 rounded-2xl border border-black/10 bg-white/75 px-4 text-sm outline-none transition focus:border-[#d6b46a]"
+          placeholder={labels.recurring}
+        />
+        <input
+          value={form.private_label}
+          onChange={(event) => updateField("private_label", event.target.value)}
+          className="h-12 rounded-2xl border border-black/10 bg-white/75 px-4 text-sm outline-none transition focus:border-[#d6b46a]"
+          placeholder={labels.privateLabel}
+        />
+      </div>
 
       <textarea
         value={form.message}

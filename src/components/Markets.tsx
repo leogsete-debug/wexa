@@ -1,48 +1,51 @@
 import { Globe2 } from "lucide-react";
 import type { SiteLocale } from "@/components/HomePage";
+import { sectionText } from "@/lib/site-content";
 import type { MarketContent } from "@/types/content";
+import type { SiteSection } from "@/types/content";
 
 type MarketsProps = {
   markets: MarketContent[];
   locale?: SiteLocale;
+  section?: SiteSection;
 };
 
 const text = {
   pt: {
-    eyebrow: "Mercados atendidos",
-    title: "Presença comercial para conectar o Brasil ao mundo.",
+    eyebrow: "FORNECIMENTO INTERNACIONAL",
+    title: "Conectados aos principais polos industriais do mundo.",
     description:
-      "Atendimento corporativo para importadores, distribuidores, redes e compradores que precisam de comunicação clara, documentação e operação de exportação confiável.",
-    card: "Relacionamento comercial, curadoria de produtos e suporte para operações internacionais.",
+      "Desenvolvemos fornecedores em mercados estrategicos para oferecer qualidade, variedade e competitividade ao Brasil.",
+    card: "Origem fornecedora, desenvolvimento comercial e suporte para importacao ao Brasil.",
   },
   zh: {
-    eyebrow: "国际市场",
-    title: "连接巴西与全球买家",
+    eyebrow: "全球供应网络",
+    title: "连接世界主要制造与供应中心",
     description:
-      "为进口商、分销商、连锁企业和采购商提供企业级服务，支持清晰沟通、文件准备和可靠出口运营。",
-    card: "提供商务关系维护、产品筛选和国际业务支持。",
+      "我们在战略市场开发供应商，为巴西客户提供质量、产品多样性和竞争力。",
+    card: "供应来源、商务开发以及进入巴西市场的进口支持。",
   },
 };
 
 const marketNameZh: Record<string, string> = {
-  Brasil: "巴西",
-  "America Latina": "拉丁美洲",
-  "América Latina": "拉丁美洲",
-  "America do Sul": "南美洲",
-  "América do Sul": "南美洲",
-  "America do Norte": "北美洲",
-  "América do Norte": "北美洲",
-  Europa: "欧洲",
+  China: "中国",
+  India: "印度",
+  "Índia": "印度",
+  "Sudeste Asiatico": "东南亚",
+  "Sudeste Asiático": "东南亚",
+  "Outros mercados estrategicos": "其他战略市场",
+  "Outros mercados estratégicos": "其他战略市场",
   Asia: "亚洲",
-  Ásia: "亚洲",
-  Africa: "非洲",
-  África: "非洲",
-  "Oriente Medio": "中东",
-  "Oriente Médio": "中东",
 };
 
-export default function Markets({ markets, locale = "pt" }: MarketsProps) {
-  const labels = text[locale];
+export default function Markets({ markets, locale = "pt", section }: MarketsProps) {
+  const fallbackLabels = text[locale];
+  const labels = {
+    eyebrow: sectionText(section, "eyebrow", locale, fallbackLabels.eyebrow),
+    title: sectionText(section, "title", locale, fallbackLabels.title),
+    description: sectionText(section, "description", locale, fallbackLabels.description),
+    card: sectionText(section, "card_text", locale, fallbackLabels.card),
+  };
   return (
     <section className="relative overflow-hidden bg-[#080b0d] px-4 py-16 text-white sm:px-6 sm:py-20 lg:px-8 lg:py-32">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(214,180,106,0.2),transparent_30rem),radial-gradient(circle_at_82%_12%,rgba(255,255,255,0.1),transparent_24rem)]" />
@@ -71,10 +74,10 @@ export default function Markets({ markets, locale = "pt" }: MarketsProps) {
                 <Globe2 size={22} strokeWidth={1.8} />
               </div>
               <h3 className="text-[1.45rem] font-semibold tracking-[-0.03em] sm:text-2xl">
-                {locale === "zh" ? marketNameZh[market.name] || marketNameZh[market.continent || ""] || market.name : market.name}
+                {locale === "zh" ? market.name_zh || marketNameZh[market.name] || marketNameZh[market.continent || ""] || market.name : market.name}
               </h3>
               <p className="mt-3 text-sm leading-6 text-white/58">
-                {labels.card}
+                {locale === "zh" ? market.description_zh || market.description || labels.card : market.description || labels.card}
               </p>
             </article>
           ))}

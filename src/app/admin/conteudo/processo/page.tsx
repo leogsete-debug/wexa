@@ -9,7 +9,9 @@ import type { ProcessStepContent } from "@/types/content";
 type StepForm = {
   id?: string;
   title: string;
+  title_zh: string;
   description: string;
+  description_zh: string;
   icon: string;
   sort_order: string;
   published: boolean;
@@ -17,7 +19,9 @@ type StepForm = {
 
 const initialForm: StepForm = {
   title: "",
+  title_zh: "",
   description: "",
+  description_zh: "",
   icon: "send",
   sort_order: "0",
   published: true,
@@ -64,7 +68,9 @@ export default function ProcessContentPage() {
     setForm({
       id: step.id,
       title: step.title ?? "",
+      title_zh: step.title_zh ?? "",
       description: step.description ?? "",
+      description_zh: step.description_zh ?? "",
       icon: step.icon ?? "send",
       sort_order: String(step.sort_order ?? 0),
       published: step.published ?? true,
@@ -89,7 +95,9 @@ export default function ProcessContentPage() {
 
     const payload = {
       title: form.title.trim(),
+      title_zh: toNullable(form.title_zh),
       description: toNullable(form.description),
+      description_zh: toNullable(form.description_zh),
       icon: toNullable(form.icon),
       sort_order: Number.isFinite(Number(form.sort_order)) ? Number(form.sort_order) : 0,
       published: form.published,
@@ -159,8 +167,16 @@ export default function ProcessContentPage() {
               <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[#d6b46a]" />
             </label>
             <label className="grid gap-2 text-sm font-semibold text-neutral-700">
+              Título em chinês
+              <input value={form.title_zh} onChange={(event) => setForm((current) => ({ ...current, title_zh: event.target.value }))} className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[#d6b46a]" />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold text-neutral-700">
               Descrição
               <textarea value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} className="min-h-28 rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-[#d6b46a]" />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold text-neutral-700">
+              Descrição em chinês
+              <textarea value={form.description_zh} onChange={(event) => setForm((current) => ({ ...current, description_zh: event.target.value }))} className="min-h-28 rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-[#d6b46a]" />
             </label>
             <label className="grid gap-2 text-sm font-semibold text-neutral-700">
               Ícone

@@ -1,4 +1,4 @@
--- Sprint 8: processo de exportacao editavel
+-- Sprint 8: processo de importacao editavel
 
 create extension if not exists pgcrypto;
 
@@ -46,11 +46,14 @@ on public.export_process_steps for all to authenticated using (true) with check 
 insert into public.export_process_steps (title, description, icon, sort_order, published)
 select * from (
   values
-    ('Solicitacao', 'Recebemos a demanda, destino, volume e requisitos comerciais.', 'send', 0, true),
-    ('Cotacao', 'Estruturamos preco, prazos, condicoes e escopo de fornecimento.', 'clipboard', 1, true),
-    ('Producao', 'Coordenamos producao ou separacao com fornecedores qualificados.', 'factory', 2, true),
-    ('Controle de qualidade', 'Validamos padroes, documentacao e consistencia do pedido.', 'shield', 3, true),
-    ('Embarque', 'Organizamos logistica, exportacao e acompanhamento operacional.', 'ship', 4, true),
-    ('Entrega', 'Acompanhamos a chegada e o pos-venda com visao de longo prazo.', 'package', 5, true)
+    ('Entendimento da demanda', 'Analisamos o produto, volume, especificacoes, publico e objetivo comercial.', 'send', 0, true),
+    ('Busca de fornecedores', 'Localizamos fabricantes internacionais compativeis com a necessidade da empresa.', 'factory', 1, true),
+    ('Cotacao e negociacao', 'Negociamos preco, condicoes comerciais, prazo de producao e pedido minimo.', 'clipboard', 2, true),
+    ('Desenvolvimento e amostras', 'Avaliamos materiais, especificacoes, embalagens, personalizacao e amostras.', 'package', 3, true),
+    ('Producao', 'Acompanhamos o andamento da producao junto ao fabricante.', 'factory', 4, true),
+    ('Inspecao de qualidade', 'Verificamos qualidade, acabamento, quantidade e conformidade antes do embarque.', 'shield', 5, true),
+    ('Logistica internacional', 'Organizamos transporte, consolidacao de carga e embarque internacional.', 'ship', 6, true),
+    ('Documentacao e nacionalizacao', 'Acompanhamos documentos, importacao e desembaraco aduaneiro.', 'clipboard', 7, true),
+    ('Entrega no Brasil', 'O produto chega pronto para distribuicao no mercado brasileiro.', 'package', 8, true)
 ) as seed(title, description, icon, sort_order, published)
 where not exists (select 1 from public.export_process_steps);

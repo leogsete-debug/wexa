@@ -29,6 +29,7 @@ import type { Product } from "@/types/product";
 
 const sidebarItems = [
   { title: "Dashboard", icon: Gauge, href: "/admin" },
+  { title: "Analytics", icon: BarChart3, href: "/admin/analytics" },
   { title: "Produtos", icon: Package, href: "/admin/produtos" },
   { title: "Categorias", icon: FolderTree, href: "#" },
   { title: "Galeria", icon: ImageIcon, href: "#" },
@@ -41,6 +42,7 @@ const sidebarItems = [
 ];
 
 const contentItems = [
+  { title: "Site", icon: FileText, href: "/admin/conteudo/site" },
   { title: "Empresa", icon: Building2, href: "/admin/conteudo/empresa" },
   { title: "Mercados", icon: Globe2, href: "/admin/conteudo/mercados" },
   { title: "Processo", icon: FileText, href: "/admin/conteudo/processo" },

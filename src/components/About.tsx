@@ -18,17 +18,16 @@ export default function About({ content, locale = "pt" }: AboutProps) {
   const translatedContent = isZh
     ? {
         ...content,
-        section_title: "关于 TOPMAX EXPORT",
-        section_subtitle: "连接巴西制造商与全球市场",
-        full_text:
-          "TopMax Export 致力于将巴西优质产品连接到国际市场，为买家提供专业、可靠且高效的商务支持。\n\n我们的平台展示产品、企业实力、出口流程和商业信息，帮助国际客户更快了解公司并建立合作信任。",
-        mission: "国际出口合作伙伴",
-        vision: "值得信赖的出口伙伴",
-        differentials: "为国际买家提供专业产品展示、商务支持和长期合作关系。",
-        stat_20: "20+|行业经验",
-        stat_35: "35+|合作国家",
-        stat_500: "500+|产品选择",
-        stat_100: "100%|质量承诺",
+        section_title: content.section_title_zh || content.section_title,
+        section_subtitle: content.section_subtitle_zh || content.section_subtitle,
+        full_text: content.full_text_zh || content.full_text,
+        mission: content.mission_zh || content.mission,
+        vision: content.vision_zh || content.vision,
+        differentials: content.differentials_zh || content.differentials,
+        stat_20: content.stat_20_zh || content.stat_20,
+        stat_35: content.stat_35_zh || content.stat_35,
+        stat_500: content.stat_500_zh || content.stat_500,
+        stat_100: content.stat_100_zh || content.stat_100,
       }
     : content;
   const stats = [

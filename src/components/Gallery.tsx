@@ -1,31 +1,35 @@
 import Image from "next/image";
 import type { SiteLocale } from "@/components/HomePage";
+import { fallbackGalleryItems, sectionText } from "@/lib/site-content";
+import type { GalleryItem, SiteSection } from "@/types/content";
 
-const images = [
-  { src: "/images/galeria-1.jpeg", className: "md:row-span-2" },
-  { src: "/images/galeria-2.jpeg", className: "" },
-  { src: "/images/galeria-3.jpeg", className: "" },
-  { src: "/images/galeria-4.jpeg", className: "md:col-span-2" },
-];
-
-const text = {
-  pt: {
-    eyebrow: "Galeria",
-    title: "Imagens para uma apresentação comercial de alto impacto.",
-    description:
-      "Um recorte visual editorial para apoiar reuniões, feiras, propostas e negociações com compradores globais.",
-    alt: "Galeria TopMax Export",
-  },
-  zh: {
-    eyebrow: "产品展示",
-    title: "高影响力的商业展示图片",
-    description: "展示产品、质量和市场定位",
-    alt: "TopMax Export 产品展示",
-  },
+type GalleryProps = {
+  locale?: SiteLocale;
+  section?: SiteSection;
+  items?: GalleryItem[];
 };
 
-export default function Gallery({ locale = "pt" }: { locale?: SiteLocale }) {
-  const labels = text[locale];
+export default function Gallery({ locale = "pt", section, items = fallbackGalleryItems }: GalleryProps) {
+  if (section && !section.enabled) return null;
+
+  const labels = {
+    eyebrow: sectionText(section, "eyebrow", locale, locale === "zh" ? "国际业务" : "OPERACAO INTERNACIONAL"),
+    title: sectionText(
+      section,
+      "title",
+      locale,
+      locale === "zh" ? "产品、生产与物流的一体化运营" : "Produtos, producao e logistica em uma operacao integrada.",
+    ),
+    description: sectionText(
+      section,
+      "description",
+      locale,
+      locale === "zh"
+        ? "展示我们与国际制造商及巴西市场之间的完整业务流程。"
+        : "Uma visao da nossa atuacao junto a fabricantes internacionais e ao mercado brasileiro.",
+    ),
+    alt: sectionText(section, "alt", locale, locale === "zh" ? "TopMax Export 产品展示" : "Galeria TopMax Export"),
+  };
 
   return (
     <section id="galeria" className="relative px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-32">
@@ -46,14 +50,16 @@ export default function Gallery({ locale = "pt" }: { locale?: SiteLocale }) {
         </div>
 
         <div className="mt-10 grid auto-rows-[220px] gap-4 sm:mt-14 sm:auto-rows-[260px] sm:gap-5 md:grid-cols-2 lg:grid-cols-3 lg:auto-rows-[280px]">
-          {images.map((image, index) => (
+          {items.map((image, index) => (
             <figure
-              key={image.src}
-              className={`group relative overflow-hidden rounded-[1.35rem] border border-white/70 bg-neutral-200 shadow-[0_24px_80px_rgba(31,41,55,0.13)] sm:rounded-[2rem] ${image.className}`}
+              key={image.id}
+              className={`group relative overflow-hidden rounded-[1.35rem] border border-white/70 bg-neutral-200 shadow-[0_24px_80px_rgba(31,41,55,0.13)] sm:rounded-[2rem] ${
+                image.featured ? "md:row-span-2" : index === 3 ? "md:col-span-2" : ""
+              }`}
             >
               <Image
-                src={image.src}
-                alt={`${labels.alt} ${index + 1}`}
+                src={image.image_url}
+                alt={locale === "zh" ? image.alt_text_zh || image.alt_text || `${labels.alt} ${index + 1}` : image.alt_text || `${labels.alt} ${index + 1}`}
                 fill
                 sizes="(min-width: 768px) 33vw, 100vw"
                 className="object-cover transition duration-700 group-hover:scale-110"

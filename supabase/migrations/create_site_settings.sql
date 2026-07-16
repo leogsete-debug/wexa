@@ -65,23 +65,23 @@ insert into public.site_settings (
   catalog_pdf_url
 )
 select
-  'https://wa.me/5500000000000',
-  '+55 00 00000-0000',
+  'https://wa.me/5521995016888?text=Ol%C3%A1!%20Encontrei%20a%20Top%20Max%20atrav%C3%A9s%20do%20site%20e%20gostaria%20de%20conhecer%20melhor%20seus%20produtos%20e%20solu%C3%A7%C3%B5es%20de%20importa%C3%A7%C3%A3o.%20Poderiam%20me%20ajudar%3F',
+  '5521995016888',
   'comercial@topmaxexport.com',
   'TopMax Export',
-  'Vitrine internacional de exportação',
-  'Conectando a excelência brasileira ao mercado global',
-  'Uma vitrine digital de alto padrão para apresentar produtos, fortalecer negociações e conectar compradores ao mercado internacional.',
+  'IMPORTACAO E FORNECIMENTO GLOBAL',
+  'Conectando o Brasil aos melhores fabricantes do mundo.',
+  'Importamos produtos da China, India e outros mercados estrategicos, oferecendo solucoes completas para distribuidores, atacadistas, varejistas e grandes redes brasileiras.',
   'Solicitar cotação',
-  'https://wa.me/5500000000000',
-  'Ver produtos',
+  null,
+  'Conhecer produtos',
   '#produtos',
   '/images/hero.jpeg',
   '/images/hero.jpeg',
   true,
   true,
-  'Catálogo Completo',
-  'Baixe nosso catálogo completo com produtos, especificações e preços.',
+  'Conheca nosso portfolio de produtos importados.',
+  'Baixe o catalogo completo e encontre produtos para distribuicao, atacado, varejo e grandes redes.',
   null
 where not exists (select 1 from public.site_settings);
 

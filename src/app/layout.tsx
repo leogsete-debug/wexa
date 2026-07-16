@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TopMax Export | Exportação brasileira de alto padrão",
+  title: "Top Max | Importacao da China, India e mercados internacionais",
   description:
-    "Vitrine internacional de exportação conectando produtos brasileiros a compradores globais com apresentação comercial premium.",
+    "A Top Max conecta empresas brasileiras a fabricantes internacionais, oferecendo importacao, desenvolvimento de fornecedores, controle de qualidade e logistica global.",
   alternates: {
     canonical: "/",
     languages: {

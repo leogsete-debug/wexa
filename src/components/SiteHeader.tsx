@@ -4,6 +4,9 @@ import { Menu, Settings, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import type { SiteLocale } from "@/components/HomePage";
+import TrackedWhatsappLink from "@/components/TrackedWhatsappLink";
+import { sectionArray, sectionBoolean, sectionText } from "@/lib/site-content";
+import type { SiteSection } from "@/types/content";
 import type { SiteSettings } from "@/types/site-settings";
 
 const navLinks = {
@@ -41,6 +44,7 @@ const text = {
 type SiteHeaderProps = {
   settings: SiteSettings;
   locale?: SiteLocale;
+  section?: SiteSection;
 };
 
 function LanguageSelector({ locale }: { locale: SiteLocale }) {
@@ -62,10 +66,27 @@ function LanguageSelector({ locale }: { locale: SiteLocale }) {
   );
 }
 
-export default function SiteHeader({ settings, locale = "pt" }: SiteHeaderProps) {
+type HeaderLink = {
+  label: string;
+  label_zh?: string;
+  href: string;
+};
+
+export default function SiteHeader({ settings, locale = "pt", section }: SiteHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const labels = text[locale];
-  const links = navLinks[locale];
+  const links = sectionArray<HeaderLink>(section, "nav", navLinks.pt).map((link) => ({
+    href: link.href,
+    label: locale === "zh" ? link.label_zh || link.label : link.label,
+  }));
+  const quoteLabel = sectionText(section, "quote_label", locale, settings.header_quote_text || labels.quote);
+  const quoteUrl = settings.whatsapp_url;
+  const showLanguageSelector = settings.show_language_selector ?? sectionBoolean(section, "show_language_selector", true);
+  const showAdminButton = settings.show_admin_button ?? sectionBoolean(section, "show_admin_button", true);
+  const showQuoteButton = settings.show_quote_button ?? sectionBoolean(section, "show_quote_button", true);
+  const adminLabel = sectionText(section, "admin_label", locale, labels.admin);
+  const openMenuLabel = sectionText(section, "open_menu_label", locale, labels.openMenu);
+  const closeMenuLabel = sectionText(section, "close_menu_label", locale, labels.closeMenu);
 
   return (
     <header className="fixed left-0 top-0 z-50 w-full border-b border-white/15 bg-[#07100d]/55 shadow-[0_20px_70px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
@@ -87,27 +108,32 @@ export default function SiteHeader({ settings, locale = "pt" }: SiteHeaderProps)
         </nav>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <LanguageSelector locale={locale} />
+          {showLanguageSelector ? <LanguageSelector locale={locale} /> : null}
 
-          <a
-            href={settings.whatsapp_url}
+          {showQuoteButton ? (
+          <TrackedWhatsappLink
+            href={quoteUrl}
+            source="header"
             className="hidden rounded-full border border-white/35 bg-white/10 px-2.5 py-2 text-[0.54rem] font-semibold uppercase tracking-[0.1em] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition duration-300 hover:-translate-y-0.5 hover:border-[#d6b46a]/80 hover:bg-[#d6b46a] hover:text-[#111] hover:shadow-[0_18px_45px_rgba(214,180,106,0.28)] min-[430px]:inline-flex min-[430px]:px-3 sm:px-6 sm:py-3 sm:text-[0.7rem] sm:tracking-[0.18em]"
           >
-            {labels.quote}
-          </a>
+            {quoteLabel}
+          </TrackedWhatsappLink>
+          ) : null}
 
+          {showAdminButton ? (
           <a
             href="/admin"
-            aria-label={labels.admin}
-            title={labels.admin}
+            aria-label={adminLabel}
+            title={adminLabel}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition duration-300 hover:bg-[#d6b46a] hover:text-[#111] sm:h-11 sm:w-11"
           >
             <Settings size={17} strokeWidth={2} />
           </a>
+          ) : null}
 
           <button
             type="button"
-            aria-label={isMenuOpen ? labels.closeMenu : labels.openMenu}
+            aria-label={isMenuOpen ? closeMenuLabel : openMenuLabel}
             aria-expanded={isMenuOpen}
             onClick={() => setIsMenuOpen((open) => !open)}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition duration-300 hover:bg-white/18 sm:h-11 sm:w-11 lg:hidden"
@@ -134,13 +160,16 @@ export default function SiteHeader({ settings, locale = "pt" }: SiteHeaderProps)
                 {link.label}
               </a>
             ))}
-            <a
+            {showQuoteButton ? (
+            <TrackedWhatsappLink
               className="rounded-xl px-3 py-2.5 text-[#f0d89a] transition duration-300 hover:bg-white/12 sm:rounded-2xl sm:px-4 sm:py-3 min-[430px]:hidden"
-              href={settings.whatsapp_url}
+              href={quoteUrl}
+              source="header"
               onClick={() => setIsMenuOpen(false)}
             >
-              {labels.quote}
-            </a>
+              {quoteLabel}
+            </TrackedWhatsappLink>
+            ) : null}
           </nav>
         </div>
       </div>

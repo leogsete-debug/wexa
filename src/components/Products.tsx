@@ -1,8 +1,12 @@
 import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
 import type { SiteLocale } from "@/components/HomePage";
+import TrackedWhatsappLink from "@/components/TrackedWhatsappLink";
+import { sectionText } from "@/lib/site-content";
+import type { SiteSection } from "@/types/content";
 
 type PublicProduct = {
+  id?: string | null;
   name: string;
   category: string;
   badge: string;
@@ -11,6 +15,7 @@ type PublicProduct = {
 };
 
 type SupabaseProduct = {
+  id: string;
   name: string | null;
   name_zh?: string | null;
   category: string | null;
@@ -23,31 +28,31 @@ type SupabaseProduct = {
 
 const fallbackProducts: PublicProduct[] = [
   {
-    name: "Café verde especial",
-    category: "Agronegócio",
-    badge: "Seleção exportação",
-    description: "Grãos selecionados para compradores internacionais, torrefações e distribuidores corporativos.",
+    name: "Linha cama, mesa e banho",
+    category: "Produtos texteis",
+    badge: "Importacao",
+    description: "Produtos texteis importados para distribuidores, atacadistas, varejistas e grandes redes.",
     image: "/images/produto-1.jpeg",
   },
   {
-    name: "Alimentos especiais brasileiros",
-    category: "Exportação de alimentos",
-    badge: "Alta demanda",
-    description: "Produtos brasileiros com apresentação comercial pronta para mercados exigentes.",
+    name: "Roupas de cama",
+    category: "Cama",
+    badge: "Fornecimento em escala",
+    description: "Solucoes para cama com desenvolvimento de fornecedores, padronizacao e fornecimento continuo.",
     image: "/images/produto-2.jpeg",
   },
   {
-    name: "Ingredientes naturais",
-    category: "Commodities",
-    badge: "Rastreável",
-    description: "Insumos naturais com foco em consistência, rastreabilidade e escala comercial.",
+    name: "Toalhas e banho",
+    category: "Banho",
+    badge: "Qualidade",
+    description: "Produtos para banho desenvolvidos junto a fabricantes internacionais conforme demanda do mercado brasileiro.",
     image: "/images/produto-3.jpeg",
   },
   {
-    name: "Suprimentos industriais",
-    category: "Soluções corporativas",
-    badge: "Fornecimento seguro",
-    description: "Soluções para importadores que buscam fornecedores confiáveis no Brasil.",
+    name: "Tapetes e cobertores",
+    category: "Casa",
+    badge: "Portfolio",
+    description: "Categorias texteis selecionadas para varejo, atacado e operacoes de grande volume.",
     image: "/images/produto-4.jpeg",
   },
   {
@@ -58,41 +63,41 @@ const fallbackProducts: PublicProduct[] = [
     image: "/images/galeria-1.jpeg",
   },
   {
-    name: "Seleção para exportação",
-    category: "Portfólio curado",
+    name: "Desenvolvimento sob demanda",
+    category: "Fornecimento global",
     badge: "Sob demanda",
-    description: "Portfólio sob demanda para operações comerciais, feiras e negociações internacionais.",
+    description: "Busca, negociacao e desenvolvimento de produtos com fabricantes internacionais para o Brasil.",
     image: "/images/galeria-2.jpeg",
   },
 ];
 
 const fallbackProductsZh: PublicProduct[] = [
   {
-    name: "精品巴西绿咖啡",
-    category: "农业商务",
-    badge: "出口精选",
-    description: "为国际买家、烘焙商和企业分销商精选的优质咖啡豆。",
+    name: "床品、桌布和浴室纺织品",
+    category: "纺织产品",
+    badge: "进口供应",
+    description: "面向分销商、批发商、零售商和大型连锁企业的进口纺织产品。",
     image: "/images/produto-1.jpeg",
   },
   {
-    name: "巴西特色食品",
-    category: "食品出口",
-    badge: "高需求",
-    description: "面向严苛市场、具备商业展示能力的巴西产品。",
+    name: "床上用品",
+    category: "床品",
+    badge: "规模化供应",
+    description: "通过供应商开发、标准化和持续供货提供床上用品解决方案。",
     image: "/images/produto-2.jpeg",
   },
   {
-    name: "天然原料",
-    category: "大宗商品",
-    badge: "可追溯",
-    description: "注重一致性、可追溯性和商业规模的天然原料。",
+    name: "毛巾与浴室用品",
+    category: "浴室纺织",
+    badge: "质量控制",
+    description: "根据巴西市场需求与国际制造商共同开发的浴室用品。",
     image: "/images/produto-3.jpeg",
   },
   {
-    name: "工业供应品",
-    category: "企业解决方案",
-    badge: "稳定供应",
-    description: "为寻求巴西可靠供应商的进口商提供解决方案。",
+    name: "地毯与毯子",
+    category: "家居用品",
+    badge: "产品组合",
+    description: "为零售、批发和大批量业务精选的纺织品类。",
     image: "/images/produto-4.jpeg",
   },
   {
@@ -103,36 +108,36 @@ const fallbackProductsZh: PublicProduct[] = [
     image: "/images/galeria-1.jpeg",
   },
   {
-    name: "出口产品精选",
-    category: "精选组合",
+    name: "按需产品开发",
+    category: "全球供应",
     badge: "按需供应",
-    description: "面向商务运营、展会和国际谈判的按需产品组合。",
+    description: "为巴西市场寻找、谈判并开发国际制造商的产品。",
     image: "/images/galeria-2.jpeg",
   },
 ];
 
 const text = {
   pt: {
-    eyebrow: "Catálogo de alto padrão",
-    title: "Produtos preparados para negociações internacionais.",
+    eyebrow: "PORTFOLIO DE IMPORTACAO",
+    title: "Produtos importados dos principais mercados mundiais.",
     description:
-      "Uma seleção comercial para compradores, distribuidores e importadores que exigem qualidade, apresentação e segurança no fornecimento.",
+      "Selecionamos fabricantes internacionais para oferecer ao mercado brasileiro produtos competitivos, com qualidade, escala e fornecimento continuo.",
     button: "Solicitar cotação",
     product: "Produto",
     featured: "Destaque",
     published: "Publicado",
-    fallbackDescription: "Produto disponível para negociações internacionais.",
+    fallbackDescription: "Produto importado disponivel para distribuicao, atacado, varejo e grandes redes.",
   },
   zh: {
-    eyebrow: "高端产品目录",
-    title: "为国际商务洽谈准备的产品",
+    eyebrow: "进口产品组合",
+    title: "来自全球主要市场的进口产品",
     description:
-      "面向采购商、分销商和进口商的商业精选，注重质量、展示效果和供应安全。",
+      "我们精选国际制造商，为巴西市场提供具有竞争力、质量稳定、可规模化供应的产品。",
     button: "申请报价",
     product: "产品",
     featured: "重点推荐",
     published: "已发布",
-    fallbackDescription: "该产品可用于国际商务洽谈和出口合作。",
+    fallbackDescription: "适合分销、批发、零售和大型连锁企业的进口产品。",
   },
 };
 
@@ -144,6 +149,7 @@ function mapSupabaseProduct(product: SupabaseProduct, locale: SiteLocale): Publi
   const labels = text[locale];
 
   return {
+    id: product.id,
     name: locale === "zh" ? product.name_zh || product.name : product.name,
     category: locale === "zh" ? product.category_zh || product.category || labels.product : product.category || labels.product,
     badge: product.featured ? labels.featured : labels.published,
@@ -200,10 +206,22 @@ async function getPublishedProducts(locale: SiteLocale): Promise<PublicProduct[]
 type ProductsProps = {
   whatsappUrl: string;
   locale?: SiteLocale;
+  section?: SiteSection;
 };
 
-export default async function Products({ whatsappUrl, locale = "pt" }: ProductsProps) {
-  const labels = text[locale];
+export default async function Products({ whatsappUrl, locale = "pt", section }: ProductsProps) {
+  const fallbackLabels = text[locale];
+  const labels = {
+    ...fallbackLabels,
+    eyebrow: sectionText(section, "eyebrow", locale, fallbackLabels.eyebrow),
+    title: sectionText(section, "title", locale, fallbackLabels.title),
+    description: sectionText(section, "description", locale, fallbackLabels.description),
+    button: sectionText(section, "quote_button", locale, fallbackLabels.button),
+    product: sectionText(section, "product_fallback", locale, fallbackLabels.product),
+    featured: sectionText(section, "featured_badge", locale, fallbackLabels.featured),
+    published: sectionText(section, "published_badge", locale, fallbackLabels.published),
+    fallbackDescription: sectionText(section, "description_fallback", locale, fallbackLabels.fallbackDescription),
+  };
   const publishedProducts = await getPublishedProducts(locale);
   const products = publishedProducts.length > 0 ? publishedProducts : locale === "zh" ? fallbackProductsZh : fallbackProducts;
 
@@ -259,12 +277,15 @@ export default async function Products({ whatsappUrl, locale = "pt" }: ProductsP
                 <p className="mt-4 text-[0.95rem] leading-7 text-neutral-600 sm:mt-5 sm:text-[0.98rem]">
                   {product.description}
                 </p>
-                <a
+                <TrackedWhatsappLink
                   href={whatsappUrl}
+                  source="product"
+                  productId={product.id}
+                  productName={product.name}
                   className="mt-6 inline-flex w-full justify-center rounded-full bg-[#111] px-5 py-3.5 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[#d6b46a] hover:text-[#111] hover:shadow-[0_18px_45px_rgba(214,180,106,0.28)] sm:mt-8 sm:w-auto sm:px-6 sm:text-[0.72rem] sm:tracking-[0.18em] md:mt-auto md:self-start"
                 >
                   {labels.button}
-                </a>
+                </TrackedWhatsappLink>
               </div>
             </article>
           ))}

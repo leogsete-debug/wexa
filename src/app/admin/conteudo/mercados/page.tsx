@@ -10,6 +10,10 @@ import type { MarketContent } from "@/types/content";
 type MarketForm = {
   id?: string;
   name: string;
+  name_zh: string;
+  description: string;
+  description_zh: string;
+  icon: string;
   country: string;
   continent: string;
   image_url: string;
@@ -19,6 +23,10 @@ type MarketForm = {
 
 const initialForm: MarketForm = {
   name: "",
+  name_zh: "",
+  description: "",
+  description_zh: "",
+  icon: "globe",
   country: "",
   continent: "",
   image_url: "",
@@ -67,6 +75,10 @@ export default function MarketsContentPage() {
     setForm({
       id: market.id,
       name: market.name ?? "",
+      name_zh: market.name_zh ?? "",
+      description: market.description ?? "",
+      description_zh: market.description_zh ?? "",
+      icon: market.icon ?? "globe",
       country: market.country ?? "",
       continent: market.continent ?? "",
       image_url: market.image_url ?? "",
@@ -93,6 +105,10 @@ export default function MarketsContentPage() {
 
     const payload = {
       name: form.name.trim(),
+      name_zh: toNullable(form.name_zh),
+      description: toNullable(form.description),
+      description_zh: toNullable(form.description_zh),
+      icon: toNullable(form.icon),
       country: toNullable(form.country),
       continent: toNullable(form.continent),
       image_url: toNullable(form.image_url),
@@ -161,6 +177,10 @@ export default function MarketsContentPage() {
             <h2 className="text-xl font-semibold tracking-[-0.03em]">{form.id ? "Editar mercado" : "Adicionar mercado"}</h2>
             {[
               ["name", "Nome"],
+              ["name_zh", "Nome em chinês"],
+              ["description", "Descrição"],
+              ["description_zh", "Descrição em chinês"],
+              ["icon", "Ícone"],
               ["country", "País"],
               ["continent", "Continente"],
               ["image_url", "Imagem"],

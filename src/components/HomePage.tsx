@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import SiteHeader from "@/components/SiteHeader";
 import Hero from "@/components/Hero";
 import About from "@/components/About";
@@ -10,7 +11,7 @@ import CatalogCTA from "@/components/CatalogCTA";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import WhatsappButton from "@/components/WhatsappButton";
-import AnalyticsPageView from "@/components/AnalyticsPageView";
+import PageViewTracker from "@/components/PageViewTracker";
 import { getLatestPublishedCatalog, resolveCatalogPdfUrl } from "@/lib/catalogs";
 import {
   getPublicCompanyContent,
@@ -78,7 +79,9 @@ export default async function HomePage({ locale = "pt" }: HomePageProps) {
 
   return (
     <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(214,180,106,0.14),_transparent_32rem),linear-gradient(180deg,_#fbfaf7_0%,_#f4f1eb_48%,_#ffffff_100%)] text-[#161616] selection:bg-[#d7b46a]/30">
-      <AnalyticsPageView locale={locale} />
+      <Suspense fallback={null}>
+        <PageViewTracker />
+      </Suspense>
       <SiteHeader settings={translatedSettings} locale={locale} section={sectionByKey(siteSections, "header")} />
       <Hero settings={translatedSettings} locale={locale} section={sectionByKey(siteSections, "hero")} />
       <About content={companyContent} locale={locale} />

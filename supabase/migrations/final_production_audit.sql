@@ -1,24 +1,8 @@
--- Cria eventos publicos de analytics sem dados pessoais sensiveis.
--- Execute manualmente no Supabase SQL Editor com uma conta administradora.
+-- Final production audit adjustments for Top Max.
+-- Safe to run in Supabase SQL Editor with an administrator account.
+-- This migration does not drop tables, delete records, or recreate existing data.
 
 create extension if not exists pgcrypto;
-
-create table if not exists public.analytics_events (
-  id uuid primary key default gen_random_uuid(),
-  event_name text not null,
-  event_source text,
-  page_path text,
-  locale text,
-  product_id uuid null,
-  product_name text null,
-  referrer text null,
-  utm_source text null,
-  utm_medium text null,
-  utm_campaign text null,
-  device_type text null,
-  visitor_id text null,
-  created_at timestamptz default now()
-);
 
 alter table public.analytics_events
   add column if not exists visitor_id text;
@@ -32,11 +16,11 @@ alter table public.analytics_events
 create index if not exists analytics_events_event_name_idx
 on public.analytics_events (event_name);
 
-create index if not exists analytics_events_created_at_idx
-on public.analytics_events (created_at desc);
-
 create index if not exists analytics_events_event_source_idx
 on public.analytics_events (event_source);
+
+create index if not exists analytics_events_created_at_idx
+on public.analytics_events (created_at desc);
 
 alter table public.analytics_events enable row level security;
 

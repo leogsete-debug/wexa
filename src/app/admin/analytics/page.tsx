@@ -21,12 +21,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import type { AnalyticsEventName, WhatsappEventSource } from "@/lib/analytics";
 
 type AnalyticsEvent = {
   id: string;
-  event_name: AnalyticsEventName;
-  event_source: WhatsappEventSource | null;
+  event_name: string;
+  event_source: string | null;
   page_path: string | null;
   locale: string | null;
   product_id: string | null;
@@ -70,6 +69,7 @@ const periodOptions = [
 ] as const;
 
 const sourceLabels: Record<string, string> = {
+  site: "Site",
   header: "Header",
   hero: "Hero",
   product: "Produto",
@@ -84,12 +84,27 @@ const sourceLabels: Record<string, string> = {
 };
 
 const eventLabels: Record<string, string> = {
-  page_view: "Visitante",
+  page_view: "Visualizacao de pagina",
   whatsapp_click: "Clique no WhatsApp",
   catalog_download: "Download do catalogo",
   lead_submit: "Lead enviado",
+  product_click: "Clique em produto",
+  gallery_click: "Clique na galeria",
+  phone_click: "Clique no telefone",
+  email_click: "Clique no e-mail",
+  quotation_click: "Clique em cotacao",
+  language_change: "Troca de idioma",
+  button_click: "Clique em botao",
+  form_start: "Formulario iniciado",
+  form_complete: "Formulario concluido",
   test_event: "Evento de teste",
 };
+
+function formatAnalyticsLabel(value: string | null | undefined, labels: Record<string, string>) {
+  const text = value?.trim();
+  if (!text) return "Nao informado";
+  return labels[text] || text.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
 
 function getPeriodStart(period: string) {
   const now = new Date();
@@ -134,7 +149,7 @@ function formatDay(date: Date) {
 function uniqueVisitors(events: AnalyticsEvent[]) {
   const pageViews = events.filter((event) => event.event_name === "page_view");
   const visitors = new Set(pageViews.map((event) => event.visitor_id).filter(Boolean));
-  return visitors.size || pageViews.length;
+  return visitors.size;
 }
 
 export default function AdminAnalyticsPage() {
@@ -146,6 +161,7 @@ export default function AdminAnalyticsPage() {
   const [period, setPeriod] = useState<(typeof periodOptions)[number]["value"]>("30d");
 
   async function loadEvents() {
+    await Promise.resolve();
     setIsLoading(true);
     setError("");
 
@@ -166,13 +182,22 @@ export default function AdminAnalyticsPage() {
   }
 
   useEffect(() => {
-    loadEvents();
+    const timeoutId = window.setTimeout(() => {
+      void loadEvents();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   async function handleLogout() {
     await supabase.auth.signOut();
     router.replace("/admin/login");
     router.refresh();
+  }
+
+  async function refreshData() {
+    router.refresh();
+    await loadEvents();
   }
 
   async function createTestEvent() {
@@ -224,8 +249,10 @@ export default function AdminAnalyticsPage() {
     (event) => event.product_name,
   );
   const pageCounts = countBy(pageViews, (event) => event.page_path);
-  const sourceCounts = countBy(whatsappClicks, (event) => sourceLabels[event.event_source || ""] || event.event_source);
+  const eventCounts = countBy(filteredEvents, (event) => formatAnalyticsLabel(event.event_name, eventLabels));
+  const sourceCounts = countBy(whatsappClicks, (event) => formatAnalyticsLabel(event.event_source, sourceLabels));
   const maxSource = Math.max(1, ...sourceCounts.map((item) => item.value));
+  const maxEvent = Math.max(1, ...eventCounts.map((item) => item.value));
   const maxChart = Math.max(1, ...Array.from({ length: 30 }, (_, index) => index));
   const last30Days = Array.from({ length: 30 }, (_, index) => {
     const day = new Date();
@@ -243,7 +270,8 @@ export default function AdminAnalyticsPage() {
   const maxDayValue = Math.max(1, ...last30Days.map((item) => item.value), maxChart ? 1 : 1);
 
   const kpis = [
-    { title: "Total de visitantes", value: uniqueVisitors(filteredEvents), icon: Users },
+    { title: "Visitantes unicos", value: uniqueVisitors(filteredEvents), icon: Users },
+    { title: "Visualizacoes de pagina", value: pageViews.length, icon: FileText },
     { title: "Cliques no WhatsApp", value: whatsappClicks.length, icon: MousePointerClick },
     { title: "Downloads do catalogo", value: catalogDownloads.length, icon: Tags },
     { title: "Leads enviados", value: leadsSent.length, icon: Inbox },
@@ -330,6 +358,14 @@ export default function AdminAnalyticsPage() {
             <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
+                onClick={refreshData}
+                disabled={isLoading}
+                className="inline-flex h-12 items-center justify-center rounded-full border border-black/10 bg-white px-6 text-xs font-bold uppercase tracking-[0.16em] text-[#111] transition duration-300 hover:bg-[#d6b46a] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Atualizar dados
+              </button>
+              <button
+                type="button"
                 onClick={createTestEvent}
                 disabled={isCreatingTestEvent}
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#111] px-6 text-xs font-bold uppercase tracking-[0.16em] text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[#d6b46a] hover:text-[#111] disabled:cursor-not-allowed disabled:opacity-60"
@@ -379,7 +415,7 @@ export default function AdminAnalyticsPage() {
                 </div>
               </section>
 
-              <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+              <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-7">
                 {kpis.map(({ title, value, icon: Icon }) => (
                   <article key={title} className="rounded-[1.35rem] border border-white/75 bg-white/80 p-5 shadow-[0_18px_55px_rgba(31,41,55,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl">
                     <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#111] text-[#d6b46a]">
@@ -434,6 +470,27 @@ export default function AdminAnalyticsPage() {
                 </article>
               </section>
 
+              <section className="mt-8 rounded-[1.5rem] border border-white/75 bg-white/80 p-6 shadow-[0_22px_70px_rgba(31,41,55,0.09),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl">
+                <h2 className="text-xl font-semibold tracking-[-0.03em] text-[#111]">Eventos por tipo</h2>
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  {eventCounts.length === 0 ? (
+                    <p className="text-sm leading-6 text-neutral-500">Nenhum evento encontrado.</p>
+                  ) : (
+                    eventCounts.map((item) => (
+                      <div key={item.label}>
+                        <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+                          <span className="font-semibold text-[#141414]">{item.label}</span>
+                          <span className="text-neutral-500">{item.value}</span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-black/5">
+                          <div className="h-full rounded-full bg-[#111]" style={{ width: `${Math.max(8, (item.value / maxEvent) * 100)}%` }} />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </section>
+
               <section className="mt-8 overflow-hidden rounded-[1.5rem] border border-white/75 bg-white/80 shadow-[0_22px_70px_rgba(31,41,55,0.09),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl">
                 <div className="border-b border-black/10 px-5 py-5">
                   <h2 className="text-xl font-semibold tracking-[-0.03em] text-[#111]">Eventos recentes</h2>
@@ -450,8 +507,8 @@ export default function AdminAnalyticsPage() {
                   {filteredEvents.slice(0, 80).map((event) => (
                     <div key={event.id} className="grid gap-2 px-5 py-4 text-sm text-neutral-600 lg:grid-cols-[10rem_12rem_10rem_1fr_1fr_7rem] lg:items-center lg:gap-4">
                       <span className="font-semibold text-[#111]">{formatDateTime(event.created_at)}</span>
-                      <span>{eventLabels[event.event_name] || event.event_name}</span>
-                      <span>{sourceLabels[event.event_source || ""] || event.event_source || "-"}</span>
+                      <span>{formatAnalyticsLabel(event.event_name, eventLabels)}</span>
+                      <span>{event.event_source ? formatAnalyticsLabel(event.event_source, sourceLabels) : "-"}</span>
                       <span className="break-words">{event.page_path || "-"}</span>
                       <span className="break-words">{event.product_name || "-"}</span>
                       <span>{event.locale === "zh" ? "ZH" : event.locale === "pt" ? "PT" : "-"}</span>

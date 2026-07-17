@@ -133,7 +133,7 @@ export default function ContactLeadForm({ locale = "pt" }: { locale?: SiteLocale
       return;
     }
 
-    trackAnalyticsEvent({
+    await trackAnalyticsEvent({
       eventName: "lead_submit",
       source: "lead_form",
       locale,

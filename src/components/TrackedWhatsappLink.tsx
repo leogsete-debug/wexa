@@ -39,7 +39,6 @@ export default function TrackedWhatsappLink({
         event.preventDefault();
 
         await trackWhatsappClick({ source, productId, productName });
-        console.info("Abrindo WhatsApp", { source, href });
         const openedWindow = window.open(href, "_blank", "noopener,noreferrer");
 
         if (!openedWindow) {

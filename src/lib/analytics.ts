@@ -1,22 +1,6 @@
-export type WhatsappEventSource =
-  | "header"
-  | "hero"
-  | "product"
-  | "catalog"
-  | "cta"
-  | "contact"
-  | "footer"
-  | "floating_button"
-  | "page"
-  | "lead_form"
-  | "test";
+export type WhatsappEventSource = string;
 
-export type AnalyticsEventName =
-  | "page_view"
-  | "whatsapp_click"
-  | "catalog_download"
-  | "lead_submit"
-  | "test_event";
+export type AnalyticsEventName = string;
 
 export type TrackWhatsappClickInput = {
   source: WhatsappEventSource;
@@ -28,7 +12,7 @@ export type TrackWhatsappClickInput = {
   debug?: boolean;
 };
 
-function getDeviceType() {
+export function getDeviceType() {
   if (typeof window === "undefined") return "desktop";
 
   const userAgent = window.navigator.userAgent.toLowerCase();
@@ -43,7 +27,7 @@ function getLocaleFromPath(pathname: string) {
   return pathname.startsWith("/zh") ? "zh" : "pt";
 }
 
-function getVisitorId() {
+export function getVisitorId() {
   const storageKey = "topmax_visitor_id";
   const current = window.localStorage.getItem(storageKey);
 
@@ -69,6 +53,7 @@ function buildWhatsappPayload({
 
   return {
     eventName,
+    eventSource: source,
     source,
     pagePath: pagePath || window.location.pathname,
     locale: locale || getLocaleFromPath(window.location.pathname),
@@ -95,7 +80,19 @@ async function sendWithFetch(body: string, timeoutMs: number) {
       keepalive: true,
       signal: controller.signal,
     });
-    const result = await response.json().catch(() => null);
+    const responseBody = await response.text();
+
+    if (!response.ok) {
+      throw new Error(`Analytics ${response.status}: ${responseBody}`);
+    }
+
+    let result = null;
+
+    try {
+      result = JSON.parse(responseBody);
+    } catch {
+      result = null;
+    }
 
     return {
       ok: response.ok && result?.ok !== false,
@@ -127,30 +124,31 @@ export async function trackAnalyticsEvent({
   debug = true,
 }: TrackWhatsappClickInput) {
   if (typeof window === "undefined") return { ok: false, saved: false };
+  const shouldDebug = debug && process.env.NODE_ENV !== "production";
 
   try {
-    if (debug) console.info("Analytics iniciado", { eventName, source, productId, productName });
+    if (shouldDebug) console.info("Analytics iniciado", { eventName, source, productId, productName });
 
     const payload = buildWhatsappPayload({ eventName, source, pagePath, locale, productId, productName });
     const body = JSON.stringify(payload);
 
     try {
-      if (debug) console.info("Evento enviado", { transport: "fetch" });
+      if (shouldDebug) console.info("Evento enviado", { transport: "fetch" });
       const result = await sendWithFetch(body, 1500);
 
       if (result.saved) {
-        if (debug) console.info("Evento salvo", result);
+        if (shouldDebug) console.info("Evento salvo", result);
         return result;
       }
 
-      if (debug) console.warn("Evento enviado, mas não confirmado como salvo", result);
+      if (shouldDebug) console.warn("Evento enviado, mas não confirmado como salvo", result);
     } catch (error) {
-      if (debug) console.warn("Falha no fetch de analytics; tentando sendBeacon", error);
+      if (shouldDebug) console.warn("Falha no fetch de analytics; tentando sendBeacon", error);
     }
 
     const beaconQueued = sendWithBeacon(body);
 
-    if (debug) {
+    if (shouldDebug) {
       if (beaconQueued) {
         console.info("Evento enviado", { transport: "sendBeacon" });
       } else {
@@ -160,7 +158,7 @@ export async function trackAnalyticsEvent({
 
     return { ok: beaconQueued, saved: false, transport: "sendBeacon" };
   } catch (error) {
-    if (debug) console.error("Erro no analytics", { stage: "client", error });
+    if (shouldDebug) console.error("Erro no analytics", { stage: "client", error });
     return { ok: false, saved: false };
   }
 }

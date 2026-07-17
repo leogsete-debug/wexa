@@ -1,27 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import type { AnalyticsEventName, WhatsappEventSource } from "@/lib/analytics";
 
-const allowedEvents = new Set<AnalyticsEventName>([
-  "page_view",
-  "whatsapp_click",
-  "catalog_download",
-  "lead_submit",
-  "test_event",
-]);
-const allowedSources = new Set<WhatsappEventSource>([
-  "header",
-  "hero",
-  "product",
-  "catalog",
-  "cta",
-  "contact",
-  "footer",
-  "floating_button",
-  "page",
-  "lead_form",
-  "test",
-]);
 const allowedLocales = new Set(["pt", "zh"]);
 const allowedDeviceTypes = new Set(["mobile", "tablet", "desktop"]);
 
@@ -44,7 +23,15 @@ function cleanEnum(value: unknown, allowed: Set<string>, maxLength = 32) {
   return text && allowed.has(text) ? text : null;
 }
 
+function cleanRequiredText(value: unknown) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
 export async function POST(request: NextRequest) {
+  const isDevelopment = process.env.NODE_ENV !== "production";
+
   try {
     const payload = await request.json().catch(() => null);
 
@@ -52,8 +39,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, saved: false, error: "invalid_payload" }, { status: 400 });
     }
 
-    const eventName = cleanEnum(payload.eventName || payload.event_name || "whatsapp_click", allowedEvents);
-    const eventSource = cleanEnum(payload.source, allowedSources);
+    const eventName = cleanRequiredText(payload.eventName ?? payload.event_name);
+    const eventSource = cleanRequiredText(payload.eventSource ?? payload.event_source ?? payload.source);
 
     if (!eventName || !eventSource) {
       return NextResponse.json({ ok: false, saved: false, error: "invalid_event" }, { status: 400 });
@@ -82,27 +69,45 @@ export async function POST(request: NextRequest) {
       utm_campaign: cleanText(payload.utmCampaign, 120),
       device_type: cleanEnum(payload.deviceType, allowedDeviceTypes, 16),
       visitor_id: cleanText(payload.visitorId, 80),
+      created_at: new Date().toISOString(),
     };
-    const { error } = await supabase.from("analytics_events").insert(eventPayload);
+    const supabaseResponse = await supabase.from("analytics_events").insert(eventPayload);
+    const { error } = supabaseResponse;
+
+    if (isDevelopment && eventName === "page_view") {
+      console.log("Resposta do Supabase", {
+        status: supabaseResponse.status,
+        statusText: supabaseResponse.statusText,
+        data: supabaseResponse.data,
+        error: supabaseResponse.error,
+      });
+    }
 
     if (error) {
-      console.error("Analytics insert failed", {
+      console.error("Supabase analytics error:", {
         code: error.code,
         message: error.message,
         details: error.details,
         hint: error.hint,
-        payload: eventPayload,
       });
 
-      return NextResponse.json(
-        { ok: false, saved: false, error: "supabase_insert_failed", details: error.message },
+      return Response.json(
+        isDevelopment
+          ? {
+              success: false,
+              error: error.message,
+              code: error.code,
+              details: error.details,
+              hint: error.hint,
+            }
+          : { success: false, error: "analytics_insert_failed" },
         { status: 500 },
       );
     }
 
     return NextResponse.json({ ok: true, saved: true }, { status: 201 });
   } catch (error) {
-    console.error("Analytics route failed", error);
+    console.error("Erro ao salvar analytics:", error);
     return NextResponse.json({ ok: false, saved: false, error: "route_exception" }, { status: 500 });
   }
 }

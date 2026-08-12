@@ -5,6 +5,7 @@ export type Catalog = {
   title: string;
   description: string | null;
   pdf_url: string | null;
+  external_pdf_url: string | null;
   file_name: string | null;
   file_size: number | null;
   cover_image_url: string | null;
@@ -19,6 +20,7 @@ export type CatalogPayload = {
   title: string;
   description: string | null;
   pdf_url: string | null;
+  external_pdf_url: string | null;
   file_name: string | null;
   file_size: number | null;
   cover_image_url: string | null;

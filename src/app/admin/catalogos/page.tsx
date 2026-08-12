@@ -11,6 +11,8 @@ import {
   getCatalogStatusLabel,
   getCatalogStoragePathFromUrl,
   isValidCatalogPdfUrl,
+  normalizeExternalCatalogPdfUrl,
+  resolveCatalogSourceUrl,
 } from "@/lib/catalogs";
 import { formatFileSize } from "@/lib/media";
 import { supabase } from "@/lib/supabase";
@@ -83,7 +85,7 @@ export default function AdminCatalogsPage() {
     const nextStatus: CatalogStatus = catalog.status === "published" ? "archived" : "published";
     const nextIsActive = nextStatus === "published";
 
-    if (nextIsActive && !isValidCatalogPdfUrl(catalog.pdf_url)) {
+    if (nextIsActive && !normalizeExternalCatalogPdfUrl(catalog.external_pdf_url) && !isValidCatalogPdfUrl(catalog.pdf_url)) {
       setError("Envie um PDF valido antes de publicar o catálogo.");
       return;
     }
@@ -214,8 +216,8 @@ export default function AdminCatalogsPage() {
                         {catalog.file_size ? ` - ${formatFileSize(catalog.file_size)}` : ""}
                       </p>
                     ) : null}
-                    {catalog.pdf_url ? (
-                      <a href={catalog.pdf_url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex text-xs font-semibold text-[#9b7a3e] underline">
+                    {resolveCatalogSourceUrl(catalog.external_pdf_url, catalog.pdf_url) ? (
+                      <a href={resolveCatalogSourceUrl(catalog.external_pdf_url, catalog.pdf_url)!} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex text-xs font-semibold text-[#9b7a3e] underline">
                         Ver PDF
                       </a>
                     ) : null}
@@ -245,10 +247,10 @@ export default function AdminCatalogsPage() {
                     >
                       {catalog.status === "published" ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
-                    {catalog.pdf_url ? (
+                    {resolveCatalogSourceUrl(catalog.external_pdf_url, catalog.pdf_url) ? (
                       <button
                         type="button"
-                        onClick={() => copyUrl(catalog.pdf_url)}
+                        onClick={() => copyUrl(resolveCatalogSourceUrl(catalog.external_pdf_url, catalog.pdf_url))}
                         className="inline-flex h-10 items-center justify-center rounded-full border border-black/10 bg-white px-3 text-[#111] transition hover:bg-[#d6b46a]"
                         aria-label="Copiar link"
                       >

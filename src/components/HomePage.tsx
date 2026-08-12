@@ -12,7 +12,11 @@ import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import WhatsappButton from "@/components/WhatsappButton";
 import PageViewTracker from "@/components/PageViewTracker";
-import { getLatestPublishedCatalog, resolveCatalogPdfUrl } from "@/lib/catalogs";
+import {
+  getLatestPublishedCatalog,
+  normalizeExternalCatalogPdfUrl,
+  resolveCatalogSourceUrl,
+} from "@/lib/catalogs";
 import {
   getPublicCompanyContent,
   getPublicContactContent,
@@ -75,7 +79,9 @@ export default async function HomePage({ locale = "pt" }: HomePageProps) {
   ]);
 
   const translatedSettings = localizeSettings(settings, locale);
-  const catalogPdfUrl = resolveCatalogPdfUrl(latestCatalog?.pdf_url, settings.catalog_pdf_url);
+  const catalogPdfUrl =
+    normalizeExternalCatalogPdfUrl(settings.catalog_pdf_url) ??
+    resolveCatalogSourceUrl(latestCatalog?.external_pdf_url, latestCatalog?.pdf_url);
 
   return (
     <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(214,180,106,0.14),_transparent_32rem),linear-gradient(180deg,_#fbfaf7_0%,_#f4f1eb_48%,_#ffffff_100%)] text-[#161616] selection:bg-[#d7b46a]/30">

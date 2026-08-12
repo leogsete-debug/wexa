@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { normalizeCatalogPdfUrl } from "@/lib/catalogs";
+import { normalizeExternalCatalogPdfUrl } from "@/lib/catalogs";
 import type { SiteSettings } from "@/types/site-settings";
 
 export const DEFAULT_WHATSAPP_NUMBER = "5521995016888";
@@ -94,7 +94,7 @@ export function mergeSiteSettings(settings?: Partial<SiteSettings> | null): Site
     floating_whatsapp_number: merged.floating_whatsapp_number || whatsappNumber,
     floating_whatsapp_message: whatsappMessage,
     whatsapp_url: buildWhatsappUrl(whatsappNumber, whatsappMessage),
-    catalog_pdf_url: normalizeCatalogPdfUrl(merged.catalog_pdf_url) ?? "",
+    catalog_pdf_url: normalizeExternalCatalogPdfUrl(merged.catalog_pdf_url) ?? "",
   };
 }
 

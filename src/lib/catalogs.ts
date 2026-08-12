@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Catalog, CatalogStatus } from "@/types/catalog";
 
 export const CATALOG_BUCKET = "catalogs";
-export const CATALOG_MAX_FILE_SIZE = 30 * 1024 * 1024;
+export const CATALOG_MAX_FILE_SIZE = 200 * 1024 * 1024;
 
 export const catalogStatuses: Array<{
   value: CatalogStatus;
@@ -60,6 +60,21 @@ export function isValidCatalogPdfUrl(value?: string | null) {
   return Boolean(normalizeCatalogPdfUrl(value));
 }
 
+export function normalizeExternalCatalogPdfUrl(value?: string | null) {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+export function resolveCatalogSourceUrl(externalPdfUrl?: string | null, storagePdfUrl?: string | null) {
+  return normalizeExternalCatalogPdfUrl(externalPdfUrl) ?? normalizeCatalogPdfUrl(storagePdfUrl);
+}
+
 export function resolveCatalogPdfUrl(latestCatalogPdfUrl?: string | null, settingsCatalogPdfUrl?: string | null) {
   return normalizeCatalogPdfUrl(latestCatalogPdfUrl) ?? normalizeCatalogPdfUrl(settingsCatalogPdfUrl);
 }
@@ -104,13 +119,12 @@ export async function getLatestPublishedCatalog(): Promise<Catalog | null> {
     .select("*")
     .eq("status", "published")
     .eq("is_active", true)
-    .not("pdf_url", "is", null)
     .order("updated_at", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle<Catalog>();
 
-  if (error || !data || !isValidCatalogPdfUrl(data.pdf_url)) {
+  if (error || !data || !resolveCatalogSourceUrl(data.external_pdf_url, data.pdf_url)) {
     return null;
   }
 

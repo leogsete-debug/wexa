@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { Save } from "lucide-react";
 import MediaPicker from "@/components/admin/MediaPicker";
-import { normalizeCatalogPdfUrl } from "@/lib/catalogs";
+import { normalizeExternalCatalogPdfUrl } from "@/lib/catalogs";
 import { buildWhatsappUrl, fallbackSiteSettings, normalizeWhatsappNumber, mergeSiteSettings } from "@/lib/site-settings";
 import { supabase } from "@/lib/supabase";
 import type { SiteSettings } from "@/types/site-settings";
@@ -121,6 +121,7 @@ function SettingsTextField({
         />
       ) : (
         <input
+          type={field.name === "catalog_pdf_url" ? "url" : "text"}
           value={String(settings[field.name] ?? "")}
           onChange={(event) => onChange(field.name, event.target.value)}
           readOnly={field.name === "whatsapp_url"}
@@ -216,7 +217,12 @@ export default function AdminSettingsPage() {
     setMessage("");
     setError("");
 
-    const catalogPdfUrl = normalizeCatalogPdfUrl(settings.catalog_pdf_url);
+    const catalogPdfUrl = normalizeExternalCatalogPdfUrl(settings.catalog_pdf_url);
+    if (settings.catalog_pdf_url.trim() && !catalogPdfUrl) {
+      setError("O Link do PDF do catálogo deve começar com http:// ou https://.");
+      setIsSaving(false);
+      return;
+    }
     const whatsappNumber = normalizeWhatsappNumber(settings.whatsapp_number);
     const whatsappMessage = String(settings.floating_whatsapp_message ?? "");
     const whatsappUrl = buildWhatsappUrl(whatsappNumber, whatsappMessage);

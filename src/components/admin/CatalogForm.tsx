@@ -11,9 +11,11 @@ import {
   catalogStatuses,
   getCatalogStoragePathFromUrl,
   isValidCatalogPdfUrl,
+  normalizeExternalCatalogPdfUrl,
   sanitizeCatalogFileName,
 } from "@/lib/catalogs";
 import { formatFileSize } from "@/lib/media";
+import { uploadCatalogPdf } from "@/lib/catalog-upload";
 import { supabase } from "@/lib/supabase";
 import type { Catalog, CatalogPayload, CatalogStatus } from "@/types/catalog";
 
@@ -28,6 +30,7 @@ type CatalogFormState = {
   status: CatalogStatus;
   is_active: boolean;
   pdf_url: string;
+  external_pdf_url: string;
   file_name: string;
   file_size: number | null;
   cover_image_url: string;
@@ -40,6 +43,7 @@ const initialState: CatalogFormState = {
   status: "draft",
   is_active: false,
   pdf_url: "",
+  external_pdf_url: "",
   file_name: "",
   file_size: null,
   cover_image_url: "",
@@ -63,6 +67,9 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
   const [isLoading, setIsLoading] = useState(mode === "edit");
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPdf, setIsUploadingPdf] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [pendingPdfPath, setPendingPdfPath] = useState<string | null>(null);
+  const [uploadedPdfUrl, setUploadedPdfUrl] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -93,6 +100,7 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
         status: data.status ?? "draft",
         is_active: Boolean(data.is_active),
         pdf_url: data.pdf_url ?? "",
+        external_pdf_url: data.external_pdf_url ?? "",
         file_name: data.file_name ?? "",
         file_size: data.file_size ?? null,
         cover_image_url: data.cover_image_url ?? "",
@@ -108,7 +116,7 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
-  function handlePdfChange(event: ChangeEvent<HTMLInputElement>) {
+  async function handlePdfChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
     event.target.value = "";
     setError("");
@@ -119,19 +127,23 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
       return;
     }
 
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      setError("Selecione um arquivo PDF valido.");
+    const signature = new TextDecoder().decode(await file.slice(0, 5).arrayBuffer());
+    if (!file.name.toLowerCase().endsWith(".pdf") || signature !== "%PDF-") {
+      setError("Selecione um arquivo PDF válido.");
       setPdfFile(null);
       return;
     }
 
     if (file.size > CATALOG_MAX_FILE_SIZE) {
-      setError(`O PDF deve ter no maximo ${formatFileSize(CATALOG_MAX_FILE_SIZE)}.`);
+      setError("O PDF deve ter no máximo 200 MB.");
       setPdfFile(null);
       return;
     }
 
     setPdfFile(file);
+    setPendingPdfPath(`${crypto.randomUUID()}-${sanitizeCatalogFileName(file.name)}`);
+    setUploadedPdfUrl(null);
+    setUploadProgress(0);
     setForm((current) => ({
       ...current,
       file_name: file.name,
@@ -144,24 +156,8 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
   }
 
   async function uploadPdfFile(file: File) {
-    const fileName = sanitizeCatalogFileName(file.name);
-    const filePath = `${Date.now()}-${fileName}`;
-
-    const { error: uploadError } = await supabase.storage.from(CATALOG_BUCKET).upload(filePath, file, {
-      contentType: "application/pdf",
-      cacheControl: "3600",
-      upsert: false,
-    });
-
-    if (uploadError) {
-      throw new Error("Não foi possível enviar o arquivo.");
-    }
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from(CATALOG_BUCKET).getPublicUrl(filePath);
-
-    return publicUrl;
+    const filePath = pendingPdfPath ?? `${crypto.randomUUID()}-${sanitizeCatalogFileName(file.name)}`;
+    return uploadCatalogPdf({ file, objectPath: filePath, onProgress: setUploadProgress });
   }
 
   async function uploadPdf() {
@@ -169,9 +165,13 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
       return form.pdf_url.trim() || null;
     }
 
+    if (uploadedPdfUrl) return uploadedPdfUrl;
+
     setIsUploadingPdf(true);
     try {
-      return await uploadPdfFile(pdfFile);
+      const url = await uploadPdfFile(pdfFile);
+      setUploadedPdfUrl(url);
+      return url;
     } finally {
       setIsUploadingPdf(false);
     }
@@ -227,12 +227,19 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
     setIsSaving(true);
 
     try {
-      const [pdfUrl, coverImageUrl] = await Promise.all([uploadPdf(), uploadCover()]);
+      const externalPdfUrl = normalizeExternalCatalogPdfUrl(form.external_pdf_url);
+      if (form.external_pdf_url.trim() && !externalPdfUrl) {
+        throw new Error("Informe uma URL externa HTTPS válida.");
+      }
+      const [pdfUrl, coverImageUrl] = await Promise.all([
+        externalPdfUrl ? Promise.resolve(form.pdf_url.trim() || null) : uploadPdf(),
+        uploadCover(),
+      ]);
       const willBePublished = form.status === "published";
       const willBeActive = willBePublished && form.is_active;
 
-      if (willBePublished && !isValidCatalogPdfUrl(pdfUrl)) {
-        throw new Error("Para publicar, envie ou selecione um PDF valido.");
+      if (willBePublished && !externalPdfUrl && !isValidCatalogPdfUrl(pdfUrl)) {
+        throw new Error("Para publicar, envie um PDF ou informe uma URL externa HTTPS válida.");
       }
 
       if (willBeActive) {
@@ -250,6 +257,7 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
         status: form.status || "draft",
         is_active: willBeActive,
         pdf_url: pdfUrl,
+        external_pdf_url: externalPdfUrl,
         file_name: pdfFile?.name ?? toNullable(form.file_name),
         file_size: pdfFile?.size ?? form.file_size,
         cover_image_url: coverImageUrl,
@@ -308,6 +316,20 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
   return (
     <form className="grid gap-6" onSubmit={handleSubmit}>
       <section className="rounded-[1.5rem] border border-white/75 bg-white/80 p-5 shadow-[0_22px_70px_rgba(31,41,55,0.09),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl sm:p-7">
+        <label className="mb-5 grid gap-2 text-sm font-semibold text-neutral-700">
+          URL externa do PDF
+          <input
+            type="url"
+            inputMode="url"
+            value={form.external_pdf_url}
+            onChange={(event) => updateField("external_pdf_url", event.target.value)}
+            className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none transition focus:border-[#d6b46a]"
+            placeholder="https://drive.google.com/..."
+          />
+          <span className="text-xs font-normal leading-5 text-neutral-500">
+            Se preenchida, esta URL HTTPS terá prioridade sobre o PDF enviado ao Supabase.
+          </span>
+        </label>
         <div className="grid gap-5 lg:grid-cols-2">
           <label className="grid gap-2 text-sm font-semibold text-neutral-700">
             Título *
@@ -385,7 +407,11 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
             Upload do PDF
             <span className="flex min-h-36 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-black/15 bg-white px-4 py-6 text-center text-sm text-neutral-500 transition hover:border-[#d6b46a]">
               <FileUp size={28} className="text-[#9b7a3e]" />
-              {isUploadingPdf ? "Enviando..." : pdfFile ? pdfFile.name : "Clique para selecionar um PDF"}
+              {isUploadingPdf
+                ? `Enviando catálogo... ${uploadProgress}%`
+                : pdfFile
+                  ? pdfFile.name
+                  : "Clique para selecionar um PDF"}
               <input
                 type="file"
                 accept="application/pdf,.pdf"
@@ -496,7 +522,11 @@ export default function CatalogForm({ mode }: CatalogFormProps) {
           className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#111] px-7 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:-translate-y-0.5 hover:bg-[#d6b46a] hover:text-[#111] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Save size={17} />
-          {isUploadingPdf ? "Enviando..." : isSaving ? "Salvando..." : "Salvar"}
+          {isUploadingPdf
+            ? `Enviando catálogo... ${uploadProgress}%`
+            : isSaving
+              ? "Salvando..."
+              : "Salvar"}
         </button>
       </div>
     </form>

@@ -8,6 +8,7 @@ create table if not exists public.catalogs (
   title text not null,
   description text,
   pdf_url text,
+  external_pdf_url text,
   file_name text,
   file_size bigint,
   cover_image_url text,
@@ -20,6 +21,7 @@ create table if not exists public.catalogs (
 
 alter table public.catalogs
   add column if not exists file_name text,
+  add column if not exists external_pdf_url text,
   add column if not exists file_size bigint,
   add column if not exists is_active boolean default false;
 
@@ -111,7 +113,7 @@ to public
 using (
   status = 'published'
   and is_active = true
-  and pdf_url is not null
+  and (external_pdf_url is not null or pdf_url is not null)
 );
 
 drop policy if exists "Authenticated users can read all catalogs" on public.catalogs;
@@ -144,7 +146,7 @@ to authenticated
 using (true);
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('catalogs', 'catalogs', true, 31457280, array['application/pdf'])
+values ('catalogs', 'catalogs', true, 209715200, array['application/pdf'])
 on conflict (id) do update
 set
   public = excluded.public,

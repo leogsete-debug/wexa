@@ -2,7 +2,7 @@ import { Download, MessageCircle } from "lucide-react";
 import type { SiteLocale } from "@/components/HomePage";
 import TrackedWhatsappLink from "@/components/TrackedWhatsappLink";
 import TrackedCatalogDownloadLink from "@/components/TrackedCatalogDownloadLink";
-import { normalizeCatalogPdfUrl } from "@/lib/catalogs";
+import { normalizeExternalCatalogPdfUrl } from "@/lib/catalogs";
 import { sectionText } from "@/lib/site-content";
 import type { SiteSection } from "@/types/content";
 import type { SiteSettings } from "@/types/site-settings";
@@ -33,7 +33,7 @@ const text = {
 };
 
 export default function CatalogCTA({ settings, catalogPdfUrl, locale = "pt", section }: CatalogCTAProps) {
-  const pdfUrl = normalizeCatalogPdfUrl(catalogPdfUrl);
+  const pdfUrl = normalizeExternalCatalogPdfUrl(catalogPdfUrl);
   const fallbackLabels = text[locale];
   const labels = {
     eyebrow: sectionText(section, "eyebrow", locale, fallbackLabels.eyebrow),

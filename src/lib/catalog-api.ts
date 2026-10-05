@@ -138,3 +138,39 @@ export async function getCatalogPhoto(key: string, index = 1) {
 export function catalogPhotoUrl(key: string, index = 1) {
   return `/api/catalogo/foto?k=${encodeURIComponent(key)}${index > 1 ? `&n=${index}` : ""}`;
 }
+
+export type CatalogHealth =
+  | {
+      online: true;
+      latencyMs: number;
+      stockDate: string | null;
+      products: number;
+      featured: number;
+      lowStock: string[];
+      outOfStock: string[];
+    }
+  | { online: false; latencyMs: number; error: string };
+
+// Checagem ao vivo (sem cache) usada pela Central de Comando.
+export async function checkCatalogHealth(): Promise<CatalogHealth> {
+  const startedAt = Date.now();
+
+  try {
+    const data = await callCatalog<{ estoqueData?: unknown; produtos?: RawCatalogProduct[] }>("catDados", 20_000);
+    const products = data.produtos ?? [];
+
+    return {
+      online: true,
+      latencyMs: Date.now() - startedAt,
+      stockDate: typeof data.estoqueData === "string" ? data.estoqueData : null,
+      products: products.length,
+      featured: products.filter((product) => product.destaque === true).length,
+      lowStock: products
+        .filter((product) => toNumber(product.fardos) > 0 && toNumber(product.fardos) <= 50)
+        .map((product) => String(product.nome)),
+      outOfStock: products.filter((product) => toNumber(product.fardos) <= 0).map((product) => String(product.nome)),
+    };
+  } catch (error) {
+    return { online: false, latencyMs: Date.now() - startedAt, error: error instanceof Error ? error.message : "erro" };
+  }
+}

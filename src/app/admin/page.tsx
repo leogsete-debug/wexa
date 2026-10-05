@@ -1,8 +1,8 @@
 "use client";
 
 import {
+  Activity,
   BarChart3,
-  ClipboardList,
   Building2,
   Contact,
   FileText,
@@ -30,6 +30,7 @@ import type { Product } from "@/types/product";
 
 const sidebarItems = [
   { title: "Dashboard", icon: Gauge, href: "/admin" },
+  { title: "Central", icon: Activity, href: "/admin/central" },
   { title: "Analytics", icon: BarChart3, href: "/admin/analytics" },
   { title: "Produtos", icon: Package, href: "/admin/produtos" },
   { title: "Categorias", icon: FolderTree, href: "#" },
@@ -60,7 +61,6 @@ const libraryItems = [
 
 const crmItems = [
   { title: "Leads", icon: Inbox, href: "/admin/crm/leads" },
-  { title: "Pedidos", icon: ClipboardList, href: "/admin/pedidos" },
 ];
 
 function countBy<T>(items: T[], getter: (item: T) => string | null | undefined) {

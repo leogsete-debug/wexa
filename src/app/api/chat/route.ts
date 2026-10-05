@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { logAgentRun } from "@/lib/agent-log";
 import { generateChatReply, isAiConfigured, type ChatMessage } from "@/lib/ai";
 import { findMentionedProducts, getSalesAgentKnowledge } from "@/lib/sales-agent";
 
@@ -51,6 +52,7 @@ async function logMessages(sessionId: string, locale: string, rows: Array<{ role
 
 export async function POST(request: NextRequest) {
   if (!isAiConfigured()) {
+    await logAgentRun({ agent: "sofia", task: "responder_cliente", status: "erro", detail: "Nenhuma chave de IA configurada" });
     return NextResponse.json({ error: "ai_not_configured" }, { status: 503 });
   }
 
@@ -90,6 +92,7 @@ export async function POST(request: NextRequest) {
   }
 
   const knowledge = await getSalesAgentKnowledge();
+  const startedAt = Date.now();
 
   try {
     // O modelo da NVIDIA é fraco em chinês: em /zh o Gemini (se configurado) responde primeiro.
@@ -97,17 +100,38 @@ export async function POST(request: NextRequest) {
       providerOrder: locale === "zh" ? ["gemini", "groq", "nvidia"] : undefined,
     });
 
-    await logMessages(sessionId, locale, [
-      { role: "user", content: lastMessage.content },
-      { role: "assistant", content: reply.text, provider: reply.provider },
+    const products = findMentionedProducts(reply.text, knowledge.products);
+
+    await Promise.all([
+      logMessages(sessionId, locale, [
+        { role: "user", content: lastMessage.content },
+        { role: "assistant", content: reply.text, provider: reply.provider },
+      ]),
+      logAgentRun({
+        agent: "sofia",
+        task: "responder_cliente",
+        status: "ok",
+        provider: reply.provider,
+        durationMs: Date.now() - startedAt,
+        detail: products.length ? `Indicou: ${products.map((product) => product.name).join(", ")}` : null,
+      }),
     ]);
 
     return NextResponse.json({
       reply: reply.text,
-      products: findMentionedProducts(reply.text, knowledge.products),
+      products,
     });
-  } catch {
-    await logMessages(sessionId, locale, [{ role: "user", content: lastMessage.content }]);
+  } catch (error) {
+    await Promise.all([
+      logMessages(sessionId, locale, [{ role: "user", content: lastMessage.content }]),
+      logAgentRun({
+        agent: "sofia",
+        task: "responder_cliente",
+        status: "erro",
+        durationMs: Date.now() - startedAt,
+        detail: error instanceof Error ? error.message : "Falha desconhecida",
+      }),
+    ]);
     return NextResponse.json({ error: "ai_unavailable" }, { status: 503 });
   }
 }

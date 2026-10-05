@@ -108,5 +108,5 @@ export async function generateChatReply(
   }
 
   console.error("[ai] todos os provedores falharam:", failures.join(" | "));
-  throw new Error("ai_unavailable");
+  throw new Error(`ai_unavailable: ${failures.join(" | ")}`);
 }

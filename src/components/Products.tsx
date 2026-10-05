@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
+import AddToQuoteButton from "@/components/AddToQuoteButton";
 import type { SiteLocale } from "@/components/HomePage";
 import TrackedWhatsappLink from "@/components/TrackedWhatsappLink";
 import { sectionText } from "@/lib/site-content";
@@ -123,6 +124,7 @@ const text = {
     description:
       "Selecionamos fabricantes internacionais para oferecer ao mercado brasileiro produtos competitivos, com qualidade, escala e fornecimento continuo.",
     button: "Solicitar cotação",
+    whatsapp: "Dúvidas? Fale no WhatsApp",
     product: "Produto",
     featured: "Destaque",
     published: "Publicado",
@@ -134,6 +136,7 @@ const text = {
     description:
       "我们精选国际制造商，为巴西市场提供具有竞争力、质量稳定、可规模化供应的产品。",
     button: "申请报价",
+    whatsapp: "有疑问？WhatsApp 联系我们",
     product: "产品",
     featured: "重点推荐",
     published: "已发布",
@@ -277,15 +280,30 @@ export default async function Products({ whatsappUrl, locale = "pt", section }: 
                 <p className="mt-4 text-[0.95rem] leading-7 text-neutral-600 sm:mt-5 sm:text-[0.98rem]">
                   {product.description}
                 </p>
-                <TrackedWhatsappLink
-                  href={whatsappUrl}
-                  source="product"
-                  productId={product.id}
-                  productName={product.name}
-                  className="mt-6 inline-flex w-full justify-center rounded-full bg-[#111] px-5 py-3.5 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[#d6b46a] hover:text-[#111] hover:shadow-[0_18px_45px_rgba(214,180,106,0.28)] sm:mt-8 sm:w-auto sm:px-6 sm:text-[0.72rem] sm:tracking-[0.18em] md:mt-auto md:self-start"
-                >
-                  {labels.button}
-                </TrackedWhatsappLink>
+{product.id ? (
+                  <div className="mt-6 flex flex-col gap-3 sm:mt-8 md:mt-auto">
+                    <AddToQuoteButton productId={product.id} name={product.name} image={product.image} locale={locale} />
+                    <TrackedWhatsappLink
+                      href={whatsappUrl}
+                      source="product"
+                      productId={product.id}
+                      productName={product.name}
+                      className="text-center text-xs font-semibold text-neutral-500 underline-offset-4 transition hover:text-[#9b7a3e] hover:underline sm:text-left"
+                    >
+                      {labels.whatsapp}
+                    </TrackedWhatsappLink>
+                  </div>
+                ) : (
+                                  <TrackedWhatsappLink
+                    href={whatsappUrl}
+                    source="product"
+                    productId={product.id}
+                    productName={product.name}
+                    className="mt-6 inline-flex w-full justify-center rounded-full bg-[#111] px-5 py-3.5 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[#d6b46a] hover:text-[#111] hover:shadow-[0_18px_45px_rgba(214,180,106,0.28)] sm:mt-8 sm:w-auto sm:px-6 sm:text-[0.72rem] sm:tracking-[0.18em] md:mt-auto md:self-start"
+                  >
+                    {labels.button}
+                  </TrackedWhatsappLink>
+                )}
               </div>
             </article>
           ))}

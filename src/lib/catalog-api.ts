@@ -146,6 +146,7 @@ export type CatalogHealth =
       stockDate: string | null;
       products: number;
       featured: number;
+      productNames: string[];
       lowStock: string[];
       outOfStock: string[];
     }
@@ -165,6 +166,7 @@ export async function checkCatalogHealth(): Promise<CatalogHealth> {
       stockDate: typeof data.estoqueData === "string" ? data.estoqueData : null,
       products: products.length,
       featured: products.filter((product) => product.destaque === true).length,
+      productNames: products.map((product) => String(product.nome)),
       lowStock: products
         .filter((product) => toNumber(product.fardos) > 0 && toNumber(product.fardos) <= 50)
         .map((product) => String(product.nome)),

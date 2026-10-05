@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -10,6 +10,8 @@ import {
   CheckCircle2,
   ExternalLink,
   Camera,
+  FileText,
+  Sparkles,
   LineChart,
   MessageCircle,
   RefreshCw,
@@ -17,27 +19,19 @@ import {
   Store,
   XCircle,
 } from "lucide-react";
+import {
+  ago,
+  computeCentralReport,
+  percent,
+  summarizeForManager,
+  type AgentRunRow,
+  type CatalogHealth,
+  type ChatRow,
+  type EventRow,
+  type Health,
+  type LeadRow,
+} from "@/lib/central-metrics";
 import { supabase } from "@/lib/supabase";
-
-type Health = "ok" | "atencao" | "problema" | "inativo";
-
-type AgentRunRow = {
-  agent: string;
-  task: string;
-  status: "ok" | "aviso" | "erro";
-  provider: string | null;
-  duration_ms: number | null;
-  detail: string | null;
-  created_at: string;
-};
-
-type ChatRow = { session_id: string; role: "user" | "assistant"; content: string; provider: string | null; created_at: string };
-type EventRow = { event_name: string; event_source: string | null; visitor_id: string | null; product_name: string | null; created_at: string };
-type LeadRow = { id: string; name: string; source: string | null; status: string; created_at: string };
-
-type CatalogHealth =
-  | { online: true; latencyMs: number; stockDate: string | null; products: number; featured: number; lowStock: string[]; outOfStock: string[] }
-  | { online: false; latencyMs: number; error: string };
 
 const systemLinks = [
   { title: "HUB", href: "https://topmax-hub.vercel.app" },
@@ -53,31 +47,47 @@ const healthStyle: Record<Health, { label: string; dot: string; badge: string }>
   inativo: { label: "Não iniciado", dot: "bg-neutral-400", badge: "border-neutral-400/25 bg-neutral-400/10 text-neutral-600" },
 };
 
+type ManagerReport = {
+  id: string;
+  kind: "semanal" | "mensal" | "anual";
+  period_start: string;
+  period_end: string;
+  analysis: string;
+  provider: string | null;
+  created_at: string;
+};
+
+const reportDays: Record<ManagerReport["kind"], number> = { semanal: 7, mensal: 30, anual: 365 };
+
+function ReportText({ text }: { text: string }) {
+  return (
+    <div className="grid gap-2 text-sm leading-6 text-neutral-700">
+      {text.split("\n").map((line, index) => {
+        const trimmed = line.trim();
+        if (!trimmed) return null;
+        if (trimmed.startsWith("## ")) {
+          return (
+            <h4 key={index} className="mt-3 text-xs font-bold uppercase tracking-[0.16em] text-[#9b7a3e] first:mt-0">
+              {trimmed.slice(3)}
+            </h4>
+          );
+        }
+        if (/^[-*•] /.test(trimmed)) {
+          return (
+            <p key={index} className="flex gap-2">
+              <span className="text-[#d6b46a]">•</span>
+              <span>{trimmed.slice(2).replace(/\*\*/g, "")}</span>
+            </p>
+          );
+        }
+        return <p key={index}>{trimmed.replace(/\*\*/g, "")}</p>;
+      })}
+    </div>
+  );
+}
+
 const cardClass =
   "rounded-[1.5rem] border border-white/75 bg-white/85 p-5 shadow-[0_22px_70px_rgba(31,41,55,0.09),inset_0_1px_0_rgba(255,255,255,0.95)]";
-
-function distinct<T>(values: T[]) {
-  return new Set(values.filter((value) => value != null && value !== "")).size;
-}
-
-function percent(part: number, total: number) {
-  return total > 0 ? Math.round((part / total) * 100) : 0;
-}
-
-function ago(iso: string) {
-  const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-  if (minutes < 1) return "agora";
-  if (minutes < 60) return `há ${minutes} min`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `há ${hours} h`;
-  return `há ${Math.round(hours / 24)} d`;
-}
-
-function daysSince(dateText: string | null, now: number) {
-  if (!dateText) return null;
-  const date = new Date(`${dateText}T12:00:00`);
-  return Number.isNaN(date.getTime()) ? null : Math.floor((now - date.getTime()) / 86_400_000);
-}
 
 export default function CentralPage() {
   const [days, setDays] = useState<7 | 30>(7);
@@ -89,12 +99,17 @@ export default function CentralPage() {
   const [missingTables, setMissingTables] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadedAt, setLoadedAt] = useState<Date | null>(null);
+  const [reports, setReports] = useState<ManagerReport[] | null>(null);
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+  const [generating, setGenerating] = useState<ManagerReport["kind"] | null>(null);
+  const [reportError, setReportError] = useState("");
+  const autoReportTried = useRef(false);
 
   const load = useCallback(async () => {
     setIsLoading(true);
     const since = new Date(Date.now() - days * 86_400_000).toISOString();
 
-    const [runsResult, chatsResult, eventsResult, leadsResult, catalogResult] = await Promise.all([
+    const [runsResult, chatsResult, eventsResult, leadsResult, catalogResult, reportsResult] = await Promise.all([
       supabase.from("agent_runs").select("*").gte("created_at", since).order("created_at", { ascending: false }).limit(3000),
       supabase.from("chat_messages").select("session_id, role, content, provider, created_at").gte("created_at", since).order("created_at", { ascending: false }).limit(3000),
       supabase.from("analytics_events").select("event_name, event_source, visitor_id, product_name, created_at").gte("created_at", since).limit(10000),
@@ -102,6 +117,11 @@ export default function CentralPage() {
       fetch("/api/admin/catalog-health", { cache: "no-store" })
         .then((response) => response.json() as Promise<CatalogHealth>)
         .catch(() => ({ online: false, latencyMs: 0, error: "Falha ao consultar" }) as CatalogHealth),
+      supabase
+        .from("manager_reports")
+        .select("id, kind, period_start, period_end, analysis, provider, created_at")
+        .order("created_at", { ascending: false })
+        .limit(20),
     ]);
 
     setMissingTables([runsResult.error ? "agent_runs" : null, chatsResult.error ? "chat_messages" : null].filter(Boolean) as string[]);
@@ -110,6 +130,7 @@ export default function CentralPage() {
     setEvents((eventsResult.data ?? []) as EventRow[]);
     setLeads((leadsResult.data ?? []) as LeadRow[]);
     setCatalog(catalogResult);
+    setReports(reportsResult.error ? [] : ((reportsResult.data ?? []) as ManagerReport[]));
     setLoadedAt(new Date());
     setIsLoading(false);
   }, [days]);
@@ -119,101 +140,137 @@ export default function CentralPage() {
     return () => window.clearTimeout(timeout);
   }, [load]);
 
-  const report = useMemo(() => {
-    const now = loadedAt ? loadedAt.getTime() : 0;
-    // Agente Sofia
-    const sofiaRuns = runs.filter((run) => run.agent === "sofia");
-    const sofiaOk = sofiaRuns.filter((run) => run.status === "ok");
-    const sofiaErrors = sofiaRuns.filter((run) => run.status === "erro");
-    const sofiaErrorRate = percent(sofiaErrors.length, sofiaRuns.length);
-    const okDurations = sofiaOk.map((run) => run.duration_ms ?? 0).filter((value) => value > 0);
-    const avgLatency = okDurations.length ? Math.round(okDurations.reduce((sum, value) => sum + value, 0) / okDurations.length / 100) / 10 : 0;
-    const lastSofiaError = sofiaErrors[0] ?? null;
-    const providers = sofiaOk.reduce<Record<string, number>>((acc, run) => {
-      const key = run.provider || "?";
-      acc[key] = (acc[key] ?? 0) + 1;
-      return acc;
-    }, {});
-    const conversations = distinct(chats.map((chat) => chat.session_id));
-    const customerMessages = chats.filter((chat) => chat.role === "user").length;
-    const recommendations = sofiaOk.filter((run) => run.detail?.startsWith("Indicou")).length;
-    const lastRunIsError = sofiaRuns[0]?.status === "erro";
+  const report = useMemo(
+    () => computeCentralReport({ runs, chats, events, leads, catalog, missingTables, now: loadedAt ? loadedAt.getTime() : 0 }),
+    [runs, chats, events, leads, catalog, missingTables, loadedAt],
+  );
 
-    let sofiaHealth: Health = "ok";
-    if (sofiaRuns.length === 0) sofiaHealth = "ok";
-    if (sofiaErrorRate >= 20 || (lastRunIsError && now - new Date(sofiaRuns[0].created_at).getTime() < 3_600_000)) sofiaHealth = "problema";
-    else if (sofiaErrorRate >= 5 || avgLatency > 8) sofiaHealth = "atencao";
+  // Agente Gerente: busca o período atual + o anterior, resume e pede a análise à IA.
+  const generateReport = useCallback(
+    async (kind: ManagerReport["kind"]) => {
+      setGenerating(kind);
+      setReportError("");
 
-    // Vitrine (site)
-    const pageViews = events.filter((event) => event.event_name === "page_view");
-    const visitors = distinct(pageViews.map((event) => event.visitor_id));
-    const storeClicks = events.filter((event) => event.event_name === "catalog_store_click");
-    const storeVisitors = distinct(storeClicks.map((event) => event.visitor_id));
-    const chatOpeners = distinct(events.filter((event) => event.event_name === "chat_open").map((event) => event.visitor_id));
-    const clickRate = percent(storeVisitors, visitors);
-    const clicksBySource = storeClicks.reduce<Record<string, number>>((acc, event) => {
-      const key = event.event_source || "outro";
-      acc[key] = (acc[key] ?? 0) + 1;
-      return acc;
-    }, {});
-    const topSources = Object.entries(clicksBySource).sort((a, b) => b[1] - a[1]).slice(0, 4);
-    const siteHealth: Health = visitors >= 20 && clickRate < 5 ? "atencao" : "ok";
+      try {
+        const now = Date.now();
+        const span = reportDays[kind] * 86_400_000;
+        const cutoff = new Date(now - span).toISOString();
+        const since = new Date(now - 2 * span).toISOString();
 
-    // Catálogo de pedidos (sistema próprio)
-    const stockAge = catalog && catalog.online ? daysSince(catalog.stockDate, now) : null;
-    let catalogHealth: Health = "ok";
-    if (!catalog || !catalog.online) catalogHealth = "problema";
-    else if ((stockAge ?? 0) > 7 || catalog.featured === 0 || catalog.latencyMs > 10_000) catalogHealth = "atencao";
+        const [runsResult, chatsResult, eventsResult, leadsResult, sessionResult] = await Promise.all([
+          supabase.from("agent_runs").select("*").gte("created_at", since).limit(20000),
+          supabase
+            .from("chat_messages")
+            .select("session_id, role, content, provider, created_at")
+            .gte("created_at", since)
+            .order("created_at", { ascending: false })
+            .limit(20000),
+          supabase
+            .from("analytics_events")
+            .select("event_name, event_source, visitor_id, product_name, created_at")
+            .gte("created_at", since)
+            .limit(50000),
+          supabase.from("leads").select("id, name, source, status, created_at").gte("created_at", since),
+          supabase.auth.getSession(),
+        ]);
 
-    // Alertas e melhorias
-    const alerts: Array<{ level: Health; text: string }> = [];
-    if (missingTables.length) alerts.push({ level: "problema", text: `Tabela(s) ${missingTables.join(", ")} não encontrada(s) no Supabase: rode os SQL de supabase/migrations.` });
-    if (lastSofiaError?.detail?.includes("Nenhuma chave")) alerts.push({ level: "problema", text: "A Sofia está sem chave de IA configurada: o site mostra só o formulário de contato." });
-    else if (sofiaErrorRate >= 5) alerts.push({ level: sofiaErrorRate >= 20 ? "problema" : "atencao", text: `A Sofia falhou em ${sofiaErrorRate}% dos atendimentos. Adicionar uma chave do Gemini como reserva reduz as falhas.` });
-    if (avgLatency > 8) alerts.push({ level: "atencao", text: `A Sofia está demorando ${avgLatency}s por resposta. Vale testar outro modelo.` });
-    if (!catalog?.online) alerts.push({ level: "problema", text: "O catálogo de pedidos não respondeu. Clientes podem não conseguir fazer pedidos." });
-    if (catalog?.online && stockAge != null && stockAge > 7) alerts.push({ level: "atencao", text: `O estoque do catálogo foi atualizado há ${stockAge} dias (${catalog.stockDate}). Atualize para não vender o que acabou.` });
-    if (catalog?.online && catalog.featured === 0) alerts.push({ level: "atencao", text: "Nenhum produto marcado como destaque no catálogo: o carrossel do site fica vazio." });
-    if (catalog?.online && catalog.outOfStock.length) alerts.push({ level: "atencao", text: `Sem estoque: ${catalog.outOfStock.slice(0, 5).join(", ")}${catalog.outOfStock.length > 5 ? "…" : ""}.` });
-    if (catalog?.online && catalog.lowStock.length) alerts.push({ level: "inativo", text: `Últimos fardos (≤ 50): ${catalog.lowStock.slice(0, 6).join(", ")}${catalog.lowStock.length > 6 ? "…" : ""}. Bom momento para planejar reposição ou fazer campanha de "últimas unidades".` });
-    if (visitors >= 20 && clickRate < 5) alerts.push({ level: "atencao", text: `Só ${clickRate}% dos visitantes foram ao catálogo. Teste destaques diferentes no carrossel.` });
-    if (conversations > 0 && leads.filter((lead) => lead.source === "site_chat").length === 0) alerts.push({ level: "inativo", text: `${conversations} conversa(s) com a Sofia e nenhum contato deixado no chat. Acompanhe se os clientes estão indo direto ao catálogo.` });
+        const split = <T extends { created_at: string }>(rows: T[] | null) => ({
+          current: (rows ?? []).filter((row) => row.created_at >= cutoff),
+          previous: (rows ?? []).filter((row) => row.created_at < cutoff),
+        });
+        const runRows = split(runsResult.data as AgentRunRow[] | null);
+        const chatRows = split(chatsResult.data as ChatRow[] | null);
+        const eventRows = split(eventsResult.data as EventRow[] | null);
+        const leadRows = split(leadsResult.data as LeadRow[] | null);
 
-    // Últimas conversas
-    const sessions = new Map<string, ChatRow[]>();
-    for (const chat of chats) {
-      if (!sessions.has(chat.session_id)) sessions.set(chat.session_id, []);
-      sessions.get(chat.session_id)!.push(chat);
-    }
-    const recentConversations = [...sessions.entries()]
-      .filter(([sessionId]) => !sessionId.startsWith("teste-claude"))
-      .slice(0, 6)
-      .map(([sessionId, messages]) => {
-        const ordered = [...messages].reverse();
-        return {
-          sessionId,
-          firstQuestion: ordered.find((message) => message.role === "user")?.content ?? "",
-          lastReply: [...ordered].reverse().find((message) => message.role === "assistant")?.content ?? "",
-          count: messages.length,
-          at: messages[0].created_at,
-        };
-      });
+        const current = computeCentralReport({
+          runs: runRows.current,
+          chats: chatRows.current,
+          events: eventRows.current,
+          leads: leadRows.current,
+          catalog,
+          missingTables: [],
+          now,
+        });
+        const previous = computeCentralReport({
+          runs: runRows.previous,
+          chats: chatRows.previous,
+          events: eventRows.previous,
+          leads: leadRows.previous,
+          catalog: null,
+          missingTables: [],
+          now,
+        });
 
-    return {
-      sofia: { health: sofiaHealth, runs: sofiaRuns.length, errors: sofiaErrors.length, errorRate: sofiaErrorRate, avgLatency, lastError: lastSofiaError, providers, conversations, customerMessages, recommendations },
-      site: { health: siteHealth, visitors, storeVisitors, storeClicks: storeClicks.length, clickRate, topSources, chatOpeners },
-      catalog: { health: catalogHealth, stockAge },
-      funnel: [
-        { label: "Visitantes", value: visitors },
-        { label: "Abriram o chat", value: chatOpeners },
-        { label: "Conversaram com a Sofia", value: conversations },
-        { label: "Foram ao catálogo", value: storeVisitors },
-        { label: "Deixaram contato", value: leads.length },
-      ],
-      alerts,
-      recentConversations,
-    };
-  }, [runs, chats, events, leads, catalog, missingTables, loadedAt]);
+        const token = sessionResult.data.session?.access_token;
+        if (!token) throw new Error("Sessão expirada. Entre de novo no painel.");
+
+        const response = await fetch("/api/gerente/relatorio", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            kind,
+            periodStart: cutoff,
+            periodEnd: new Date(now).toISOString(),
+            current: summarizeForManager(current),
+            previous: summarizeForManager(previous),
+            catalog:
+              catalog && catalog.online
+                ? {
+                    estoque_de: catalog.stockDate,
+                    produtos: catalog.products,
+                    produtos_no_catalogo: catalog.productNames ?? [],
+                    destaques_no_site: catalog.featured,
+                    ultimos_fardos: catalog.lowStock,
+                    sem_estoque: catalog.outOfStock,
+                  }
+                : { online: false },
+            questions: chatRows.current
+              .filter((chat) => chat.role === "user" && !chat.session_id.startsWith("teste-claude"))
+              .map((chat) => chat.content),
+            alerts: current.alerts.map((alert) => alert.text),
+          }),
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.report) {
+          throw new Error(
+            response.status === 401
+              ? "Sessão expirada. Entre de novo no painel."
+              : "A IA não conseguiu gerar o relatório agora. Tente de novo em alguns minutos.",
+          );
+        }
+
+        const saved = data.report as ManagerReport;
+        setReports((existing) => [saved, ...(existing ?? []).filter((item) => item.id !== saved.id)]);
+        setSelectedReportId(saved.id ?? null);
+      } catch (error) {
+        setReportError(error instanceof Error ? error.message : "Falha ao gerar relatório.");
+      } finally {
+        setGenerating(null);
+      }
+    },
+    [catalog],
+  );
+
+  // Relatório semanal automático: se o último tem mais de 7 dias, o Gerente gera sozinho ao abrir a Central.
+  useEffect(() => {
+    if (!reports || !loadedAt || !catalog || autoReportTried.current) return;
+    const lastWeekly = reports.find((item) => item.kind === "semanal");
+    const isStale = !lastWeekly || loadedAt.getTime() - new Date(lastWeekly.created_at).getTime() > 7 * 86_400_000;
+    if (!isStale) return;
+    autoReportTried.current = true;
+    const timeout = window.setTimeout(() => generateReport("semanal"), 0);
+    return () => window.clearTimeout(timeout);
+  }, [reports, loadedAt, catalog, generateReport]);
+
+  const selectedReport = reports?.find((item) => item.id === selectedReportId) ?? reports?.[0] ?? null;
+  const lastWeeklyReport = reports?.find((item) => item.kind === "semanal") ?? null;
+  const managerHealth: Health =
+    !reports ||
+    (lastWeeklyReport && (loadedAt?.getTime() ?? 0) - new Date(lastWeeklyReport.created_at).getTime() <= 8 * 86_400_000)
+      ? "ok"
+      : "atencao";
 
   const sourceLabels: Record<string, string> = {
     header: "Cabeçalho",
@@ -287,8 +344,12 @@ export default function CentralPage() {
       title: "Gerente · Análises",
       role: "Lê tudo isso, gera relatórios semanais, mensais e anuais e sugere melhorias.",
       icon: LineChart,
-      health: "inativo",
-      stats: [["Situação", "Em construção, próximo passo"]],
+      health: managerHealth,
+      stats: [
+        ["Último relatório", reports?.[0] ? `${reports[0].kind} · ${ago(reports[0].created_at)}` : "Nenhum ainda"],
+        ["Relatórios salvos", String(reports?.length ?? 0)],
+        ["Semanal", "Automático a cada 7 dias"],
+      ],
     },
     {
       key: "armazem",
@@ -430,6 +491,81 @@ export default function CentralPage() {
                 </article>
               );
             })}
+          </div>
+        </section>
+
+        <section className="mt-8">
+          <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Relatórios do Gerente</h2>
+            <div className="flex flex-wrap gap-2">
+              {(["semanal", "mensal", "anual"] as const).map((kind) => (
+                <button
+                  key={kind}
+                  type="button"
+                  disabled={generating !== null}
+                  onClick={() => generateReport(kind)}
+                  className="inline-flex h-10 items-center gap-2 rounded-full bg-[#111] px-4 text-xs font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#d6b46a] hover:text-[#111] disabled:opacity-50"
+                >
+                  <Sparkles size={14} className={generating === kind ? "animate-pulse" : ""} />
+                  {generating === kind ? "Analisando..." : `Gerar ${kind}`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className={`${cardClass} grid gap-5 lg:grid-cols-[16rem_1fr]`}>
+            <div className="grid content-start gap-2 lg:border-r lg:border-black/10 lg:pr-5">
+              {reports === null ? (
+                <p className="text-sm text-neutral-500">Carregando...</p>
+              ) : reports.length === 0 ? (
+                <p className="text-sm text-neutral-500">
+                  {generating ? "O Gerente está preparando o primeiro relatório..." : "Nenhum relatório ainda."}
+                </p>
+              ) : (
+                reports.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setSelectedReportId(item.id)}
+                    className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm transition ${
+                      selectedReport?.id === item.id ? "bg-[#111] text-white" : "hover:bg-black/5"
+                    }`}
+                  >
+                    <FileText size={16} className="shrink-0 text-[#d6b46a]" />
+                    <span>
+                      <span className="block font-semibold capitalize">{item.kind}</span>
+                      <span className={`block text-xs ${selectedReport?.id === item.id ? "text-white/60" : "text-neutral-500"}`}>
+                        {new Date(item.created_at).toLocaleDateString("pt-BR")}
+                      </span>
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+
+            <div>
+              {reportError ? (
+                <p className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-700">
+                  {reportError}
+                </p>
+              ) : null}
+              {selectedReport ? (
+                <>
+                  <p className="mb-4 text-xs text-neutral-500">
+                    Relatório {selectedReport.kind} · {new Date(selectedReport.period_start).toLocaleDateString("pt-BR")} a{" "}
+                    {new Date(selectedReport.period_end).toLocaleDateString("pt-BR")}
+                    {selectedReport.provider ? ` · IA: ${selectedReport.provider}` : ""}
+                  </p>
+                  <ReportText text={selectedReport.analysis} />
+                </>
+              ) : (
+                <p className="text-sm text-neutral-500">
+                  {generating
+                    ? "Analisando os números do período e comparando com o anterior..."
+                    : "Gere um relatório para ver a análise do Gerente."}
+                </p>
+              )}
+            </div>
           </div>
         </section>
 

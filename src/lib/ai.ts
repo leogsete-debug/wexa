@@ -56,6 +56,8 @@ export async function generateChatReply(
     timeoutMs?: number;
     reasoningEffort?: string;
     providerOrder?: string[];
+    // Troca o modelo de um provedor só nesta chamada (ex.: Gerente usa um modelo maior).
+    modelOverrides?: Partial<Record<string, string>>;
   } = {},
 ): Promise<{ text: string; provider: string }> {
   const providers = getProviders(options.providerOrder);
@@ -76,7 +78,7 @@ export async function generateChatReply(
           Authorization: `Bearer ${provider.apiKey}`,
         },
         body: JSON.stringify({
-          model: provider.model,
+          model: options.modelOverrides?.[provider.name] || provider.model,
           messages,
           temperature: options.temperature ?? 0.4,
           max_tokens: options.maxTokens ?? 1200,

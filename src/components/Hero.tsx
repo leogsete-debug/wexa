@@ -2,7 +2,6 @@ import Image from "next/image";
 import type { SiteLocale } from "@/components/HomePage";
 import TrackedCatalogStoreLink from "@/components/TrackedCatalogStoreLink";
 import { catalogStoreLabels } from "@/lib/catalog-store";
-import { sectionArray } from "@/lib/site-content";
 import type { SiteSection } from "@/types/content";
 import type { SiteSettings } from "@/types/site-settings";
 
@@ -12,18 +11,8 @@ type HeroProps = {
   section?: SiteSection;
 };
 
-type HeroStat = {
-  value: string;
-  label: string;
-  label_zh?: string;
-  sort_order?: number;
-};
-
-export default function Hero({ settings, locale = "pt", section }: HeroProps) {
+export default function Hero({ settings, locale = "pt" }: HeroProps) {
   const mobileHeroImage = settings.hero_mobile_image_url || settings.hero_image_url;
-  const stats = sectionArray<HeroStat>(section, "stats")
-    .slice()
-    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
 
   return (
     <section className="relative flex min-h-[100svh] items-center overflow-hidden">
@@ -84,23 +73,6 @@ export default function Hero({ settings, locale = "pt", section }: HeroProps) {
             </div>
           ) : null}
 
-          {stats.length > 0 ? (
-            <div className="mt-6 grid grid-cols-2 gap-2 rounded-[1.25rem] border border-white/18 bg-white/[0.105] p-2 shadow-[0_30px_100px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-2xl sm:mt-12 sm:gap-4 sm:rounded-[2rem] sm:p-4 md:grid-cols-4">
-              {stats.map((item) => (
-                <div
-                  key={`${item.value}-${item.label}`}
-                  className="rounded-xl border border-white/10 bg-white/[0.08] p-3 transition duration-300 hover:-translate-y-1 hover:bg-white/[0.14] sm:rounded-3xl sm:p-6"
-                >
-                  <h3 className="text-xl font-semibold tracking-[-0.03em] text-[#f0d89a] sm:text-4xl sm:tracking-[-0.04em]">
-                    {item.value}
-                  </h3>
-                  <p className="mt-1.5 text-[0.56rem] font-semibold uppercase leading-3 tracking-[0.08em] text-white/62 sm:mt-2 sm:text-xs sm:leading-4 sm:tracking-[0.22em]">
-                    {locale === "zh" ? item.label_zh || item.label : item.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : null}
         </div>
       </div>
     </section>

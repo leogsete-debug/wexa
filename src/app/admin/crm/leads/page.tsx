@@ -1,10 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { ClipboardList, Search, UserCheck, UserPlus, Users, XCircle } from "lucide-react";
+import { Search, UserCheck, UserPlus, Users, XCircle } from "lucide-react";
 import { getLeadMetric, getLeadStatusClasses, leadStatuses } from "@/lib/leads";
-import { orderFromLead } from "@/lib/orders";
 import { supabase } from "@/lib/supabase";
 import type { Lead, LeadStatus } from "@/types/lead";
 
@@ -14,7 +12,6 @@ function toNullable(value: string) {
 }
 
 export default function CrmLeadsPage() {
-  const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [search, setSearch] = useState("");
@@ -117,27 +114,6 @@ export default function CrmLeadsPage() {
     const nextNotes = [selectedLead.notes, `[${stamp}] ${noteDraft.trim()}`].filter(Boolean).join("\n\n");
     setNoteDraft("");
     await updateSelectedLead({ notes: nextNotes });
-  }
-
-  async function createOrderFromLead() {
-    if (!selectedLead) return;
-
-    const { data, error: createError } = await supabase
-      .from("orders")
-      .insert(orderFromLead(selectedLead))
-      .select("id")
-      .single<{ id: string }>();
-
-    if (createError || !data) {
-      setError("Não foi possível criar o pedido a partir do lead.");
-      return;
-    }
-
-    if (selectedLead.status === "Novo") {
-      await updateSelectedLead({ status: "Em atendimento" });
-    }
-
-    router.push(`/admin/pedidos?pedido=${data.id}`);
   }
 
   return (
@@ -286,14 +262,6 @@ export default function CrmLeadsPage() {
           </div>
 
           <div className="grid flex-1 gap-5 overflow-y-auto py-5">
-            <button
-              type="button"
-              onClick={createOrderFromLead}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#111] px-5 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-[#d6b46a] hover:text-[#111]"
-            >
-              <ClipboardList size={16} /> Criar pedido
-            </button>
-
             <div className="grid gap-3 rounded-[1.25rem] border border-white/75 bg-white/80 p-5 shadow-[0_16px_50px_rgba(31,41,55,0.08)]">
               {[
                 ["Telefone", selectedLead.phone],

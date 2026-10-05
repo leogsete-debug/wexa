@@ -15,13 +15,13 @@ type Provider = {
   model: string;
 };
 
-function getProviders(): Provider[] {
+function getProviders(preferredOrder?: string[]): Provider[] {
   const providers: Provider[] = [
     {
       name: "nvidia",
       baseUrl: "https://integrate.api.nvidia.com/v1",
       apiKey: process.env.NVIDIA_API_KEY,
-      model: process.env.NVIDIA_MODEL || "meta/llama-3.3-70b-instruct",
+      model: process.env.NVIDIA_MODEL || "openai/gpt-oss-20b",
     },
     {
       name: "gemini",
@@ -37,7 +37,7 @@ function getProviders(): Provider[] {
     },
   ];
 
-  const order = (process.env.AI_PROVIDER_ORDER || "nvidia,gemini,groq").split(",").map((name) => name.trim());
+  const order = preferredOrder ?? (process.env.AI_PROVIDER_ORDER || "nvidia,gemini,groq").split(",").map((name) => name.trim());
 
   return order
     .map((name) => providers.find((provider) => provider.name === name))
@@ -50,15 +50,22 @@ export function isAiConfigured() {
 
 export async function generateChatReply(
   messages: ChatMessage[],
-  options: { temperature?: number; maxTokens?: number; timeoutMs?: number } = {},
+  options: {
+    temperature?: number;
+    maxTokens?: number;
+    timeoutMs?: number;
+    reasoningEffort?: string;
+    providerOrder?: string[];
+  } = {},
 ): Promise<{ text: string; provider: string }> {
-  const providers = getProviders();
+  const providers = getProviders(options.providerOrder);
 
   if (providers.length === 0) {
     throw new Error("ai_not_configured");
   }
 
   const failures: string[] = [];
+  const reasoningEffort = options.reasoningEffort ?? process.env.AI_REASONING_EFFORT ?? "low";
 
   for (const provider of providers) {
     try {
@@ -72,7 +79,10 @@ export async function generateChatReply(
           model: provider.model,
           messages,
           temperature: options.temperature ?? 0.4,
-          max_tokens: options.maxTokens ?? 600,
+          max_tokens: options.maxTokens ?? 1200,
+          // Modelos com raciocínio (gpt-oss, Gemini) respondem bem mais rápido em "low".
+          // AI_REASONING_EFFORT vazio desliga o parâmetro para modelos que não o aceitam.
+          ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
         }),
         signal: AbortSignal.timeout(options.timeoutMs ?? 25_000),
         cache: "no-store",

@@ -92,7 +92,10 @@ export async function POST(request: NextRequest) {
   const knowledge = await getSalesAgentKnowledge();
 
   try {
-    const reply = await generateChatReply([{ role: "system", content: knowledge.systemPrompt[locale] }, ...history]);
+    // O modelo da NVIDIA é fraco em chinês: em /zh o Gemini (se configurado) responde primeiro.
+    const reply = await generateChatReply([{ role: "system", content: knowledge.systemPrompt[locale] }, ...history], {
+      providerOrder: locale === "zh" ? ["gemini", "groq", "nvidia"] : undefined,
+    });
 
     await logMessages(sessionId, locale, [
       { role: "user", content: lastMessage.content },

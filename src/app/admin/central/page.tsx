@@ -12,6 +12,7 @@ import {
   Camera,
   FileText,
   Sparkles,
+  Wand2,
   LineChart,
   MessageCircle,
   RefreshCw,
@@ -272,6 +273,11 @@ export default function CentralPage() {
       ? "ok"
       : "atencao";
 
+  const contentRuns = runs.filter((run) => run.agent === "conteudo");
+  const contentErrors = contentRuns.filter((run) => run.status === "erro");
+  const contentHealth: Health =
+    contentRuns.length === 0 ? "ok" : percent(contentErrors.length, contentRuns.length) >= 30 ? "atencao" : "ok";
+
   const sourceLabels: Record<string, string> = {
     header: "Cabeçalho",
     header_menu: "Menu",
@@ -350,6 +356,19 @@ export default function CentralPage() {
         ["Relatórios salvos", String(reports?.length ?? 0)],
         ["Semanal", "Automático a cada 7 dias"],
       ],
+    },
+    {
+      key: "conteudo",
+      title: "Conteúdo · Estúdio",
+      role: "Cria artes, vídeos e legendas com os produtos e o estoque reais do catálogo.",
+      icon: Wand2,
+      health: contentHealth,
+      stats: [
+        ["Legendas geradas", String(contentRuns.filter((run) => run.task === "legenda" && run.status === "ok").length)],
+        ["Imagens com IA", String(contentRuns.filter((run) => run.task === "imagem_ia" && run.status === "ok").length)],
+        ["Falhas", String(contentErrors.length)],
+      ],
+      note: contentErrors[0]?.detail?.includes("not_configured") ? null : contentErrors[0] ? `Último erro: ${contentErrors[0].detail ?? ""}` : null,
     },
     {
       key: "armazem",

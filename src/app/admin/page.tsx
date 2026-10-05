@@ -18,6 +18,7 @@ import {
   Tags,
   Upload,
   Users,
+  Wand2,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -31,6 +32,7 @@ import type { Product } from "@/types/product";
 const sidebarItems = [
   { title: "Dashboard", icon: Gauge, href: "/admin" },
   { title: "Central", icon: Activity, href: "/admin/central" },
+  { title: "Estúdio", icon: Wand2, href: "/admin/estudio" },
   { title: "Analytics", icon: BarChart3, href: "/admin/analytics" },
   { title: "Produtos", icon: Package, href: "/admin/produtos" },
   { title: "Categorias", icon: FolderTree, href: "#" },

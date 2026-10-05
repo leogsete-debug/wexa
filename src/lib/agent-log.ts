@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 // Todo agente registra aqui cada tarefa (sucesso, aviso ou erro). É a base da
 // Central de Comando e das análises do agente Gerente.
 export type AgentRun = {
-  agent: "sofia" | "gerente" | "armazem" | "instagram" | "whatsapp";
+  agent: "sofia" | "gerente" | "conteudo" | "armazem" | "instagram" | "whatsapp";
   task: string;
   status: "ok" | "aviso" | "erro";
   provider?: string | null;

@@ -24,8 +24,12 @@ export async function POST(request: NextRequest) {
   const products = Array.isArray(body?.products) ? body.products.slice(0, 8) : [];
   const goal = goals[body?.goal] ? body.goal : "venda";
   const format = body?.format === "reels" ? "Reels/Stories (vídeo vertical)" : "post de feed";
+  const strategy = body?.strategy && typeof body.strategy === "object" ? body.strategy : null;
+  const strategyText = strategy
+    ? `\n\nEstratégia do perfil (siga):\n${JSON.stringify(strategy).slice(0, 1500)}\nSe houver "gancho", use-o (ou uma variação) como primeira linha. Se houver "chamada", use-a no fechamento.`
+    : "";
 
-  if (products.length === 0) {
+  if (products.length === 0 && !strategy) {
     return NextResponse.json({ error: "missing_products" }, { status: 400 });
   }
 
@@ -41,7 +45,7 @@ Regras:
 - Chamada final: pedir para acessar o catálogo pelo link da bio (${catalogLink}).
 - No máximo 3 emojis.
 - Depois da legenda, uma linha em branco e 8 a 12 hashtags relevantes (nicho atacado/varejo de cama, mesa e banho, Brasil).
-Responda só com a legenda e as hashtags, sem títulos.`;
+Responda só com a legenda e as hashtags, sem títulos.${strategyText}`;
 
   const startedAt = Date.now();
 
@@ -49,7 +53,12 @@ Responda só com a legenda e as hashtags, sem títulos.`;
     const reply = await generateChatReply(
       [
         { role: "system", content: system },
-        { role: "user", content: `Produtos:\n${JSON.stringify(products).slice(0, 4000)}` },
+        {
+          role: "user",
+          content: products.length
+            ? `Produtos:\n${JSON.stringify(products).slice(0, 4000)}`
+            : "Post institucional (sem produto específico): siga o tema e o gancho da estratégia.",
+        },
       ],
       { maxTokens: 1500, temperature: 0.7 },
     );

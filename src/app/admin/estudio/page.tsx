@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Check, Clapperboard, Copy, Download, ImageIcon, Loader2, PenLine, Search, Sparkles, Wand2 } from "lucide-react";
+import { ArrowLeft, Check, Clapperboard, Compass, Copy, Download, ImageIcon, Loader2, PenLine, Search, Sparkles, Wand2 } from "lucide-react";
 import { drawArt, formatSizes, loadImage, renderVideo, type ArtMode, type ArtSlide, type StudioFormat } from "@/lib/studio-render";
 import { supabase } from "@/lib/supabase";
 
@@ -18,7 +18,60 @@ type CatalogItem = {
   photoCount: number;
 };
 
-type Tab = "arte" | "video" | "legenda";
+type Tab = "estrategia" | "arte" | "video" | "legenda";
+
+type StrategyPost = {
+  dia: number;
+  formato: string;
+  pilar: string;
+  tema: string;
+  gancho: string;
+  produto: string | null;
+  objetivo: string;
+  chamada: string;
+};
+
+type Strategy = {
+  posicionamento: string;
+  persona: string;
+  tom_de_voz: string;
+  bio_sugerida: string;
+  pilares: Array<{ nome: string; objetivo: string; porcentagem: number; ideias?: string[] }>;
+  frequencia: string;
+  calendario: StrategyPost[];
+  ganchos?: string[];
+  metricas?: string[];
+};
+
+type Profile = {
+  instagram: string;
+  publico: string;
+  objetivo: string;
+  tom: string;
+  seguidores: string;
+  referencias: string;
+  observacoes: string;
+};
+
+const defaultProfile: Profile = {
+  instagram: "@topmaxexport",
+  publico: "Lojistas de cama, mesa e banho, atacadistas e redes no Brasil",
+  objetivo: "Gerar autoridade e levar lojistas ao catálogo para fazer pedidos",
+  tom: "Profissional, direto e confiável",
+  seguidores: "",
+  referencias: "",
+  observacoes: "",
+};
+
+const profileFields: Array<[keyof Profile, string, string]> = [
+  ["instagram", "Instagram", "@seuperfil"],
+  ["publico", "Público", "Quem você quer atrair"],
+  ["objetivo", "Objetivo", "O que o perfil precisa gerar"],
+  ["tom", "Tom de voz", "Como a marca fala"],
+  ["seguidores", "Seguidores hoje", "Ex.: 800"],
+  ["referencias", "Referências", "Perfis que você admira"],
+  ["observacoes", "O que funciona / não funciona", "Ex.: vídeos do contêiner dão mais alcance"],
+];
 type BadgeOption = "auto" | "Destaque" | "Novidade" | "Últimas unidades" | "Coleção" | "Pronta entrega" | "none";
 type Goal = "venda" | "ultimas" | "novidade" | "autoridade" | "colecao";
 
@@ -78,7 +131,13 @@ export default function StudioPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [photoIndex, setPhotoIndex] = useState<Record<string, number>>({});
-  const [tab, setTab] = useState<Tab>("arte");
+  const [tab, setTab] = useState<Tab>("estrategia");
+  const [profile, setProfile] = useState<Profile>(defaultProfile);
+  const [strategy, setStrategy] = useState<Strategy | null>(null);
+  const [strategyDate, setStrategyDate] = useState<string | null>(null);
+  const [strategyBusy, setStrategyBusy] = useState(false);
+  const [strategyError, setStrategyError] = useState("");
+  const [activeIdea, setActiveIdea] = useState<StrategyPost | null>(null);
   const [format, setFormat] = useState<StudioFormat>("post");
   const [mode, setMode] = useState<ArtMode>("real");
   const [badge, setBadge] = useState<BadgeOption>("auto");
@@ -101,6 +160,32 @@ export default function StudioPage() {
   const [copied, setCopied] = useState(false);
   const previewRef = useRef<HTMLCanvasElement>(null);
   const videoCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Última estratégia salva + perfil lembrado neste navegador
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("topmax_studio_profile");
+      if (saved) {
+        const parsed = { ...defaultProfile, ...JSON.parse(saved) } as Profile;
+        window.setTimeout(() => setProfile(parsed), 0);
+      }
+    } catch {
+      // sem localStorage: usa o perfil padrão
+    }
+
+    supabase
+      .from("content_strategies")
+      .select("profile, strategy, created_at")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        const latest = data?.[0];
+        if (!latest) return;
+        setStrategy(latest.strategy as Strategy);
+        setStrategyDate(latest.created_at);
+        if (latest.profile && Object.keys(latest.profile).length) setProfile({ ...defaultProfile, ...(latest.profile as Partial<Profile>) });
+      });
+  }, []);
 
   useEffect(() => {
     fetch("/api/catalogo/produtos", { cache: "no-store" })
@@ -210,6 +295,60 @@ export default function StudioPage() {
     }
   };
 
+  const generateStrategy = async () => {
+    setStrategyBusy(true);
+    setStrategyError("");
+    try {
+      try {
+        window.localStorage.setItem("topmax_studio_profile", JSON.stringify(profile));
+      } catch {
+        // ignora
+      }
+      const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+      const { data: chats } = await supabase
+        .from("chat_messages")
+        .select("content, session_id")
+        .eq("role", "user")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(80);
+      const questions = (chats ?? [])
+        .filter((chat) => !String(chat.session_id).startsWith("teste-claude"))
+        .map((chat) => chat.content);
+
+      const response = await fetch("/api/conteudo/estrategia", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(await authHeader()) },
+        body: JSON.stringify({ profile, questions }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.strategy?.strategy) throw new Error("A IA não conseguiu montar a estratégia agora. Tente de novo em instantes.");
+      setStrategy(data.strategy.strategy as Strategy);
+      setStrategyDate(data.strategy.created_at ?? new Date().toISOString());
+    } catch (error) {
+      setStrategyError(error instanceof Error ? error.message : "Falha ao gerar a estratégia.");
+    } finally {
+      setStrategyBusy(false);
+    }
+  };
+
+  // "Criar" um post do calendário: abre a ferramenta certa já preenchida
+  const createFromIdea = (idea: StrategyPost) => {
+    setActiveIdea(idea);
+    const match = idea.produto ? items.find((item) => item.name.toLowerCase() === idea.produto?.toLowerCase()) : null;
+    if (match) setSelected([match.key]);
+    const goalMap: Record<string, Goal> = { venda: "venda", ultimas: "ultimas", novidade: "novidade", autoridade: "autoridade", colecao: "colecao" };
+    setGoal(goalMap[idea.objetivo] ?? "venda");
+    if (idea.chamada) setCta(idea.chamada.slice(0, 28));
+    const isVertical = /reels|story/i.test(idea.formato);
+    setFormat(isVertical ? "story" : "post");
+    if (idea.objetivo === "ultimas") setBadge("Últimas unidades");
+    else if (idea.objetivo === "novidade") setBadge("Novidade");
+    else setBadge("auto");
+    setCaption("");
+    setTab(/reels/i.test(idea.formato) && match ? "video" : match ? "arte" : "legenda");
+  };
+
   const downloadArt = () => {
     const canvas = previewRef.current;
     if (!canvas || !main) return;
@@ -269,7 +408,7 @@ export default function StudioPage() {
   };
 
   const generateCaption = async () => {
-    if (selectedItems.length === 0) return;
+    if (selectedItems.length === 0 && !activeIdea) return;
     setCaptionBusy(true);
     setCaptionError("");
     try {
@@ -279,6 +418,16 @@ export default function StudioPage() {
         body: JSON.stringify({
           goal,
           format: format === "story" ? "reels" : "post",
+          strategy: strategy
+            ? {
+                posicionamento: strategy.posicionamento,
+                persona: strategy.persona,
+                tom_de_voz: strategy.tom_de_voz,
+                ...(activeIdea
+                  ? { pilar: activeIdea.pilar, tema: activeIdea.tema, gancho: activeIdea.gancho, chamada: activeIdea.chamada }
+                  : {}),
+              }
+            : null,
           products: selectedItems.map((item) => ({
             nome: item.name,
             pecas_por_fardo: item.piecesPerBale,
@@ -330,6 +479,7 @@ export default function StudioPage() {
 
         <div className="mt-6 flex flex-wrap gap-2">
           {([
+            ["estrategia", "Estratégia", Compass],
             ["arte", "Arte", ImageIcon],
             ["video", "Vídeo", Clapperboard],
             ["legenda", "Legenda", PenLine],
@@ -346,7 +496,150 @@ export default function StudioPage() {
           ))}
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[22rem_1fr]">
+        {activeIdea && tab !== "estrategia" ? (
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[#d6b46a]/40 bg-[#d6b46a]/10 px-4 py-3 text-sm">
+            <Compass size={16} className="text-[#9b7a3e]" />
+            <span>
+              <strong>Dia {activeIdea.dia} · {activeIdea.pilar}:</strong> {activeIdea.gancho}
+            </span>
+            <button type="button" onClick={() => setActiveIdea(null)} className="ml-auto text-xs font-semibold text-neutral-500 hover:underline">
+              Limpar
+            </button>
+          </div>
+        ) : null}
+
+        {tab === "estrategia" ? (
+          <div className="mt-6 grid gap-6 lg:grid-cols-[22rem_1fr]">
+            <aside className={`${card} grid h-fit gap-3`}>
+              <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-neutral-500">Seu perfil</h2>
+              {profileFields.map(([field, label, placeholder]) => (
+                <label key={field} className="grid gap-1 text-xs font-semibold text-neutral-600">
+                  {label}
+                  {field === "observacoes" || field === "referencias" ? (
+                    <textarea
+                      value={profile[field]}
+                      onChange={(event) => setProfile((current) => ({ ...current, [field]: event.target.value }))}
+                      placeholder={placeholder}
+                      className="min-h-20 rounded-2xl border border-black/10 bg-white p-3 text-sm font-normal outline-none focus:border-[#d6b46a]"
+                    />
+                  ) : (
+                    <input
+                      value={profile[field]}
+                      onChange={(event) => setProfile((current) => ({ ...current, [field]: event.target.value }))}
+                      placeholder={placeholder}
+                      className={`${input} font-normal`}
+                    />
+                  )}
+                </label>
+              ))}
+              <button type="button" onClick={generateStrategy} disabled={strategyBusy} className={primary}>
+                {strategyBusy ? <Loader2 size={16} className="animate-spin" /> : <Compass size={16} />}
+                {strategyBusy ? "Montando (até 1 min)..." : strategy ? "Refazer estratégia" : "Criar estratégia"}
+              </button>
+              <p className="text-xs leading-5 text-neutral-500">Usa o estoque real do catálogo e as perguntas que os clientes fizeram à Sofia.</p>
+              {strategyError ? <p className="text-xs text-red-600">{strategyError}</p> : null}
+            </aside>
+
+            <section className="grid content-start gap-6">
+              {!strategy ? (
+                <div className={card}>
+                  <p className="text-sm leading-6 text-neutral-600">
+                    {strategyBusy
+                      ? "O agente está analisando o perfil, o estoque e as dúvidas dos clientes para montar a estratégia..."
+                      : "Preencha o perfil e clique em Criar estratégia. O agente monta posicionamento, pilares e um calendário de 14 dias com produtos reais."}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className={`${card} grid gap-4 md:grid-cols-2`}>
+                    {([
+                      ["Posicionamento", strategy.posicionamento],
+                      ["Cliente ideal", strategy.persona],
+                      ["Tom de voz", strategy.tom_de_voz],
+                      ["Frequência", strategy.frequencia],
+                    ] as const).map(([label, value]) => (
+                      <div key={label}>
+                        <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-[#9b7a3e]">{label}</h3>
+                        <p className="mt-1 text-sm leading-6 text-neutral-700">{value}</p>
+                      </div>
+                    ))}
+                    <div className="md:col-span-2">
+                      <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-[#9b7a3e]">Bio sugerida</h3>
+                      <div className="mt-1 flex flex-wrap items-center gap-3">
+                        <p className="rounded-2xl bg-[#fbfaf7] px-4 py-2 text-sm text-[#111]">{strategy.bio_sugerida}</p>
+                        <button type="button" onClick={() => navigator.clipboard.writeText(strategy.bio_sugerida)} className="text-xs font-semibold text-[#9b7a3e] hover:underline">
+                          Copiar
+                        </button>
+                      </div>
+                    </div>
+                    {strategyDate ? <p className="text-xs text-neutral-400 md:col-span-2">Criada em {new Date(strategyDate).toLocaleString("pt-BR")}</p> : null}
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {strategy.pilares.map((pillar) => (
+                      <article key={pillar.nome} className={card}>
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-semibold text-[#111]">{pillar.nome}</h3>
+                          <span className="rounded-full bg-[#d6b46a]/15 px-2.5 py-1 text-xs font-bold text-[#9b7a3e]">{pillar.porcentagem}%</span>
+                        </div>
+                        <p className="mt-2 text-sm leading-6 text-neutral-600">{pillar.objetivo}</p>
+                      </article>
+                    ))}
+                  </div>
+
+                  <div className={card}>
+                    <h3 className="text-lg font-semibold tracking-[-0.02em] text-[#111]">Calendário de 14 dias</h3>
+                    <div className="mt-4 grid gap-2">
+                      {strategy.calendario.map((post) => (
+                        <div key={`${post.dia}-${post.gancho}`} className="grid items-center gap-3 rounded-2xl border border-black/5 bg-[#fbfaf7] p-3 sm:grid-cols-[3rem_6rem_1fr_auto]">
+                          <span className="text-sm font-bold text-[#9b7a3e]">Dia {post.dia}</span>
+                          <span className="w-fit rounded-full bg-[#111] px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.1em] text-white">{post.formato}</span>
+                          <span className="min-w-0">
+                            <span className="block text-sm font-semibold text-[#111]">{post.gancho}</span>
+                            <span className="block text-xs text-neutral-500">
+                              {post.pilar} · {post.tema}
+                              {post.produto ? ` · ${post.produto}` : ""}
+                            </span>
+                          </span>
+                          <button type="button" onClick={() => createFromIdea(post)} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#d6b46a] px-4 text-xs font-bold text-[#111] hover:bg-[#111] hover:text-white">
+                            <Wand2 size={13} /> Criar
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {strategy.ganchos?.length || strategy.metricas?.length ? (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {strategy.ganchos?.length ? (
+                        <div className={card}>
+                          <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-[#9b7a3e]">Banco de ganchos</h3>
+                          <ul className="mt-2 grid gap-1.5 text-sm text-neutral-700">
+                            {strategy.ganchos.map((hook) => (
+                              <li key={hook}>• {hook}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                      {strategy.metricas?.length ? (
+                        <div className={card}>
+                          <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-[#9b7a3e]">O que acompanhar</h3>
+                          <ul className="mt-2 grid gap-1.5 text-sm text-neutral-700">
+                            {strategy.metricas.map((metric) => (
+                              <li key={metric}>• {metric}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </>
+              )}
+            </section>
+          </div>
+        ) : null}
+
+        <div className={`mt-6 grid gap-6 lg:grid-cols-[22rem_1fr] ${tab === "estrategia" ? "hidden" : ""}`}>
           {/* Produtos */}
           <aside className={`${card} h-fit`}>
             <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-neutral-500">Produtos</h2>
@@ -514,7 +807,7 @@ export default function StudioPage() {
                 <p className="text-sm text-neutral-600">
                   {selectedItems.length ? `Para: ${selectedItems.map((item) => item.name).join(", ")}` : "Selecione um ou mais produtos."}
                 </p>
-                <button type="button" onClick={generateCaption} disabled={captionBusy || selectedItems.length === 0} className={`${primary} w-fit`}>
+                <button type="button" onClick={generateCaption} disabled={captionBusy || (selectedItems.length === 0 && !activeIdea)} className={`${primary} w-fit`}>
                   {captionBusy ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
                   {captionBusy ? "Escrevendo..." : caption ? "Escrever outra" : "Escrever legenda"}
                 </button>

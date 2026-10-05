@@ -30,6 +30,7 @@ Regras:
 - Calendário de 14 dias (14 itens), misturando formatos; pelo menos 5 reels.
 - Use produtos da lista com nome EXATO; priorize destaques, novidades e últimos fardos.
 - Responda dúvidas reais que os clientes fizeram (ex.: pedido mínimo, como funciona a compra em fardos) com conteúdo educativo.
+- Prova social: só proponha formatos que o dono consegue produzir de verdade (pedir depoimento ou foto a um cliente real, mostrar pedido saindo). NUNCA invente depoimentos, números de lucro ou resultados de clientes.
 - Nunca invente preço, prazo, frete ou pedido mínimo; quando o tema for esses assuntos, a chamada é falar com a equipe/consultar o catálogo.`;
 
 function parseStrategy(text: string) {

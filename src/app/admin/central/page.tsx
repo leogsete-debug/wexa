@@ -10,6 +10,13 @@ import {
   CheckCircle2,
   ExternalLink,
   Camera,
+  CalendarDays,
+  Check,
+  Clapperboard,
+  Copy,
+  Download,
+  Loader2,
+  Trash2,
   FileText,
   Sparkles,
   Wand2,
@@ -32,6 +39,17 @@ import {
   type Health,
   type LeadRow,
 } from "@/lib/central-metrics";
+import {
+  addDays,
+  generateContentFromStrategy,
+  removeContentMedia,
+  toDateKey,
+  type CatalogItemLite,
+  type ContentItem,
+  type ContentStatus,
+  type GenerationStep,
+  type StrategySummary,
+} from "@/lib/content-calendar";
 import { supabase } from "@/lib/supabase";
 
 const systemLinks = [
@@ -105,12 +123,20 @@ export default function CentralPage() {
   const [generating, setGenerating] = useState<ManagerReport["kind"] | null>(null);
   const [reportError, setReportError] = useState("");
   const autoReportTried = useRef(false);
+  const [contentItems, setContentItems] = useState<ContentItem[] | null>(null);
+  const [strategyData, setStrategyData] = useState<StrategySummary | null>(null);
+  const [catalogList, setCatalogList] = useState<CatalogItemLite[]>([]);
+  const [genStart, setGenStart] = useState(() => toDateKey(new Date()));
+  const [genStep, setGenStep] = useState<GenerationStep | null>(null);
+  const [genMessage, setGenMessage] = useState("");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setIsLoading(true);
     const since = new Date(Date.now() - days * 86_400_000).toISOString();
 
-    const [runsResult, chatsResult, eventsResult, leadsResult, catalogResult, reportsResult] = await Promise.all([
+    const contentSince = toDateKey(new Date(Date.now() - 30 * 86_400_000));
+    const [runsResult, chatsResult, eventsResult, leadsResult, catalogResult, reportsResult, itemsResult, strategyResult, productsResult] = await Promise.all([
       supabase.from("agent_runs").select("*").gte("created_at", since).order("created_at", { ascending: false }).limit(3000),
       supabase.from("chat_messages").select("session_id, role, content, provider, created_at").gte("created_at", since).order("created_at", { ascending: false }).limit(3000),
       supabase.from("analytics_events").select("event_name, event_source, visitor_id, product_name, created_at").gte("created_at", since).limit(10000),
@@ -123,6 +149,17 @@ export default function CentralPage() {
         .select("id, kind, period_start, period_end, analysis, provider, created_at")
         .order("created_at", { ascending: false })
         .limit(20),
+      supabase
+        .from("content_items")
+        .select("*")
+        .gte("scheduled_for", contentSince)
+        .order("scheduled_for", { ascending: true })
+        .order("created_at", { ascending: true })
+        .limit(400),
+      supabase.from("content_strategies").select("strategy").order("created_at", { ascending: false }).limit(1),
+      fetch("/api/catalogo/produtos", { cache: "no-store" })
+        .then((response) => response.json() as Promise<{ items?: CatalogItemLite[] }>)
+        .catch(() => ({ items: [] as CatalogItemLite[] })),
     ]);
 
     setMissingTables([runsResult.error ? "agent_runs" : null, chatsResult.error ? "chat_messages" : null].filter(Boolean) as string[]);
@@ -132,6 +169,9 @@ export default function CentralPage() {
     setLeads((leadsResult.data ?? []) as LeadRow[]);
     setCatalog(catalogResult);
     setReports(reportsResult.error ? [] : ((reportsResult.data ?? []) as ManagerReport[]));
+    setContentItems(itemsResult.error ? [] : ((itemsResult.data ?? []) as ContentItem[]));
+    setStrategyData((strategyResult.data?.[0]?.strategy as StrategySummary | undefined) ?? null);
+    setCatalogList(productsResult.items ?? []);
     setLoadedAt(new Date());
     setIsLoading(false);
   }, [days]);
@@ -273,6 +313,162 @@ export default function CentralPage() {
       ? "ok"
       : "atencao";
 
+  // Calendário de conteúdo
+  const todayKey = loadedAt ? toDateKey(loadedAt) : "";
+  const pendingItems = (contentItems ?? []).filter((item) => item.status !== "postado");
+  const overdueItems = pendingItems.filter((item) => item.scheduled_for && item.scheduled_for < todayKey);
+  const todayItems = (contentItems ?? []).filter((item) => item.scheduled_for === todayKey);
+  const upcomingDays = todayKey ? Array.from({ length: 14 }, (_, index) => addDays(todayKey, index)) : [];
+  const nextThreeDaysEmpty = todayKey
+    ? upcomingDays.slice(0, 3).every((day) => !(contentItems ?? []).some((item) => item.scheduled_for === day))
+    : false;
+  const postedInPeriod = (contentItems ?? []).filter(
+    (item) => item.status === "postado" && item.posted_at && (loadedAt?.getTime() ?? 0) - new Date(item.posted_at).getTime() <= days * 86_400_000,
+  ).length;
+
+  const contentAlerts: Array<{ level: Health; text: string }> = [];
+  if (overdueItems.length) contentAlerts.push({ level: "atencao", text: `${overdueItems.length} post(s) passaram do dia sem serem postados. Poste ou reagende no calendário.` });
+  if (todayItems.some((item) => item.status !== "postado")) contentAlerts.push({ level: "inativo", text: `Hoje tem ${todayItems.filter((item) => item.status !== "postado").length} post(s) para publicar. Veja em "Para postar hoje".` });
+  if (contentItems && nextThreeDaysEmpty) contentAlerts.push({ level: "atencao", text: "Nenhum post agendado para os próximos 3 dias. Clique em Gerar conteúdo da semana." });
+  const allAlerts = [...contentAlerts, ...report.alerts];
+
+  const updateItem = async (id: string, payload: Partial<ContentItem>) => {
+    const { data, error } = await supabase.from("content_items").update(payload).eq("id", id).select("*").single();
+    if (!error && data) setContentItems((current) => (current ?? []).map((item) => (item.id === id ? (data as ContentItem) : item)));
+  };
+
+  const deleteItem = async (item: ContentItem) => {
+    if (!window.confirm(`Excluir o post "${item.hook ?? item.title ?? ""}" e a mídia dele?`)) return;
+    const { error } = await supabase.from("content_items").delete().eq("id", item.id);
+    if (error) return;
+    await removeContentMedia(item.media_path).catch(() => undefined);
+    setContentItems((current) => (current ?? []).filter((entry) => entry.id !== item.id));
+  };
+
+  const copyCaption = async (item: ContentItem) => {
+    if (!item.caption) return;
+    await navigator.clipboard.writeText(item.caption);
+    setCopiedId(item.id);
+    setTimeout(() => setCopiedId(null), 1600);
+  };
+
+  const generateContent = async (daysToGenerate: number) => {
+    if (!strategyData?.calendario?.length) return;
+    const end = addDays(genStart, daysToGenerate - 1);
+    const existing = (contentItems ?? []).filter(
+      (item) => item.source === "agente" && item.scheduled_for && item.scheduled_for >= genStart && item.scheduled_for <= end,
+    );
+    if (existing.length && !window.confirm(`Já existem ${existing.length} post(s) do agente entre ${genStart} e ${end}. Gerar mesmo assim? (os novos serão somados)`)) return;
+
+    setGenMessage("");
+    setGenStep({ done: 0, total: 1, label: "Preparando..." });
+    try {
+      const result = await generateContentFromStrategy({
+        strategy: strategyData,
+        catalog: catalogList,
+        startDate: genStart,
+        days: daysToGenerate,
+        onStep: setGenStep,
+      });
+      setGenMessage(
+        result.failures.length
+          ? `${result.created.length} post(s) criados. ${result.failures.length} falharam: ${result.failures.slice(0, 3).join(" | ")}`
+          : `${result.created.length} post(s) criados e agendados.`,
+      );
+      const { data } = await supabase
+        .from("content_items")
+        .select("*")
+        .gte("scheduled_for", addDays(todayKey || genStart, -30))
+        .order("scheduled_for", { ascending: true })
+        .order("created_at", { ascending: true })
+        .limit(400);
+      setContentItems((data ?? []) as ContentItem[]);
+    } catch (error) {
+      setGenMessage(error instanceof Error ? error.message : "Falha ao gerar o conteúdo.");
+    } finally {
+      setGenStep(null);
+    }
+  };
+
+  const formatDay = (day: string) =>
+    new Date(`${day}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
+
+  const statusStyle: Record<ContentStatus, string> = {
+    rascunho: "border-amber-500/25 bg-amber-500/10 text-amber-700",
+    agendado: "border-blue-500/20 bg-blue-500/10 text-blue-700",
+    postado: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700",
+  };
+
+  const renderItem = (item: ContentItem) => {
+    const isOverdue = item.status !== "postado" && item.scheduled_for && item.scheduled_for < todayKey;
+    const extension = item.media_url?.split(".").pop() ?? "png";
+    return (
+      <div key={item.id} className={`grid gap-3 rounded-2xl border p-3 sm:grid-cols-[5.5rem_1fr] ${isOverdue ? "border-amber-500/40" : "border-black/5"} bg-white/80`}>
+        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-black/10 sm:w-[5.5rem]">
+          {item.media_url ? (
+            item.kind === "video" ? (
+              <video src={item.media_url} muted playsInline preload="metadata" className="h-full w-full object-cover" />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={item.media_url} alt="" loading="lazy" className="h-full w-full object-cover" />
+            )
+          ) : null}
+          {item.kind === "video" ? <Clapperboard size={14} className="absolute right-1.5 top-1.5 text-white drop-shadow" /> : null}
+        </div>
+        <div className="grid min-w-0 gap-2">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className={`rounded-full border px-2 py-0.5 font-bold uppercase tracking-[0.08em] ${statusStyle[item.status]}`}>
+              {isOverdue ? "atrasado" : item.status}
+            </span>
+            <span className="rounded-full bg-[#111] px-2 py-0.5 font-bold uppercase tracking-[0.08em] text-white">{item.format ?? item.kind}</span>
+            {item.pillar ? <span className="text-neutral-500">{item.pillar}</span> : null}
+          </div>
+          <p className="text-sm font-semibold text-[#111]">{item.hook ?? item.title}</p>
+          {item.product_name ? <p className="text-xs text-neutral-500">{item.product_name}</p> : null}
+          {item.caption ? (
+            <details className="text-xs text-neutral-600">
+              <summary className="cursor-pointer font-semibold text-[#9b7a3e]">Ver legenda</summary>
+              <p className="mt-2 whitespace-pre-wrap leading-5">{item.caption}</p>
+            </details>
+          ) : (
+            <p className="text-xs text-amber-700">Sem legenda: gere no Estúdio.</p>
+          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {item.media_url ? (
+              <a href={item.media_url} download={`topmax-${item.scheduled_for ?? "post"}.${extension}`} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 text-xs font-semibold text-[#111]">
+                <Download size={13} /> Baixar
+              </a>
+            ) : null}
+            {item.caption ? (
+              <button type="button" onClick={() => copyCaption(item)} className="inline-flex h-8 items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 text-xs font-semibold text-[#111]">
+                {copiedId === item.id ? <Check size={13} /> : <Copy size={13} />} {copiedId === item.id ? "Copiada" : "Legenda"}
+              </button>
+            ) : null}
+            {item.status !== "postado" ? (
+              <button type="button" onClick={() => updateItem(item.id, { status: "postado" })} className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#111] px-3 text-xs font-bold text-white">
+                <Check size={13} /> Postado
+              </button>
+            ) : (
+              <button type="button" onClick={() => updateItem(item.id, { status: "agendado", posted_at: null })} className="inline-flex h-8 items-center rounded-full border border-black/10 bg-white px-3 text-xs font-semibold text-neutral-600">
+                Desfazer
+              </button>
+            )}
+            <input
+              type="date"
+              value={item.scheduled_for ?? ""}
+              onChange={(event) => updateItem(item.id, { scheduled_for: event.target.value || null })}
+              className="h-8 rounded-full border border-black/10 bg-white px-3 text-xs"
+              aria-label="Reagendar"
+            />
+            <button type="button" onClick={() => deleteItem(item)} className="inline-flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:text-red-600" aria-label="Excluir">
+              <Trash2 size={14} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const contentRuns = runs.filter((run) => run.agent === "conteudo");
   const contentErrors = contentRuns.filter((run) => run.status === "erro");
   const contentHealth: Health =
@@ -364,12 +560,15 @@ export default function CentralPage() {
     },
     {
       key: "conteudo",
-      action: { label: "Abrir Estúdio", href: "/admin/estudio" },
+      action: { label: "Ver calendário", href: "#conteudo" },
       title: "Conteúdo · Estúdio",
       role: "Cria artes, vídeos e legendas com os produtos e o estoque reais do catálogo.",
       icon: Wand2,
-      health: contentHealth,
+      health: overdueItems.length ? "atencao" : contentHealth,
       stats: [
+        ["Agendados (pendentes)", String(pendingItems.length - overdueItems.length)],
+        ["Postados no período", String(postedInPeriod)],
+        ["Atrasados", String(overdueItems.length)],
         ["Legendas geradas", String(contentRuns.filter((run) => run.task === "legenda" && run.status === "ok").length)],
         ["Imagens com IA", String(contentRuns.filter((run) => run.task === "imagem_ia" && run.status === "ok").length)],
         ["Falhas", String(contentErrors.length)],
@@ -453,6 +652,12 @@ export default function CentralPage() {
             <Wand2 size={13} /> Estúdio de Conteúdo
           </Link>
           <a
+            href="#conteudo"
+            className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-[#111] hover:border-[#d6b46a]"
+          >
+            <CalendarDays size={13} /> Calendário de conteúdo
+          </a>
+          <a
             href="#relatorios"
             className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-[#111] hover:border-[#d6b46a]"
           >
@@ -476,14 +681,14 @@ export default function CentralPage() {
         <section className="mt-6">
           <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Alertas e melhorias</h2>
           <div className={`${cardClass} grid gap-3`}>
-            {isLoading && report.alerts.length === 0 ? (
+            {isLoading && allAlerts.length === 0 ? (
               <p className="text-sm text-neutral-500">Analisando...</p>
-            ) : report.alerts.length === 0 ? (
+            ) : allAlerts.length === 0 ? (
               <p className="flex items-center gap-2 text-sm font-semibold text-emerald-700">
                 <CheckCircle2 size={18} /> Tudo funcionando. Nenhuma ação necessária agora.
               </p>
             ) : (
-              report.alerts.map((alert, index) => (
+              allAlerts.map((alert, index) => (
                 <p key={index} className="flex items-start gap-3 text-sm leading-6 text-neutral-700">
                   {alert.level === "problema" ? (
                     <XCircle size={18} className="mt-0.5 shrink-0 text-red-600" />
@@ -541,6 +746,97 @@ export default function CentralPage() {
                 </article>
               );
             })}
+          </div>
+        </section>
+
+        <section id="conteudo" className="mt-8 scroll-mt-6">
+          <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Calendário de conteúdo</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              {strategyData?.calendario?.length ? (
+                <>
+                  <label className="flex items-center gap-2 text-xs font-semibold text-neutral-600">
+                    Começar em
+                    <input type="date" value={genStart} onChange={(event) => setGenStart(event.target.value)} className="h-10 rounded-full border border-black/10 bg-white px-3 text-xs" />
+                  </label>
+                  {[7, 14].map((amount) => (
+                    <button
+                      key={amount}
+                      type="button"
+                      disabled={genStep !== null}
+                      onClick={() => generateContent(amount)}
+                      className="inline-flex h-10 items-center gap-2 rounded-full bg-[#111] px-4 text-xs font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#d6b46a] hover:text-[#111] disabled:opacity-50"
+                    >
+                      <Sparkles size={14} /> Gerar {amount} dias
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <Link href="/admin/estudio" className="inline-flex h-10 items-center gap-2 rounded-full bg-[#111] px-4 text-xs font-bold uppercase tracking-[0.12em] text-white">
+                  <Wand2 size={14} /> Criar estratégia primeiro
+                </Link>
+              )}
+              <Link href="/admin/estudio" className="inline-flex h-10 items-center gap-2 rounded-full border border-black/10 bg-white px-4 text-xs font-bold uppercase tracking-[0.12em] text-neutral-600">
+                <Wand2 size={14} /> Estúdio
+              </Link>
+            </div>
+          </div>
+
+          <div className={`${cardClass} grid gap-5`}>
+            {genStep ? (
+              <div className="grid gap-2 rounded-2xl border border-[#d6b46a]/30 bg-[#d6b46a]/10 p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-[#111]">
+                  <Loader2 size={16} className="animate-spin" /> O agente está criando os posts ({genStep.done}/{genStep.total})
+                </p>
+                <p className="text-xs text-neutral-600">{genStep.label}</p>
+                <div className="h-2 overflow-hidden rounded-full bg-black/10">
+                  <div className="h-full rounded-full bg-[#d6b46a] transition-all" style={{ width: `${Math.round((genStep.done / Math.max(1, genStep.total)) * 100)}%` }} />
+                </div>
+                <p className="text-xs text-amber-700">Mantenha esta aba aberta e visível até terminar (os vídeos são gravados aqui).</p>
+              </div>
+            ) : null}
+            {genMessage ? <p className="text-sm font-semibold text-[#9b7a3e]">{genMessage}</p> : null}
+
+            {contentItems === null ? (
+              <p className="text-sm text-neutral-500">Carregando calendário...</p>
+            ) : (
+              <>
+                {overdueItems.length ? (
+                  <div>
+                    <h3 className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-amber-700">Atrasados</h3>
+                    <div className="grid gap-3 lg:grid-cols-2">{overdueItems.map(renderItem)}</div>
+                  </div>
+                ) : null}
+
+                <div>
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-[#9b7a3e]">Para postar hoje</h3>
+                  {todayItems.length ? (
+                    <div className="grid gap-3 lg:grid-cols-2">{todayItems.map(renderItem)}</div>
+                  ) : (
+                    <p className="text-sm text-neutral-500">Nada agendado para hoje.</p>
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">Próximos 14 dias</h3>
+                  <div className="grid gap-4">
+                    {upcomingDays.slice(1).map((day) => {
+                      const dayItems = (contentItems ?? []).filter((item) => item.scheduled_for === day);
+                      return (
+                        <div key={day} className="grid gap-2 border-t border-black/10 pt-3 lg:grid-cols-[8rem_1fr]">
+                          <p className="text-sm font-semibold capitalize text-[#111]">{formatDay(day)}</p>
+                          {dayItems.length ? (
+                            <div className="grid gap-3 lg:grid-cols-2">{dayItems.map(renderItem)}</div>
+                          ) : (
+                            <p className="text-xs text-neutral-400">Sem post</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </section>
 

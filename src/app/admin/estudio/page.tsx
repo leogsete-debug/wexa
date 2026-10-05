@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Check, Clapperboard, Compass, Copy, Download, ImageIcon, Loader2, PenLine, Search, Sparkles, Wand2 } from "lucide-react";
+import { ArrowLeft, CalendarPlus, Check, Clapperboard, Compass, Copy, Download, ImageIcon, Loader2, PenLine, Search, Sparkles, Wand2 } from "lucide-react";
 import { drawArt, formatSizes, loadImage, renderVideo, type ArtMode, type ArtSlide, type StudioFormat } from "@/lib/studio-render";
+import { toDateKey, uploadContentMedia } from "@/lib/content-calendar";
 import { supabase } from "@/lib/supabase";
 
 type CatalogItem = {
@@ -158,6 +159,9 @@ export default function StudioPage() {
   const [captionBusy, setCaptionBusy] = useState(false);
   const [captionError, setCaptionError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [saveDate, setSaveDate] = useState(() => toDateKey(new Date()));
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
   const previewRef = useRef<HTMLCanvasElement>(null);
   const videoCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -348,6 +352,67 @@ export default function StudioPage() {
     setCaption("");
     setTab(/reels/i.test(idea.formato) && match ? "video" : match ? "arte" : "legenda");
   };
+
+  // Salva a arte ou o vídeo no calendário da Central (com a legenda atual, se houver)
+  const saveToCalendar = async (kind: "arte" | "video") => {
+    if (!main) return;
+    setSaveBusy(true);
+    setSaveMessage("");
+    try {
+      let blob: Blob | null = null;
+      let extension = "png";
+      if (kind === "arte") {
+        const canvas = previewRef.current;
+        if (!canvas) throw new Error("Arte indisponível");
+        blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+      } else {
+        if (!videoUrl) throw new Error("Gere o vídeo primeiro");
+        blob = await (await fetch(videoUrl)).blob();
+        extension = videoExt;
+      }
+      if (!blob) throw new Error("Falha ao preparar a mídia");
+
+      const title = activeIdea?.gancho ?? (selectedItems.length > 1 ? `${selectedItems.length} produtos` : main.name);
+      const media = await uploadContentMedia(blob, extension, title);
+      const { error } = await supabase.from("content_items").insert({
+        scheduled_for: saveDate || null,
+        status: caption ? "agendado" : "rascunho",
+        kind,
+        format: kind === "video" ? "reels" : format === "story" ? "story" : "post",
+        title: activeIdea?.tema ?? title,
+        pillar: activeIdea?.pilar ?? null,
+        hook: title,
+        product_name: selectedItems.map((item) => item.name).join(", ") || null,
+        caption: caption || null,
+        media_url: media.url,
+        media_path: media.path,
+        strategy_day: activeIdea?.dia ?? null,
+        source: "manual",
+      });
+      if (error) throw new Error(error.message);
+      setSaveMessage(`Salvo no calendário para ${new Date(`${saveDate}T12:00:00`).toLocaleDateString("pt-BR")}${caption ? "" : " (sem legenda: gere na aba Legenda e salve de novo, ou edite depois)"}.`);
+    } catch (error) {
+      setSaveMessage(error instanceof Error ? `Não foi possível salvar: ${error.message}` : "Não foi possível salvar.");
+    } finally {
+      setSaveBusy(false);
+    }
+  };
+
+  const saveControls = (kind: "arte" | "video", disabled: boolean) => (
+    <div className="grid gap-2 rounded-2xl border border-black/10 p-3">
+      <label className="flex items-center justify-between gap-2 text-xs font-semibold text-neutral-600">
+        Postar em
+        <input type="date" value={saveDate} onChange={(event) => setSaveDate(event.target.value)} className="h-9 rounded-full border border-black/10 bg-white px-3 text-xs" />
+      </label>
+      <button type="button" onClick={() => saveToCalendar(kind)} disabled={disabled || saveBusy} className={primary}>
+        {saveBusy ? <Loader2 size={16} className="animate-spin" /> : <CalendarPlus size={16} />} Salvar no calendário
+      </button>
+      {saveMessage ? <p className="text-xs leading-5 text-[#9b7a3e]">{saveMessage}</p> : null}
+      <Link href="/admin/central#conteudo" className="text-center text-xs font-semibold text-neutral-500 hover:underline">
+        Ver calendário na Central
+      </Link>
+    </div>
+  );
 
   const downloadArt = () => {
     const canvas = previewRef.current;
@@ -684,10 +749,11 @@ export default function StudioPage() {
                   <div className="mx-auto w-full max-w-[26rem]">
                     <canvas ref={previewRef} className="h-auto w-full rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.25)]" />
                   </div>
-                  <div className="mt-5 flex justify-center">
+                  <div className="mx-auto mt-5 grid max-w-[26rem] gap-3">
                     <button type="button" onClick={downloadArt} disabled={!main || (mode !== "real" && !aiImage)} className={primary}>
                       <Download size={16} /> Baixar arte (PNG)
                     </button>
+                    {saveControls("arte", !main || (mode !== "real" && !aiImage))}
                   </div>
                 </div>
 
@@ -788,6 +854,7 @@ export default function StudioPage() {
                       <Download size={16} /> Baixar vídeo ({videoExt.toUpperCase()})
                     </a>
                   ) : null}
+                  {videoUrl ? saveControls("video", false) : null}
                   {videoUrl && videoExt === "webm" ? (
                     <p className="text-xs leading-5 text-neutral-500">Seu navegador gerou WebM. Para o Instagram, use o Chrome atualizado (gera MP4).</p>
                   ) : null}

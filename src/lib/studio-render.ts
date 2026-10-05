@@ -329,9 +329,13 @@ export async function renderVideo(canvas: HTMLCanvasElement, plan: VideoPlan, on
       }
       drawAt(time);
       onProgress(time / total);
-      requestAnimationFrame(tick);
+      schedule(tick);
     };
-    requestAnimationFrame(tick);
+    // Relógio próprio a 30 quadros/s (requestAnimationFrame pode pausar e travar a gravação).
+    const schedule = (callback: () => void) => {
+      setTimeout(callback, 1000 / 30);
+    };
+    schedule(tick);
   });
 
   recorder.stop();
@@ -339,4 +343,64 @@ export async function renderVideo(canvas: HTMLCanvasElement, plan: VideoPlan, on
   onProgress(1);
   const blob = await done;
   return { blob, extension: mimeType.startsWith("video/mp4") ? "mp4" : "webm" };
+}
+
+// Arte de texto (posts sem produto: bastidores, educação, autoridade).
+export function drawIdeaCard(
+  ctx: CanvasRenderingContext2D,
+  idea: { title: string; subtitle?: string | null; badge?: string | null; cta: string; ctaHint: string },
+) {
+  const { width: W, height: H } = ctx.canvas;
+  const isStory = H / W > 1.6;
+  ctx.fillStyle = "#07100d";
+  ctx.fillRect(0, 0, W, H);
+  const glow = ctx.createRadialGradient(W * 0.2, H * 0.15, 0, W * 0.2, H * 0.15, W * 1.1);
+  glow.addColorStop(0, "rgba(214,180,106,0.32)");
+  glow.addColorStop(1, "rgba(214,180,106,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  const margin = 72;
+  const topY = isStory ? 120 : margin;
+  pill(ctx, "TOP MAX", margin, topY, { fill: "rgba(0,0,0,0.55)", color: GOLD, size: 30, border: "rgba(214,180,106,0.7)" });
+  if (idea.badge) pill(ctx, idea.badge.toUpperCase(), W - margin, topY, { fill: GOLD, color: "#111", size: 26, alignRight: true });
+
+  ctx.textBaseline = "alphabetic";
+  ctx.font = `800 88px ${FONT}`;
+  ctx.letterSpacing = "-1px";
+  ctx.fillStyle = "#ffffff";
+  const lines = wrapText(ctx, idea.title, W - margin * 2, 5);
+  let y = H * (isStory ? 0.36 : 0.32);
+  for (const line of lines) {
+    ctx.fillText(line, margin, y);
+    y += 100;
+  }
+  ctx.letterSpacing = "0px";
+
+  if (idea.subtitle) {
+    ctx.font = `500 38px ${FONT}`;
+    ctx.fillStyle = "rgba(255,255,255,0.75)";
+    const subLines = wrapText(ctx, idea.subtitle, W - margin * 2, 3);
+    y += 20;
+    for (const line of subLines) {
+      ctx.fillText(line, margin, y);
+      y += 52;
+    }
+  }
+
+  ctx.fillStyle = GOLD;
+  ctx.fillRect(margin, H * (isStory ? 0.28 : 0.24), 120, 8);
+
+  const ctaY = H - (isStory ? 260 : 72) - 66;
+  pill(ctx, idea.cta.toUpperCase(), margin, ctaY, { fill: GOLD, color: "#111", size: 30 });
+  ctx.font = `500 26px ${FONT}`;
+  ctx.fillStyle = "rgba(255,255,255,0.78)";
+  ctx.textBaseline = "middle";
+  ctx.font = `800 30px ${FONT}`;
+  ctx.letterSpacing = "3px";
+  const ctaWidth = ctx.measureText(idea.cta.toUpperCase()).width + 30 * 1.8;
+  ctx.letterSpacing = "0px";
+  ctx.font = `500 26px ${FONT}`;
+  ctx.fillText(idea.ctaHint, margin + ctaWidth + 24, ctaY + 33);
+  ctx.textBaseline = "alphabetic";
 }

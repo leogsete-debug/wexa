@@ -5,7 +5,6 @@ import About from "@/components/About";
 import FeaturedCarousel from "@/components/FeaturedCarousel";
 import PdfCatalog from "@/components/PdfCatalog";
 import ExportProcess from "@/components/ExportProcess";
-import Markets from "@/components/Markets";
 import Gallery from "@/components/Gallery";
 import CatalogCTA from "@/components/CatalogCTA";
 import Contact from "@/components/Contact";
@@ -21,7 +20,6 @@ import {
   getPublicCompanyContent,
   getPublicContactContent,
   getPublicFooterContent,
-  getPublicMarkets,
   getPublicProcessSteps,
 } from "@/lib/content";
 import { getFeaturedProducts } from "@/lib/featured-products";
@@ -61,7 +59,6 @@ export default async function HomePage({ locale = "pt" }: HomePageProps) {
     settings,
     latestCatalog,
     companyContent,
-    markets,
     processSteps,
     contactContent,
     footerContent,
@@ -72,7 +69,6 @@ export default async function HomePage({ locale = "pt" }: HomePageProps) {
     getPublicSiteSettings(),
     getLatestPublishedCatalog(),
     getPublicCompanyContent(),
-    getPublicMarkets(),
     getPublicProcessSteps(),
     getPublicContactContent(),
     getPublicFooterContent(),
@@ -97,7 +93,6 @@ export default async function HomePage({ locale = "pt" }: HomePageProps) {
       <About content={companyContent} locale={locale} />
       <PdfCatalog settings={translatedSettings} catalogPdfUrl={catalogPdfUrl} locale={locale} section={sectionByKey(siteSections, "catalog")} />
       <ExportProcess steps={processSteps} locale={locale} section={sectionByKey(siteSections, "process")} />
-      <Markets markets={markets} locale={locale} section={sectionByKey(siteSections, "markets")} />
       <Gallery locale={locale} section={sectionByKey(siteSections, "gallery")} items={galleryItems} />
       <CatalogCTA settings={translatedSettings} catalogPdfUrl={catalogPdfUrl} locale={locale} section={sectionByKey(siteSections, "cta")} />
       <Contact settings={translatedSettings} content={contactContent} locale={locale} />

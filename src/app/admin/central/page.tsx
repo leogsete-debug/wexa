@@ -297,9 +297,11 @@ export default function CentralPage() {
     health: Health;
     stats: Array<[string, string]>;
     note?: string | null;
+    action?: { label: string; href: string; external?: boolean };
   }> = [
     {
       key: "sofia",
+      action: { label: "Ver no site", href: "https://wexa-drab.vercel.app/", external: true },
       title: "Sofia · Atendimento",
       role: "Atende visitantes no site, indica produtos com estoque e leva ao catálogo.",
       icon: MessageCircle,
@@ -316,6 +318,7 @@ export default function CentralPage() {
     },
     {
       key: "site",
+      action: { label: "Abrir site", href: "https://wexa-drab.vercel.app/", external: true },
       title: "Vitrine · Site",
       role: "Apresenta a Top Max e os destaques, e encaminha para o catálogo de pedidos.",
       icon: Store,
@@ -329,6 +332,7 @@ export default function CentralPage() {
     },
     {
       key: "catalog",
+      action: { label: "Abrir catálogo", href: "https://topmax-catalogo.vercel.app/?lang=pt#admin", external: true },
       title: "Catálogo de pedidos",
       role: "Seu sistema (Apps Script): estoque, propostas e pedidos. Fonte da verdade dos produtos.",
       icon: ShoppingBag,
@@ -347,6 +351,7 @@ export default function CentralPage() {
     },
     {
       key: "gerente",
+      action: { label: "Ver relatórios", href: "#relatorios" },
       title: "Gerente · Análises",
       role: "Lê tudo isso, gera relatórios semanais, mensais e anuais e sugere melhorias.",
       icon: LineChart,
@@ -359,6 +364,7 @@ export default function CentralPage() {
     },
     {
       key: "conteudo",
+      action: { label: "Abrir Estúdio", href: "/admin/estudio" },
       title: "Conteúdo · Estúdio",
       role: "Cria artes, vídeos e legendas com os produtos e o estoque reais do catálogo.",
       icon: Wand2,
@@ -439,6 +445,20 @@ export default function CentralPage() {
         </header>
 
         <section className="mt-6 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">Ferramentas:</span>
+          <Link
+            href="/admin/estudio"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#d6b46a] px-3.5 py-1.5 text-xs font-bold text-[#111] hover:bg-[#111] hover:text-white"
+          >
+            <Wand2 size={13} /> Estúdio de Conteúdo
+          </Link>
+          <a
+            href="#relatorios"
+            className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-[#111] hover:border-[#d6b46a]"
+          >
+            <FileText size={13} /> Relatórios do Gerente
+          </a>
+          <span className="mx-1 hidden h-5 w-px bg-black/10 sm:block" />
           <span className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">Seu sistema:</span>
           {systemLinks.map((link) => (
             <a
@@ -507,13 +527,24 @@ export default function CentralPage() {
                     ))}
                   </dl>
                   {agent.note ? <p className="mt-3 rounded-xl bg-red-500/5 px-3 py-2 text-xs leading-5 text-red-700">{agent.note}</p> : null}
+                  {agent.action ? (
+                    <a
+                      href={agent.action.href}
+                      target={agent.action.external ? "_blank" : undefined}
+                      rel={agent.action.external ? "noreferrer" : undefined}
+                      className="mt-4 inline-flex h-10 w-fit items-center gap-2 rounded-full bg-[#111] px-4 text-xs font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#d6b46a] hover:text-[#111]"
+                    >
+                      {agent.action.label}
+                      {agent.action.external ? <ExternalLink size={13} /> : null}
+                    </a>
+                  ) : null}
                 </article>
               );
             })}
           </div>
         </section>
 
-        <section className="mt-8">
+        <section id="relatorios" className="mt-8 scroll-mt-6">
           <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Relatórios do Gerente</h2>
             <div className="flex flex-wrap gap-2">

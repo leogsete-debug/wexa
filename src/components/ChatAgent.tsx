@@ -202,7 +202,7 @@ export default function ChatAgent({ locale = "pt", whatsappUrl }: { locale?: Sit
           {labels.open}
         </span>
         <span className="relative block h-14 w-14 rounded-full border-2 border-[#d6b46a] bg-white shadow-[0_18px_50px_rgba(214,180,106,0.45)] transition duration-300 group-hover:-translate-y-1 group-hover:scale-105 sm:h-16 sm:w-16">
-          <Image src="/images/assistente-sofia.svg" alt="" fill sizes="64px" className="rounded-full" />
+          <Image src="/images/sofia.webp" alt="Sofia, assistente virtual" fill sizes="64px" className="rounded-full object-cover" />
           <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
         </span>
       </button>
@@ -214,7 +214,7 @@ export default function ChatAgent({ locale = "pt", whatsappUrl }: { locale?: Sit
       <header className="flex items-center justify-between gap-3 bg-[#111] px-4 py-3 text-white">
         <div className="flex items-center gap-3">
           <span className="relative block h-10 w-10 shrink-0 rounded-full border-2 border-[#d6b46a]">
-            <Image src="/images/assistente-sofia.svg" alt="" fill sizes="40px" className="rounded-full" />
+            <Image src="/images/sofia.webp" alt="Sofia" fill sizes="40px" className="rounded-full object-cover" />
           </span>
           <div>
             <p className="text-sm font-semibold">{labels.title}</p>

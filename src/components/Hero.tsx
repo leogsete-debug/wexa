@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { SiteLocale } from "@/components/HomePage";
-import TrackedWhatsappLink from "@/components/TrackedWhatsappLink";
+import TrackedCatalogStoreLink from "@/components/TrackedCatalogStoreLink";
+import { catalogStoreLabels } from "@/lib/catalog-store";
 import { sectionArray } from "@/lib/site-content";
 import type { SiteSection } from "@/types/content";
 import type { SiteSettings } from "@/types/site-settings";
@@ -64,13 +65,12 @@ export default function Hero({ settings, locale = "pt", section }: HeroProps) {
           {settings.show_hero_primary_button || settings.show_hero_secondary_button ? (
             <div className="mt-6 flex flex-col gap-2.5 sm:mt-10 sm:flex-row sm:gap-4">
               {settings.show_hero_primary_button ? (
-                <TrackedWhatsappLink
-                  href={settings.whatsapp_url}
+                <TrackedCatalogStoreLink
                   source="hero"
                   className="rounded-full bg-[#d6b46a] px-5 py-3.5 text-center text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[#111] shadow-[0_22px_60px_rgba(214,180,106,0.34)] transition duration-300 hover:-translate-y-1 hover:bg-[#f0d89a] hover:shadow-[0_28px_70px_rgba(214,180,106,0.46)] sm:px-9 sm:py-4 sm:text-xs sm:tracking-[0.2em]"
                 >
-                  {settings.hero_primary_button_text}
-                </TrackedWhatsappLink>
+                  {catalogStoreLabels[locale].hero}
+                </TrackedCatalogStoreLink>
               ) : null}
 
               {settings.show_hero_secondary_button ? (

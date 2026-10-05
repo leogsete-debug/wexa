@@ -1,6 +1,7 @@
-import { Download, MessageCircle } from "lucide-react";
+import { Download, ShoppingBag } from "lucide-react";
 import type { SiteLocale } from "@/components/HomePage";
-import TrackedWhatsappLink from "@/components/TrackedWhatsappLink";
+import TrackedCatalogStoreLink from "@/components/TrackedCatalogStoreLink";
+import { catalogStoreLabels } from "@/lib/catalog-store";
 import TrackedCatalogDownloadLink from "@/components/TrackedCatalogDownloadLink";
 import { normalizeExternalCatalogPdfUrl } from "@/lib/catalogs";
 import { sectionText } from "@/lib/site-content";
@@ -32,7 +33,7 @@ const text = {
   },
 };
 
-export default function CatalogCTA({ settings, catalogPdfUrl, locale = "pt", section }: CatalogCTAProps) {
+export default function CatalogCTA({ catalogPdfUrl, locale = "pt", section }: CatalogCTAProps) {
   const pdfUrl = normalizeExternalCatalogPdfUrl(catalogPdfUrl);
   const fallbackLabels = text[locale];
   const labels = {
@@ -63,10 +64,10 @@ export default function CatalogCTA({ settings, catalogPdfUrl, locale = "pt", sec
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 lg:w-[13rem] lg:flex-col">
-            <TrackedWhatsappLink href={settings.whatsapp_url} source="cta" className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full bg-[#d6b46a] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-[#111] transition duration-300 hover:-translate-y-1 hover:bg-[#f0d89a] hover:shadow-[0_24px_60px_rgba(214,180,106,0.32)] sm:px-7 sm:text-xs sm:tracking-[0.18em]">
-              <MessageCircle size={18} />
-              {labels.whatsapp}
-            </TrackedWhatsappLink>
+            <TrackedCatalogStoreLink source="cta" className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full bg-[#d6b46a] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-[#111] transition duration-300 hover:-translate-y-1 hover:bg-[#f0d89a] hover:shadow-[0_24px_60px_rgba(214,180,106,0.32)] sm:px-7 sm:text-xs sm:tracking-[0.18em]">
+              <ShoppingBag size={18} />
+              {catalogStoreLabels[locale].order}
+            </TrackedCatalogStoreLink>
             {pdfUrl ? (
               <TrackedCatalogDownloadLink href={pdfUrl} className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full border border-white/18 bg-white/10 px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:bg-white hover:text-[#111] sm:px-7 sm:text-xs sm:tracking-[0.18em]">
                 <Download size={18} />

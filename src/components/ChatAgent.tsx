@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { MessageCircle, Plus, Send, UserRound, X } from "lucide-react";
+import { ArrowUpRight, MessageCircle, Send, UserRound, X } from "lucide-react";
 import type { SiteLocale } from "@/components/HomePage";
 import { trackAnalyticsEvent } from "@/lib/analytics";
-import { addToQuoteCart } from "@/lib/quote-cart";
 import { supabase } from "@/lib/supabase";
+import TrackedCatalogStoreLink from "@/components/TrackedCatalogStoreLink";
 
 type SuggestedProduct = { id: string; name: string; image: string };
 
@@ -22,10 +22,10 @@ const text = {
     title: "Consultor Top Max",
     status: "Online agora",
     greeting:
-      "Olá! Sou o consultor virtual da Top Max. Posso te ajudar a encontrar produtos importados para sua empresa e montar sua cotação. O que você procura?",
-    suggestions: ["Quais produtos vocês importam?", "Como funciona a importação?", "Quero uma cotação"],
+      "Olá! Sou o consultor virtual da Top Max. Posso te ajudar a encontrar produtos com estoque para sua loja e te levar ao catálogo de pedidos. O que você procura?",
+    suggestions: ["Quais produtos têm em estoque?", "Como funciona a compra em fardos?", "Quero fazer um pedido"],
     placeholder: "Digite sua mensagem...",
-    addToQuote: "Adicionar à cotação",
+    addToQuote: "Ver no catálogo",
     leaveContact: "Deixar meu contato",
     contactTitle: "Deixe seu contato e nossa equipe comercial retorna:",
     name: "Nome *",
@@ -45,10 +45,10 @@ const text = {
     open: "在线咨询",
     title: "Top Max 顾问",
     status: "在线",
-    greeting: "您好！我是 Top Max 的在线顾问。我可以帮您寻找进口产品并创建询价单。请问您需要什么产品？",
-    suggestions: ["你们进口哪些产品？", "进口流程是怎样的？", "我想询价"],
+    greeting: "您好！我是 Top Max 的在线顾问。我可以帮您查找现货产品，并带您前往订购目录。请问您需要什么产品？",
+    suggestions: ["有哪些现货产品？", "按包采购怎么操作？", "我想下单"],
     placeholder: "请输入消息...",
-    addToQuote: "加入询价单",
+    addToQuote: "在目录中查看",
     leaveContact: "留下联系方式",
     contactTitle: "请留下联系方式，我们的销售团队会尽快联系您：",
     name: "姓名 *",
@@ -243,16 +243,16 @@ export default function ChatAgent({ locale = "pt", whatsappUrl }: { locale?: Sit
                   {message.products.map((product) => (
                     <div key={product.id} className="flex items-center gap-2 rounded-xl border border-black/5 bg-white p-2">
                       <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-neutral-200">
-                        <Image src={product.image} alt={product.name} fill sizes="40px" className="object-cover" />
+                        <Image src={product.image} alt={product.name} fill sizes="40px" unoptimized={product.image.startsWith("/api/")} className="object-cover" />
                       </div>
                       <span className="min-w-0 flex-1 truncate text-xs font-semibold">{product.name}</span>
-                      <button
-                        type="button"
-                        onClick={() => addToQuoteCart({ productId: product.id, name: product.name, image: product.image })}
+                      <TrackedCatalogStoreLink
+                        source="chat_agent"
+                        productName={product.name}
                         className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#d6b46a] px-2.5 py-1.5 text-[0.62rem] font-bold uppercase tracking-[0.08em] text-[#111]"
                       >
-                        <Plus size={12} /> {labels.addToQuote}
-                      </button>
+                        {labels.addToQuote} <ArrowUpRight size={12} />
+                      </TrackedCatalogStoreLink>
                     </div>
                   ))}
                 </div>

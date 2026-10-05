@@ -1,8 +1,10 @@
 import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
-import AddToQuoteButton from "@/components/AddToQuoteButton";
 import type { SiteLocale } from "@/components/HomePage";
+import TrackedCatalogStoreLink from "@/components/TrackedCatalogStoreLink";
 import TrackedWhatsappLink from "@/components/TrackedWhatsappLink";
+import { catalogPhotoUrl, getCatalogSnapshot } from "@/lib/catalog-api";
+import { catalogStoreLabels } from "@/lib/catalog-store";
 import { sectionText } from "@/lib/site-content";
 import type { SiteSection } from "@/types/content";
 
@@ -13,6 +15,9 @@ type PublicProduct = {
   badge: string;
   description: string;
   image: string;
+  // Produtos vindos do catálogo de pedidos (destaques)
+  stockLine?: string;
+  priceLine?: string;
 };
 
 type SupabaseProduct = {
@@ -126,6 +131,12 @@ const text = {
     button: "Solicitar cotação",
     whatsapp: "Dúvidas? Fale no WhatsApp",
     product: "Produto",
+    featuredBadge: "Destaque",
+    readyBadge: "Pronta entrega",
+    newBadge: "Novidade",
+    lastBales: (bales: number) => `Últimos ${bales} fardos`,
+    stock: (pieces: number, bales: number) => `${pieces} pç/fardo · ${bales.toLocaleString("pt-BR")} fardos disponíveis`,
+    price: (price: string) => `Preço sugerido: ${price} / peça`,
     featured: "Destaque",
     published: "Publicado",
     fallbackDescription: "Produto importado disponivel para distribuicao, atacado, varejo e grandes redes.",
@@ -138,6 +149,12 @@ const text = {
     button: "申请报价",
     whatsapp: "有疑问？WhatsApp 联系我们",
     product: "产品",
+    featuredBadge: "重点推荐",
+    readyBadge: "现货",
+    newBadge: "新品",
+    lastBales: (bales: number) => `仅剩 ${bales} 包`,
+    stock: (pieces: number, bales: number) => `每包 ${pieces} 件 · 现货 ${bales.toLocaleString("pt-BR")} 包`,
+    price: (price: string) => `建议价：${price} / 件`,
     featured: "重点推荐",
     published: "已发布",
     fallbackDescription: "适合分销、批发、零售和大型连锁企业的进口产品。",
@@ -162,6 +179,26 @@ function mapSupabaseProduct(product: SupabaseProduct, locale: SiteLocale): Publi
         : product.short_description || labels.fallbackDescription,
     image: product.main_image_url || "/images/produto-1.jpeg",
   };
+}
+
+// Vitrine = produtos marcados como destaque no catálogo de pedidos (topmax-catalogo).
+async function getCatalogFeaturedProducts(locale: SiteLocale): Promise<PublicProduct[]> {
+  const snapshot = await getCatalogSnapshot();
+  const labels = text[locale];
+  const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+  return (snapshot?.items ?? [])
+    .filter((item) => item.isFeatured && item.balesAvailable > 0)
+    .map((item) => ({
+      id: null,
+      name: item.name,
+      category: labels.readyBadge,
+      badge: item.balesAvailable <= 50 ? labels.lastBales(item.balesAvailable) : item.isNew ? labels.newBadge : labels.featuredBadge,
+      description: "",
+      image: item.photoCount > 0 ? catalogPhotoUrl(item.key) : "/images/produto-1.jpeg",
+      stockLine: labels.stock(item.piecesPerBale, item.balesAvailable),
+      priceLine: item.suggestedPrice > 0 ? labels.price(money.format(item.suggestedPrice)) : undefined,
+    }));
 }
 
 async function getPublishedProducts(locale: SiteLocale): Promise<PublicProduct[]> {
@@ -225,8 +262,18 @@ export default async function Products({ whatsappUrl, locale = "pt", section }: 
     published: sectionText(section, "published_badge", locale, fallbackLabels.published),
     fallbackDescription: sectionText(section, "description_fallback", locale, fallbackLabels.fallbackDescription),
   };
-  const publishedProducts = await getPublishedProducts(locale);
-  const products = publishedProducts.length > 0 ? publishedProducts : locale === "zh" ? fallbackProductsZh : fallbackProducts;
+  const storeLabels = catalogStoreLabels[locale];
+  const catalogProducts = await getCatalogFeaturedProducts(locale);
+  // Reserva: se o catálogo estiver fora do ar ou sem destaques, mostra os produtos do CMS.
+  const publishedProducts = catalogProducts.length > 0 ? [] : await getPublishedProducts(locale);
+  const products =
+    catalogProducts.length > 0
+      ? catalogProducts
+      : publishedProducts.length > 0
+        ? publishedProducts
+        : locale === "zh"
+          ? fallbackProductsZh
+          : fallbackProducts;
 
   return (
     <section id="produtos" className="relative px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-32">
@@ -259,6 +306,7 @@ export default async function Products({ whatsappUrl, locale = "pt", section }: 
                   src={product.image}
                   alt={product.name}
                   fill
+                  unoptimized={product.image.startsWith("/api/")}
                   sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
                   className="object-cover transition duration-700 ease-out group-hover:scale-110"
                 />
@@ -277,36 +325,47 @@ export default async function Products({ whatsappUrl, locale = "pt", section }: 
                 <h3 className="text-[1.45rem] font-semibold leading-tight tracking-[-0.025em] text-[#141414] transition duration-300 group-hover:text-[#9b7a3e] sm:text-[1.7rem] sm:tracking-[-0.035em]">
                   {product.name}
                 </h3>
-                <p className="mt-4 text-[0.95rem] leading-7 text-neutral-600 sm:mt-5 sm:text-[0.98rem]">
-                  {product.description}
-                </p>
-{product.id ? (
-                  <div className="mt-6 flex flex-col gap-3 sm:mt-8 md:mt-auto">
-                    <AddToQuoteButton productId={product.id} name={product.name} image={product.image} locale={locale} />
-                    <TrackedWhatsappLink
-                      href={whatsappUrl}
-                      source="product"
-                      productId={product.id}
-                      productName={product.name}
-                      className="text-center text-xs font-semibold text-neutral-500 underline-offset-4 transition hover:text-[#9b7a3e] hover:underline sm:text-left"
-                    >
-                      {labels.whatsapp}
-                    </TrackedWhatsappLink>
+                {product.description ? (
+                  <p className="mt-4 text-[0.95rem] leading-7 text-neutral-600 sm:mt-5 sm:text-[0.98rem]">
+                    {product.description}
+                  </p>
+                ) : null}
+{product.stockLine || product.priceLine ? (
+                  <div className="mt-4 grid gap-1 text-sm">
+                    {product.stockLine ? <p className="font-semibold text-[#141414]">{product.stockLine}</p> : null}
+                    {product.priceLine ? <p className="text-[#9b7a3e]">{product.priceLine}</p> : null}
                   </div>
-                ) : (
-                                  <TrackedWhatsappLink
+                ) : null}
+                <div className="mt-6 flex flex-col gap-3 sm:mt-8 md:mt-auto md:pt-6">
+                  <TrackedCatalogStoreLink
+                    source="product"
+                    productName={product.name}
+                    className="inline-flex w-full items-center justify-center rounded-full bg-[#111] px-5 py-3.5 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[#d6b46a] hover:text-[#111] hover:shadow-[0_18px_45px_rgba(214,180,106,0.28)] sm:w-auto sm:self-start sm:px-6 sm:text-[0.72rem] sm:tracking-[0.18em]"
+                  >
+                    {storeLabels.product}
+                  </TrackedCatalogStoreLink>
+                  <TrackedWhatsappLink
                     href={whatsappUrl}
                     source="product"
-                    productId={product.id}
                     productName={product.name}
-                    className="mt-6 inline-flex w-full justify-center rounded-full bg-[#111] px-5 py-3.5 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[#d6b46a] hover:text-[#111] hover:shadow-[0_18px_45px_rgba(214,180,106,0.28)] sm:mt-8 sm:w-auto sm:px-6 sm:text-[0.72rem] sm:tracking-[0.18em] md:mt-auto md:self-start"
+                    className="text-center text-xs font-semibold text-neutral-500 underline-offset-4 transition hover:text-[#9b7a3e] hover:underline sm:text-left"
                   >
-                    {labels.button}
+                    {labels.whatsapp}
                   </TrackedWhatsappLink>
-                )}
+                </div>
               </div>
             </article>
           ))}
+        </div>
+
+        <div className="mt-10 flex flex-col items-center gap-3 rounded-[1.75rem] border border-[#d6b46a]/30 bg-[#111] px-6 py-8 text-center text-white shadow-[0_30px_90px_rgba(0,0,0,0.18)] sm:mt-14 sm:py-10">
+          <p className="max-w-xl text-sm leading-6 text-white/70">{storeLabels.allProductsHint}</p>
+          <TrackedCatalogStoreLink
+            source="products_all"
+            className="inline-flex items-center justify-center rounded-full bg-[#d6b46a] px-7 py-4 text-xs font-bold uppercase tracking-[0.16em] text-[#111] shadow-[0_22px_60px_rgba(214,180,106,0.34)] transition duration-300 hover:-translate-y-1 hover:bg-[#f0d89a]"
+          >
+            {storeLabels.allProducts} →
+          </TrackedCatalogStoreLink>
         </div>
       </div>
     </section>

@@ -4,7 +4,8 @@ import { Menu, Settings, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import type { SiteLocale } from "@/components/HomePage";
-import TrackedWhatsappLink from "@/components/TrackedWhatsappLink";
+import TrackedCatalogStoreLink from "@/components/TrackedCatalogStoreLink";
+import { catalogStoreLabels } from "@/lib/catalog-store";
 import { sectionArray, sectionBoolean, sectionText } from "@/lib/site-content";
 import type { SiteSection } from "@/types/content";
 import type { SiteSettings } from "@/types/site-settings";
@@ -79,8 +80,7 @@ export default function SiteHeader({ settings, locale = "pt", section }: SiteHea
     href: link.href,
     label: locale === "zh" ? link.label_zh || link.label : link.label,
   }));
-  const quoteLabel = sectionText(section, "quote_label", locale, settings.header_quote_text || labels.quote);
-  const quoteUrl = settings.whatsapp_url;
+  const quoteLabel = catalogStoreLabels[locale].order;
   const showLanguageSelector = settings.show_language_selector ?? sectionBoolean(section, "show_language_selector", true);
   const showAdminButton = settings.show_admin_button ?? sectionBoolean(section, "show_admin_button", true);
   const showQuoteButton = settings.show_quote_button ?? sectionBoolean(section, "show_quote_button", true);
@@ -111,13 +111,12 @@ export default function SiteHeader({ settings, locale = "pt", section }: SiteHea
           {showLanguageSelector ? <LanguageSelector locale={locale} /> : null}
 
           {showQuoteButton ? (
-          <TrackedWhatsappLink
-            href={quoteUrl}
+          <TrackedCatalogStoreLink
             source="header"
             className="hidden rounded-full border border-white/35 bg-white/10 px-2.5 py-2 text-[0.54rem] font-semibold uppercase tracking-[0.1em] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition duration-300 hover:-translate-y-0.5 hover:border-[#d6b46a]/80 hover:bg-[#d6b46a] hover:text-[#111] hover:shadow-[0_18px_45px_rgba(214,180,106,0.28)] min-[430px]:inline-flex min-[430px]:px-3 sm:px-6 sm:py-3 sm:text-[0.7rem] sm:tracking-[0.18em]"
           >
             {quoteLabel}
-          </TrackedWhatsappLink>
+          </TrackedCatalogStoreLink>
           ) : null}
 
           {showAdminButton ? (
@@ -161,14 +160,13 @@ export default function SiteHeader({ settings, locale = "pt", section }: SiteHea
               </a>
             ))}
             {showQuoteButton ? (
-            <TrackedWhatsappLink
+            <TrackedCatalogStoreLink
               className="rounded-xl px-3 py-2.5 text-[#f0d89a] transition duration-300 hover:bg-white/12 sm:rounded-2xl sm:px-4 sm:py-3 min-[430px]:hidden"
-              href={quoteUrl}
-              source="header"
+              source="header_menu"
               onClick={() => setIsMenuOpen(false)}
             >
               {quoteLabel}
-            </TrackedWhatsappLink>
+            </TrackedCatalogStoreLink>
             ) : null}
           </nav>
         </div>

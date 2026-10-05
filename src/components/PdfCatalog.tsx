@@ -1,6 +1,7 @@
-import { Download, MessageCircle } from "lucide-react";
+import { Download, ShoppingBag } from "lucide-react";
 import type { SiteLocale } from "@/components/HomePage";
-import TrackedWhatsappLink from "@/components/TrackedWhatsappLink";
+import TrackedCatalogStoreLink from "@/components/TrackedCatalogStoreLink";
+import { catalogStoreLabels } from "@/lib/catalog-store";
 import TrackedCatalogDownloadLink from "@/components/TrackedCatalogDownloadLink";
 import { normalizeExternalCatalogPdfUrl } from "@/lib/catalogs";
 import { sectionText } from "@/lib/site-content";
@@ -72,14 +73,13 @@ export default function PdfCatalog({ settings, catalogPdfUrl, locale = "pt", sec
                   {unavailableMessage}
                 </p>
               )}
-              <TrackedWhatsappLink
-                href={settings.whatsapp_url}
-                source="catalog"
-                className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full border border-[#25d366]/25 bg-[#25d366] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white shadow-[0_18px_45px_rgba(37,211,102,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-[#1ebe5d] hover:shadow-[0_24px_60px_rgba(37,211,102,0.34)] sm:px-7 sm:text-xs sm:tracking-[0.18em]"
+              <TrackedCatalogStoreLink
+                source="catalog_section"
+                className="inline-flex min-h-[3.25rem] items-center justify-center gap-3 rounded-full bg-[#d6b46a] px-5 py-4 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-[#111] shadow-[0_18px_45px_rgba(214,180,106,0.28)] transition duration-300 hover:-translate-y-1 hover:bg-[#f0d89a] sm:px-7 sm:text-xs sm:tracking-[0.18em]"
               >
-                <MessageCircle size={18} />
-                {labels.whatsapp}
-              </TrackedWhatsappLink>
+                <ShoppingBag size={18} />
+                {catalogStoreLabels[locale].section}
+              </TrackedCatalogStoreLink>
             </div>
           </div>
         </div>

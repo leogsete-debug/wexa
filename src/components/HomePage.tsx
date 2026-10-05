@@ -11,7 +11,6 @@ import CatalogCTA from "@/components/CatalogCTA";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import ChatAgent from "@/components/ChatAgent";
-import QuoteCart from "@/components/QuoteCart";
 import WhatsappButton from "@/components/WhatsappButton";
 import PageViewTracker from "@/components/PageViewTracker";
 import {
@@ -101,7 +100,6 @@ export default async function HomePage({ locale = "pt" }: HomePageProps) {
       <CatalogCTA settings={translatedSettings} catalogPdfUrl={catalogPdfUrl} locale={locale} section={sectionByKey(siteSections, "cta")} />
       <Contact settings={translatedSettings} content={contactContent} locale={locale} />
       <Footer content={footerContent} settings={translatedSettings} locale={locale} />
-      <QuoteCart locale={locale} />
       <ChatAgent locale={locale} whatsappUrl={settings.whatsapp_url} />
       <WhatsappButton settings={settings} locale={locale} section={sectionByKey(siteSections, "whatsapp")} />
     </main>

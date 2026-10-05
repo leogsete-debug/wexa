@@ -34,7 +34,12 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Login e criação de nova senha ficam acessíveis sem estar logado.
   const isLoginPage = request.nextUrl.pathname === "/admin/login";
+
+  if (request.nextUrl.pathname === "/admin/nova-senha") {
+    return response;
+  }
 
   if (!user && !isLoginPage) {
     const redirectUrl = request.nextUrl.clone();

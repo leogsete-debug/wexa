@@ -10,6 +10,37 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecovering, setIsRecovering] = useState(false);
+  const [recoveryMessage, setRecoveryMessage] = useState("");
+
+  async function handleRecovery() {
+    setError("");
+    setRecoveryMessage("");
+
+    if (!email.trim()) {
+      setError("Digite o e-mail cadastrado para receber o link.");
+      return;
+    }
+
+    setIsLoading(true);
+    const { error: recoveryError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/admin/nova-senha`,
+    });
+    setIsLoading(false);
+
+    if (recoveryError) {
+      setError(
+        /rate|limit/i.test(recoveryError.message)
+          ? "Muitos pedidos seguidos. Aguarde alguns minutos e tente de novo."
+          : "Não foi possível enviar o link agora. Tente novamente em instantes.",
+      );
+      return;
+    }
+
+    setRecoveryMessage(
+      "Pronto! Se este e-mail estiver cadastrado, chega um link em alguns minutos (veja também o spam). Abra o link para criar uma senha nova.",
+    );
+  }
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -63,6 +94,7 @@ export default function AdminLoginPage() {
               />
             </label>
 
+            {isRecovering ? null : (
             <label className="grid gap-2 text-sm font-semibold text-white/78">
               Senha
               <input
@@ -75,6 +107,13 @@ export default function AdminLoginPage() {
                 placeholder="Digite sua senha"
               />
             </label>
+            )}
+
+            {recoveryMessage ? (
+              <p className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm leading-6 text-emerald-100">
+                {recoveryMessage}
+              </p>
+            ) : null}
 
             {error ? (
               <p className="rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm leading-6 text-red-100">
@@ -82,12 +121,35 @@ export default function AdminLoginPage() {
               </p>
             ) : null}
 
+            {isRecovering ? (
+              <button
+                type="button"
+                onClick={handleRecovery}
+                disabled={isLoading}
+                className="mt-1 inline-flex h-12 items-center justify-center rounded-full bg-[#d6b46a] px-6 text-xs font-bold uppercase tracking-[0.18em] text-[#111] transition duration-300 hover:bg-[#f0d89a] disabled:opacity-65"
+              >
+                {isLoading ? "Enviando..." : "Enviar link para criar senha"}
+              </button>
+            ) : (
             <button
               type="submit"
               disabled={isLoading}
               className="mt-1 inline-flex h-12 items-center justify-center rounded-full bg-[#d6b46a] px-6 text-xs font-bold uppercase tracking-[0.18em] text-[#111] transition duration-300 hover:-translate-y-0.5 hover:bg-[#f0d89a] disabled:cursor-not-allowed disabled:opacity-65 disabled:hover:translate-y-0"
             >
               {isLoading ? "Entrando..." : "Entrar"}
+            </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsRecovering((value) => !value);
+                setError("");
+                setRecoveryMessage("");
+              }}
+              className="text-center text-sm font-semibold text-white/60 underline-offset-4 hover:text-white hover:underline"
+            >
+              {isRecovering ? "Voltar para o login" : "Esqueci minha senha"}
             </button>
           </form>
         </section>

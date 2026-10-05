@@ -13,7 +13,7 @@ export default function AdminAuthGuard({ children }: AdminAuthGuardProps) {
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
 
-  const isLoginPage = pathname === "/admin/login";
+  const isLoginPage = pathname === "/admin/login" || pathname === "/admin/nova-senha";
 
   useEffect(() => {
     let isMounted = true;

@@ -2,6 +2,7 @@
 
 import {
   BarChart3,
+  ClipboardList,
   Building2,
   Contact,
   FileText,
@@ -57,7 +58,10 @@ const libraryItems = [
   { title: "Logos", icon: Building2, href: "/admin/biblioteca?tipo=logos" },
 ];
 
-const crmItems = [{ title: "Leads", icon: Inbox, href: "/admin/crm/leads" }];
+const crmItems = [
+  { title: "Leads", icon: Inbox, href: "/admin/crm/leads" },
+  { title: "Pedidos", icon: ClipboardList, href: "/admin/pedidos" },
+];
 
 function countBy<T>(items: T[], getter: (item: T) => string | null | undefined) {
   return Object.entries(

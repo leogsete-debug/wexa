@@ -2,6 +2,7 @@
 
 import {
   BarChart3,
+  ClipboardList,
   Building2,
   Contact,
   FileText,
@@ -58,7 +59,10 @@ const contentItems = [
   { title: "Rodape", icon: Settings, href: "/admin/conteudo/rodape" },
 ];
 
-const crmItems = [{ title: "Leads", icon: Inbox, href: "/admin/crm/leads" }];
+const crmItems = [
+  { title: "Leads", icon: Inbox, href: "/admin/crm/leads" },
+  { title: "Pedidos", icon: ClipboardList, href: "/admin/pedidos" },
+];
 
 const periodOptions = [
   { label: "Hoje", value: "today" },

@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import HomePage from "@/components/HomePage";
 import { getPublicSiteSettings } from "@/lib/site-settings";
 
+// Vitrine lê estoque e destaques do catálogo de pedidos a cada visita.
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getPublicSiteSettings();
   const title = settings.seo_title_zh || settings.seo_title || "TopMax Export";

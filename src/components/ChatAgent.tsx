@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { ArrowUpRight, MessageCircle, Send, UserRound, X } from "lucide-react";
+import { ArrowUpRight, Send, X } from "lucide-react";
 import type { SiteLocale } from "@/components/HomePage";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { supabase } from "@/lib/supabase";
@@ -18,11 +18,11 @@ type ChatEntry = {
 
 const text = {
   pt: {
-    open: "Atendimento",
-    title: "Consultor Top Max",
+    open: "Fale com a Sofia",
+    title: "Sofia · Assistente virtual",
     status: "Online agora",
     greeting:
-      "Olá! Sou o consultor virtual da Top Max. Posso te ajudar a encontrar produtos com estoque para sua loja e te levar ao catálogo de pedidos. O que você procura?",
+      "Olá! Sou a Sofia, assistente virtual da Top Max. Posso te ajudar a encontrar produtos com estoque para sua loja e te levar ao catálogo de pedidos. O que você procura?",
     suggestions: ["Quais produtos têm em estoque?", "Como funciona a compra em fardos?", "Quero fazer um pedido"],
     placeholder: "Digite sua mensagem...",
     addToQuote: "Ver no catálogo",
@@ -42,10 +42,10 @@ const text = {
     close: "Fechar",
   },
   zh: {
-    open: "在线咨询",
-    title: "Top Max 顾问",
+    open: "咨询 Sofia",
+    title: "Sofia · 虚拟助理",
     status: "在线",
-    greeting: "您好！我是 Top Max 的在线顾问。我可以帮您查找现货产品，并带您前往订购目录。请问您需要什么产品？",
+    greeting: "您好！我是 Top Max 的虚拟助理 Sofia。我可以帮您查找现货产品，并带您前往订购目录。请问您需要什么产品？",
     suggestions: ["有哪些现货产品？", "按包采购怎么操作？", "我想下单"],
     placeholder: "请输入消息...",
     addToQuote: "在目录中查看",
@@ -196,10 +196,15 @@ export default function ChatAgent({ locale = "pt", whatsappUrl }: { locale?: Sit
         type="button"
         onClick={openChat}
         aria-label={labels.open}
-        className="fixed bottom-20 right-4 z-50 inline-flex h-12 w-12 items-center justify-center gap-2 rounded-full bg-[#d6b46a] text-xs font-bold uppercase tracking-[0.14em] text-[#111] shadow-[0_20px_55px_rgba(214,180,106,0.4)] transition hover:-translate-y-1 hover:bg-[#111] hover:text-white sm:bottom-[6.5rem] sm:right-7 sm:w-auto sm:px-4"
+        className="group fixed bottom-4 right-4 z-50 flex items-center gap-3 sm:bottom-7 sm:right-7"
       >
-        <MessageCircle size={20} />
-        <span className="hidden sm:inline">{labels.open}</span>
+        <span className="hidden rounded-full bg-white px-4 py-2.5 text-xs font-bold text-[#111] shadow-[0_14px_40px_rgba(0,0,0,0.18)] transition group-hover:-translate-x-1 sm:inline">
+          {labels.open}
+        </span>
+        <span className="relative block h-14 w-14 rounded-full border-2 border-[#d6b46a] bg-white shadow-[0_18px_50px_rgba(214,180,106,0.45)] transition duration-300 group-hover:-translate-y-1 group-hover:scale-105 sm:h-16 sm:w-16">
+          <Image src="/images/assistente-sofia.svg" alt="" fill sizes="64px" className="rounded-full" />
+          <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
+        </span>
       </button>
     );
   }
@@ -208,8 +213,8 @@ export default function ChatAgent({ locale = "pt", whatsappUrl }: { locale?: Sit
     <section className="fixed inset-0 z-[55] flex flex-col bg-[#fbfaf7] text-[#161616] shadow-[0_30px_90px_rgba(0,0,0,0.28)] sm:inset-auto sm:bottom-7 sm:right-7 sm:h-[36rem] sm:w-[24rem] sm:overflow-hidden sm:rounded-[1.5rem] sm:border sm:border-black/10">
       <header className="flex items-center justify-between gap-3 bg-[#111] px-4 py-3 text-white">
         <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#d6b46a] text-[#111]">
-            <UserRound size={18} />
+          <span className="relative block h-10 w-10 shrink-0 rounded-full border-2 border-[#d6b46a]">
+            <Image src="/images/assistente-sofia.svg" alt="" fill sizes="40px" className="rounded-full" />
           </span>
           <div>
             <p className="text-sm font-semibold">{labels.title}</p>

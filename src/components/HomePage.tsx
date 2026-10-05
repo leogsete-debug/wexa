@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import SiteHeader from "@/components/SiteHeader";
 import Hero from "@/components/Hero";
 import About from "@/components/About";
-import Products from "@/components/Products";
+import FeaturedCarousel from "@/components/FeaturedCarousel";
 import PdfCatalog from "@/components/PdfCatalog";
 import ExportProcess from "@/components/ExportProcess";
 import Markets from "@/components/Markets";
@@ -11,7 +11,6 @@ import CatalogCTA from "@/components/CatalogCTA";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import ChatAgent from "@/components/ChatAgent";
-import WhatsappButton from "@/components/WhatsappButton";
 import PageViewTracker from "@/components/PageViewTracker";
 import {
   getLatestPublishedCatalog,
@@ -25,6 +24,7 @@ import {
   getPublicMarkets,
   getPublicProcessSteps,
 } from "@/lib/content";
+import { getFeaturedProducts } from "@/lib/featured-products";
 import { getPublicSiteSettings } from "@/lib/site-settings";
 import { getPublicGalleryItems, getPublicSiteSections, sectionByKey } from "@/lib/site-content";
 import type { SiteSettings } from "@/types/site-settings";
@@ -67,6 +67,7 @@ export default async function HomePage({ locale = "pt" }: HomePageProps) {
     footerContent,
     siteSections,
     galleryItems,
+    featuredProducts,
   ] = await Promise.all([
     getPublicSiteSettings(),
     getLatestPublishedCatalog(),
@@ -77,6 +78,7 @@ export default async function HomePage({ locale = "pt" }: HomePageProps) {
     getPublicFooterContent(),
     getPublicSiteSections(),
     getPublicGalleryItems(),
+    getFeaturedProducts(locale),
   ]);
 
   const translatedSettings = localizeSettings(settings, locale);
@@ -91,8 +93,8 @@ export default async function HomePage({ locale = "pt" }: HomePageProps) {
       </Suspense>
       <SiteHeader settings={translatedSettings} locale={locale} section={sectionByKey(siteSections, "header")} />
       <Hero settings={translatedSettings} locale={locale} section={sectionByKey(siteSections, "hero")} />
+      <FeaturedCarousel products={featuredProducts} locale={locale} />
       <About content={companyContent} locale={locale} />
-      <Products whatsappUrl={settings.whatsapp_url} locale={locale} section={sectionByKey(siteSections, "products")} />
       <PdfCatalog settings={translatedSettings} catalogPdfUrl={catalogPdfUrl} locale={locale} section={sectionByKey(siteSections, "catalog")} />
       <ExportProcess steps={processSteps} locale={locale} section={sectionByKey(siteSections, "process")} />
       <Markets markets={markets} locale={locale} section={sectionByKey(siteSections, "markets")} />
@@ -101,7 +103,6 @@ export default async function HomePage({ locale = "pt" }: HomePageProps) {
       <Contact settings={translatedSettings} content={contactContent} locale={locale} />
       <Footer content={footerContent} settings={translatedSettings} locale={locale} />
       <ChatAgent locale={locale} whatsappUrl={settings.whatsapp_url} />
-      <WhatsappButton settings={settings} locale={locale} section={sectionByKey(siteSections, "whatsapp")} />
     </main>
   );
 }

@@ -1,0 +1,171 @@
+/*
+  Tema escuro do painel admin (fundo escuro, texto suave, detalhes em verde).
+  Pedido do dono: olhos sensíveis à luz. Aplica-se a todo /admin pela classe
+  .admin-dark no layout, sobrescrevendo as cores claras usadas nas páginas.
+  As artes do Estúdio (canvas) mantêm as cores da marca.
+*/
+
+.admin-dark {
+  color-scheme: dark;
+  font-family: var(--font-admin-mono), ui-monospace, "Cascadia Code", Consolas, monospace;
+  background:
+    linear-gradient(rgba(52, 211, 153, 0.025) 1px, transparent 1px) 0 0 / 100% 3px,
+    #050806;
+  color: #a7e8c3;
+  min-height: 100vh;
+
+  --ad-bg: #050806;
+  --ad-surface: #0e1512;
+  --ad-surface-2: #131c18;
+  --ad-line: rgba(52, 211, 153, 0.14);
+  /* Textos em verde suave (pedido do dono), do mais forte ao mais discreto */
+  --ad-text: #b6f0cf;
+  --ad-text-2: #96dcb4;
+  --ad-muted: #78c29a;
+  --ad-faint: #5c9f7b;
+  --ad-green: #34d399;
+  --ad-green-strong: #059669;
+  --ad-green-hover: #10b981;
+}
+
+/* Fundos */
+.admin-dark .bg-\[\#fbfaf7\] { background-color: var(--ad-bg); }
+.admin-dark .bg-white { background-color: var(--ad-surface); }
+.admin-dark .bg-white\/75,
+.admin-dark .bg-white\/80,
+.admin-dark .bg-white\/85 { background-color: rgba(255, 255, 255, 0.035); }
+.admin-dark .bg-neutral-100 { background-color: var(--ad-surface-2); }
+.admin-dark .bg-neutral-200 { background-color: #1a241f; }
+.admin-dark .bg-black\/5 { background-color: rgba(255, 255, 255, 0.05); }
+.admin-dark .bg-black\/10 { background-color: rgba(255, 255, 255, 0.08); }
+.admin-dark .bg-black\/\[0\.03\] { background-color: rgba(255, 255, 255, 0.03); }
+.admin-dark .hover\:bg-black\/5:hover,
+.admin-dark .hover\:bg-white\/70:hover { background-color: rgba(255, 255, 255, 0.06); }
+
+/* Bordas */
+.admin-dark .border-black\/5 { border-color: rgba(255, 255, 255, 0.05); }
+.admin-dark .border-black\/10,
+.admin-dark .divide-black\/10 > :not(:last-child) { border-color: var(--ad-line); }
+.admin-dark .border-black\/15 { border-color: rgba(255, 255, 255, 0.12); }
+.admin-dark .border-white\/75,
+.admin-dark .border-white\/80,
+.admin-dark .border-white { border-color: rgba(255, 255, 255, 0.07); }
+
+/* Textos (sem branco puro, para não ofuscar) */
+.admin-dark .text-\[\#111\],
+.admin-dark .text-\[\#141414\],
+.admin-dark .text-\[\#161616\],
+.admin-dark .text-neutral-800 { color: var(--ad-text); }
+.admin-dark .text-neutral-700 { color: var(--ad-text-2); }
+.admin-dark .text-neutral-600 { color: var(--ad-muted); }
+.admin-dark .text-neutral-500 { color: var(--ad-faint); }
+.admin-dark .text-neutral-400 { color: #4f8a6a; }
+.admin-dark .placeholder\:text-neutral-400::placeholder,
+.admin-dark input::placeholder,
+.admin-dark textarea::placeholder { color: #44785c; }
+
+/* Dourado da marca → verde no painel */
+.admin-dark .text-\[\#9b7a3e\],
+.admin-dark .text-\[\#d6b46a\] { color: var(--ad-green); }
+.admin-dark .text-\[\#f0d89a\] { color: #6ee7b7; }
+.admin-dark .bg-\[\#d6b46a\] { background-color: var(--ad-green-strong); color: #ecfdf5; }
+.admin-dark .bg-\[\#d6b46a\]\/10,
+.admin-dark .bg-\[\#d6b46a\]\/15 { background-color: rgba(16, 185, 129, 0.12); }
+.admin-dark .border-\[\#d6b46a\],
+.admin-dark .border-\[\#d6b46a\]\/30,
+.admin-dark .border-\[\#d6b46a\]\/35,
+.admin-dark .border-\[\#d6b46a\]\/40 { border-color: rgba(52, 211, 153, 0.4); }
+.admin-dark .hover\:border-\[\#d6b46a\]:hover,
+.admin-dark .hover\:border-\[\#d6b46a\]\/50:hover,
+.admin-dark .hover\:border-\[\#d6b46a\]\/60:hover,
+.admin-dark .focus\:border-\[\#d6b46a\]:focus,
+.admin-dark .focus\:border-\[\#d6b46a\]\/60:focus { border-color: var(--ad-green); }
+.admin-dark .hover\:text-\[\#9b7a3e\]:hover { color: #6ee7b7; }
+
+/* Botões principais (antes pretos) → verdes */
+.admin-dark .bg-\[\#111\] { background-color: var(--ad-green-strong); color: #ecfdf5; }
+.admin-dark .hover\:bg-\[\#d6b46a\]:hover,
+.admin-dark .hover\:bg-\[\#f0d89a\]:hover { background-color: var(--ad-green-hover); }
+.admin-dark .hover\:bg-\[\#111\]:hover { background-color: #047857; }
+.admin-dark .hover\:text-\[\#111\]:hover { color: #ecfdf5; }
+.admin-dark .text-white { color: #c8f5db; }
+.admin-dark input,
+.admin-dark textarea,
+.admin-dark select { color: var(--ad-text); }
+
+/* Status coloridos com contraste suave no escuro */
+.admin-dark .text-emerald-700,
+.admin-dark .text-emerald-800 { color: #6ee7b7; }
+.admin-dark .text-red-700,
+.admin-dark .text-red-600 { color: #fca5a5; }
+.admin-dark .text-amber-700,
+.admin-dark .text-amber-600 { color: #fcd34d; }
+.admin-dark .text-blue-700 { color: #93c5fd; }
+
+/* Barra lateral do dashboard: destaque verde no item ativo */
+.admin-dark .bg-\[\#080b0d\] { background-color: #050807; }
+.admin-dark .shadow-\[0_18px_45px_rgba\(214\,180\,106\,0\.22\)\] { box-shadow: 0 18px 45px rgba(16, 185, 129, 0.22); }
+
+/* Sombras claras pesadas não fazem sentido no escuro */
+.admin-dark [class*="shadow-[0_22px_70px_rgba(31,41,55"],
+.admin-dark [class*="shadow-[0_16px_50px_rgba(31,41,55"],
+.admin-dark [class*="shadow-[0_14px_40px_rgba(31,41,55"] { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset; }
+
+/* Barras de rolagem discretas */
+.admin-dark ::-webkit-scrollbar { width: 10px; height: 10px; }
+.admin-dark ::-webkit-scrollbar-thumb { background: #1f2a25; border-radius: 999px; }
+.admin-dark ::-webkit-scrollbar-track { background: transparent; }
+
+/* Cara de terminal: tudo monoespaçado, bordas com brilho verde sutil */
+.admin-dark *,
+.admin-dark input,
+.admin-dark textarea,
+.admin-dark select,
+.admin-dark button {
+  font-family: var(--font-admin-mono), ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+.admin-dark .bg-\[\#fbfaf7\] { background: transparent; }
+.admin-dark .border-white\/75,
+.admin-dark .border-white\/80,
+.admin-dark .border-white { border-color: rgba(52, 211, 153, 0.14); }
+.admin-dark .bg-white\/75,
+.admin-dark .bg-white\/80,
+.admin-dark .bg-white\/85 { background-color: rgba(16, 185, 129, 0.035); }
+.admin-dark h1 { text-shadow: 0 0 18px rgba(52, 211, 153, 0.35); }
+.admin-dark h1::before { content: "> "; color: var(--ad-green); }
+.admin-dark ::selection { background: rgba(52, 211, 153, 0.3); color: #eafff3; }
+
+/* Retrô, porém IA de ponta: cursor piscando, cards que acendem e status "vivos" */
+.admin-dark h1::after {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 0.9em;
+  margin-left: 0.15em;
+  vertical-align: -0.08em;
+  background: var(--ad-green);
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.8);
+  animation: adminCursor 1.1s steps(1) infinite;
+}
+@keyframes adminCursor {
+  50% { opacity: 0; }
+}
+.admin-dark article,
+.admin-dark section > div[class*="rounded-[1.5rem]"] {
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.admin-dark article:hover {
+  border-color: rgba(52, 211, 153, 0.4);
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.15), 0 0 32px rgba(16, 185, 129, 0.12);
+}
+.admin-dark .bg-emerald-500 {
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.9);
+  animation: adminPulse 2.4s ease-in-out infinite;
+}
+@keyframes adminPulse {
+  50% { box-shadow: 0 0 2px rgba(52, 211, 153, 0.4); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dark h1::after,
+  .admin-dark .bg-emerald-500 { animation: none; }
+}

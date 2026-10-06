@@ -51,6 +51,7 @@ import {
   type StrategySummary,
 } from "@/lib/content-calendar";
 import { supabase } from "@/lib/supabase";
+import type { OrdersSummary } from "@/app/api/admin/pedidos-resumo/route";
 
 const systemLinks = [
   { title: "HUB", href: "https://topmax-hub.vercel.app" },
@@ -131,6 +132,8 @@ export default function CentralPage() {
   const [genStep, setGenStep] = useState<GenerationStep | null>(null);
   const [genMessage, setGenMessage] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [orders, setOrders] = useState<OrdersSummary | null>(null);
+  const [ordersNote, setOrdersNote] = useState<string>("Carregando pedidos...");
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -173,6 +176,27 @@ export default function CentralPage() {
     setContentItems(itemsResult.error ? [] : ((itemsResult.data ?? []) as ContentItem[]));
     setStrategyData((strategyResult.data?.[0]?.strategy as StrategySummary | undefined) ?? null);
     setCatalogList((productsResult.items ?? []).filter((item) => (item as { status?: string }).status !== "encomenda"));
+
+    // Pedidos do sistema próprio (Apps Script) — só leitura
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token;
+      const response = await fetch("/api/admin/pedidos-resumo", { headers: token ? { Authorization: `Bearer ${token}` } : {}, cache: "no-store" });
+      const data = await response.json();
+      if (data.summary) {
+        setOrders(data.summary as OrdersSummary);
+        setOrdersNote("");
+      } else {
+        setOrders(null);
+        setOrdersNote(
+          data.configured === false
+            ? "Ainda não conectado: falta cadastrar o segredo PEDIDOS_RESUMO_SEGREDO na Vercel e o mesmo valor em resumo_segredo no Apps Script."
+            : data.error || "Não foi possível ler os pedidos.",
+        );
+      }
+    } catch {
+      setOrdersNote("Não foi possível ler os pedidos.");
+    }
     setLoadedAt(new Date());
     setIsLoading(false);
   }, [days]);
@@ -331,7 +355,12 @@ export default function CentralPage() {
   if (overdueItems.length) contentAlerts.push({ level: "atencao", text: `${overdueItems.length} post(s) passaram do dia sem serem postados. Poste ou reagende no calendário.` });
   if (todayItems.some((item) => item.status !== "postado")) contentAlerts.push({ level: "inativo", text: `Hoje tem ${todayItems.filter((item) => item.status !== "postado").length} post(s) para publicar. Veja em "Para postar hoje".` });
   if (contentItems && nextThreeDaysEmpty) contentAlerts.push({ level: "atencao", text: "Nenhum post agendado para os próximos 3 dias. Clique em Gerar conteúdo da semana." });
-  const allAlerts = [...contentAlerts, ...report.alerts];
+  const activeOrders = (orders?.pedidos ?? []).filter((order) => order.etapa !== "faturado");
+  const stuckOrders = activeOrders.filter((order) => order.diasParado >= 3);
+  const orderAlerts: Array<{ level: Health; text: string }> = stuckOrders.length
+    ? [{ level: "atencao", text: `${stuckOrders.length} pedido(s) parados há 3 dias ou mais: ${stuckOrders.slice(0, 4).map((order) => `#${order.numero} ${order.cliente} (${order.rotulo})`).join(", ")}.` }]
+    : [];
+  const allAlerts = [...orderAlerts, ...contentAlerts, ...report.alerts];
 
   const updateItem = async (id: string, payload: Partial<ContentItem>) => {
     const { data, error } = await supabase.from("content_items").update(payload).eq("id", id).select("*").single();
@@ -818,6 +847,65 @@ export default function CentralPage() {
                 </article>
               );
             })}
+          </div>
+        </section>
+
+        <section id="pedidos" className="mt-8 scroll-mt-6">
+          <h2 className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Pedidos em andamento</h2>
+          <p className="mb-3 text-xs text-neutral-500">Direto do seu sistema de pedidos: em que fase cada um está e qual é o próximo passo.</p>
+          <div className={`${cardClass} grid gap-4`}>
+            {!orders ? (
+              <p className="text-sm text-neutral-500">{ordersNote}</p>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(orders.contagem)
+                    .filter(([, count]) => count > 0)
+                    .map(([stage, count]) => (
+                      <span key={stage} className="rounded-full border border-black/10 bg-white px-3 py-1 text-xs font-semibold text-[#111]">
+                        {orders.rotulos[stage] ?? stage}: {count}
+                      </span>
+                    ))}
+                </div>
+                {orders.pedidos.length === 0 ? (
+                  <p className="text-sm text-neutral-500">Nenhum pedido em andamento.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[46rem] text-sm">
+                      <thead>
+                        <tr className="border-b border-black/10 text-left text-xs uppercase tracking-[0.1em] text-neutral-500">
+                          <th className="py-2 pr-3">Pedido</th>
+                          <th className="py-2 pr-3">Cliente</th>
+                          <th className="py-2 pr-3">Fase</th>
+                          <th className="py-2 pr-3">Próximo passo</th>
+                          <th className="py-2 pr-3">Parado</th>
+                          <th className="py-2">Itens</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {orders.pedidos.map((order) => (
+                          <tr key={`${order.numero}-${order.registradoEm}`} className="border-b border-black/5 align-top">
+                            <td className="py-2 pr-3 font-semibold text-[#111]">#{order.numero}</td>
+                            <td className="py-2 pr-3 text-neutral-700">
+                              {order.cliente}
+                              {order.vendedor ? <span className="block text-xs text-neutral-500">{order.vendedor}</span> : null}
+                            </td>
+                            <td className="py-2 pr-3 text-xs font-semibold text-[#9b7a3e]">{order.rotulo}</td>
+                            <td className="py-2 pr-3 text-neutral-700">{order.proximo}</td>
+                            <td className={`py-2 pr-3 text-xs font-semibold ${order.diasParado >= 3 && order.etapa !== "faturado" ? "text-amber-700" : "text-neutral-500"}`}>
+                              {order.diasParado} dia(s)
+                            </td>
+                            <td className="py-2 text-xs text-neutral-500">
+                              {order.itens} itens · {order.pecas.toLocaleString("pt-BR")} pç
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </section>
 

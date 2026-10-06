@@ -18,6 +18,7 @@ import {
   Tags,
   Users,
   Wand2,
+  Warehouse,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -41,6 +42,7 @@ const sidebarItems = [
   { title: "Dashboard", icon: Gauge, href: "/admin" },
   { title: "Central", icon: Activity, href: "/admin/central" },
   { title: "Estúdio", icon: Wand2, href: "/admin/estudio" },
+  { title: "Armazém", icon: Warehouse, href: "/admin/armazem" },
   { title: "Analytics", icon: BarChart3, href: "/admin/analytics" },
   { title: "Produtos", icon: Package, href: "/admin/produtos" },
   { title: "Categorias", icon: FolderTree, href: "#" },

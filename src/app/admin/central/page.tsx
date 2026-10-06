@@ -578,10 +578,15 @@ export default function CentralPage() {
     {
       key: "armazem",
       title: "Armazém · Estoque",
-      role: "Lê packing lists, confere quantidades e pesos e atualiza o estoque.",
+      role: "Lê packing lists, confere quantidades, pesos e cubagem e gera as linhas de CHEGADAS.",
       icon: Boxes,
-      health: "inativo",
-      stats: [["Situação", "Aguardando código do Apps Script"]],
+      health: runs.some((run) => run.agent === "armazem" && run.status === "erro") ? "atencao" : "ok",
+      stats: [
+        ["Packing lists conferidos", String(runs.filter((run) => run.agent === "armazem" && run.status !== "erro").length)],
+        ["Com divergência", String(runs.filter((run) => run.agent === "armazem" && run.status === "aviso").length)],
+        ["Falhas de leitura", String(runs.filter((run) => run.agent === "armazem" && run.status === "erro").length)],
+      ],
+      action: { label: "Abrir Armazém", href: "/admin/armazem" },
     },
     {
       key: "instagram",

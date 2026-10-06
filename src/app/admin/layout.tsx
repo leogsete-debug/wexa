@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
-import { JetBrains_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import AdminAuthGuard from "@/components/admin/AdminAuthGuard";
 import "./admin-dark.css";
 
-// Painel com cara de terminal: fonte monoespaçada de programador.
-const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-admin-mono", display: "swap" });
+// Painel escuro e verde (dono sensível à luz), com tipografia moderna e legível.
+const sans = Inter({ subsets: ["latin"], variable: "--font-admin", display: "swap" });
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -12,7 +12,7 @@ type AdminLayoutProps = {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <div className={`admin-dark ${mono.variable}`}>
+    <div className={`admin-dark ${sans.variable}`}>
       <AdminAuthGuard>{children}</AdminAuthGuard>
     </div>
   );

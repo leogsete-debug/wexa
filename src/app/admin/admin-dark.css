@@ -7,10 +7,11 @@
 
 .admin-dark {
   color-scheme: dark;
-  font-family: var(--font-admin-mono), ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-family: var(--font-admin), "Inter", system-ui, sans-serif;
   background:
-    linear-gradient(rgba(52, 211, 153, 0.025) 1px, transparent 1px) 0 0 / 100% 3px,
-    #050806;
+    radial-gradient(circle at 15% -10%, rgba(16, 185, 129, 0.10), transparent 40rem),
+    radial-gradient(circle at 100% 0%, rgba(52, 211, 153, 0.05), transparent 30rem),
+    #060a08;
   color: #a7e8c3;
   min-height: 100vh;
 
@@ -116,14 +117,7 @@
 .admin-dark ::-webkit-scrollbar-thumb { background: #1f2a25; border-radius: 999px; }
 .admin-dark ::-webkit-scrollbar-track { background: transparent; }
 
-/* Cara de terminal: tudo monoespaçado, bordas com brilho verde sutil */
-.admin-dark *,
-.admin-dark input,
-.admin-dark textarea,
-.admin-dark select,
-.admin-dark button {
-  font-family: var(--font-admin-mono), ui-monospace, "Cascadia Code", Consolas, monospace;
-}
+/* Superfícies modernas: cards de vidro escuro com borda verde sutil */
 .admin-dark .bg-\[\#fbfaf7\] { background: transparent; }
 .admin-dark .border-white\/75,
 .admin-dark .border-white\/80,
@@ -131,32 +125,17 @@
 .admin-dark .bg-white\/75,
 .admin-dark .bg-white\/80,
 .admin-dark .bg-white\/85 { background-color: rgba(16, 185, 129, 0.035); }
-.admin-dark h1 { text-shadow: 0 0 18px rgba(52, 211, 153, 0.35); }
-.admin-dark h1::before { content: "> "; color: var(--ad-green); }
+.admin-dark h1 { letter-spacing: -0.03em; }
 .admin-dark ::selection { background: rgba(52, 211, 153, 0.3); color: #eafff3; }
 
-/* Retrô, porém IA de ponta: cursor piscando, cards que acendem e status "vivos" */
-.admin-dark h1::after {
-  content: "";
-  display: inline-block;
-  width: 0.5em;
-  height: 0.9em;
-  margin-left: 0.15em;
-  vertical-align: -0.08em;
-  background: var(--ad-green);
-  box-shadow: 0 0 12px rgba(52, 211, 153, 0.8);
-  animation: adminCursor 1.1s steps(1) infinite;
-}
-@keyframes adminCursor {
-  50% { opacity: 0; }
-}
+/* Interação: cards que acendem e status "vivos" (sem efeitos retrô) */
 .admin-dark article,
 .admin-dark section > div[class*="rounded-[1.5rem]"] {
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 .admin-dark article:hover {
-  border-color: rgba(52, 211, 153, 0.4);
-  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.15), 0 0 32px rgba(16, 185, 129, 0.12);
+  border-color: rgba(52, 211, 153, 0.35);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(52, 211, 153, 0.12);
 }
 .admin-dark .bg-emerald-500 {
   box-shadow: 0 0 10px rgba(52, 211, 153, 0.9);
@@ -166,7 +145,6 @@
   50% { box-shadow: 0 0 2px rgba(52, 211, 153, 0.4); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .admin-dark h1::after,
   .admin-dark .bg-emerald-500 { animation: none; }
 }
 
@@ -192,3 +170,9 @@
   color: var(--ad-green);
   box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.25);
 }
+
+/* Cards arredondados com leve profundidade */
+.admin-dark article,
+.admin-dark [class*="rounded-[1.5rem]"] { backdrop-filter: none; }
+.admin-dark section > div[class*="rounded-[1.5rem]"],
+.admin-dark article[class*="rounded"] { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); }

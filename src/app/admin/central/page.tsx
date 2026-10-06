@@ -123,6 +123,7 @@ export default function CentralPage() {
   const [generating, setGenerating] = useState<ManagerReport["kind"] | null>(null);
   const [reportError, setReportError] = useState("");
   const autoReportTried = useRef(false);
+  const autoContentTried = useRef(false);
   const [contentItems, setContentItems] = useState<ContentItem[] | null>(null);
   const [strategyData, setStrategyData] = useState<StrategySummary | null>(null);
   const [catalogList, setCatalogList] = useState<CatalogItemLite[]>([]);
@@ -352,6 +353,15 @@ export default function CentralPage() {
     setTimeout(() => setCopiedId(null), 1600);
   };
 
+  // Horário estratégico para lojistas (B2B): cedo para stories, almoço para feed, noite para reels.
+  const suggestedTime = (format: string | null) => {
+    const value = (format ?? "").toLowerCase();
+    if (value.includes("reels")) return "19h00";
+    if (value.includes("story")) return "08h30";
+    if (value.includes("carrossel")) return "12h00";
+    return "11h30";
+  };
+
   const generateContent = async (daysToGenerate: number) => {
     if (!strategyData?.calendario?.length) return;
     const end = addDays(genStart, daysToGenerate - 1);
@@ -399,7 +409,63 @@ export default function CentralPage() {
     postado: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700",
   };
 
-  const renderItem = (item: ContentItem) => {
+  // Piloto automático: se não há posts para os próximos 3 dias, o agente prepara a semana sozinho
+  // (e cria uma estratégia padrão se ainda não existir nenhuma).
+  useEffect(() => {
+    if (autoContentTried.current || !loadedAt || contentItems === null || genStep || !catalogList.length) return;
+    if (!nextThreeDaysEmpty) return;
+    autoContentTried.current = true;
+
+    const run = async () => {
+      let strategy = strategyData;
+      if (!strategy?.calendario?.length) {
+        setGenStep({ done: 0, total: 1, label: "Criando a estratégia do perfil (até 1 minuto)..." });
+        const { data: session } = await supabase.auth.getSession();
+        const token = session.session?.access_token;
+        if (!token) return setGenStep(null);
+        const response = await fetch("/api/conteudo/estrategia", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            profile: {
+              instagram: "@topmaxexport",
+              publico: "Lojistas de cama, mesa e banho, atacadistas e redes no Brasil",
+              objetivo: "Gerar autoridade e levar lojistas ao catálogo para fazer pedidos",
+              tom: "Profissional, direto e confiável",
+            },
+            questions: [],
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        strategy = data?.strategy?.strategy ?? null;
+        if (!strategy?.calendario?.length) {
+          setGenStep(null);
+          setGenMessage("O piloto automático não conseguiu criar a estratégia agora. Tente pelo Estúdio.");
+          return;
+        }
+        setStrategyData(strategy);
+      }
+      setGenStart(todayKey);
+      const result = await generateContentFromStrategy({ strategy, catalog: catalogList, startDate: todayKey, days: 7, onStep: setGenStep });
+      setGenStep(null);
+      setGenMessage(`Piloto automático: ${result.created.length} post(s) da semana prontos${result.failures.length ? ` (${result.failures.length} falharam)` : ""}.`);
+      const { data } = await supabase
+        .from("content_items")
+        .select("*")
+        .gte("scheduled_for", addDays(todayKey, -30))
+        .order("scheduled_for", { ascending: true })
+        .order("created_at", { ascending: true })
+        .limit(400);
+      setContentItems((data ?? []) as ContentItem[]);
+    };
+
+    const timeout = window.setTimeout(() => {
+      run().catch(() => setGenStep(null));
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [loadedAt, contentItems, genStep, catalogList, nextThreeDaysEmpty, strategyData, todayKey]);
+
+  const renderItem = (item: ContentItem, openCaption = false) => {
     const isOverdue = item.status !== "postado" && item.scheduled_for && item.scheduled_for < todayKey;
     const extension = item.media_url?.split(".").pop() ?? "png";
     return (
@@ -424,9 +490,10 @@ export default function CentralPage() {
             {item.pillar ? <span className="text-neutral-500">{item.pillar}</span> : null}
           </div>
           <p className="text-sm font-semibold text-[#111]">{item.hook ?? item.title}</p>
+          <p className="text-xs font-semibold text-[#9b7a3e]">Postar às {suggestedTime(item.format)}</p>
           {item.product_name ? <p className="text-xs text-neutral-500">{item.product_name}</p> : null}
           {item.caption ? (
-            <details className="text-xs text-neutral-600">
+            <details open={openCaption} className="text-xs text-neutral-600">
               <summary className="cursor-pointer font-semibold text-[#9b7a3e]">Ver legenda</summary>
               <p className="mt-2 whitespace-pre-wrap leading-5">{item.caption}</p>
             </details>
@@ -809,14 +876,14 @@ export default function CentralPage() {
                 {overdueItems.length ? (
                   <div>
                     <h3 className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-amber-700">Atrasados</h3>
-                    <div className="grid gap-3 lg:grid-cols-2">{overdueItems.map(renderItem)}</div>
+                    <div className="grid gap-3 lg:grid-cols-2">{overdueItems.map((item) => renderItem(item))}</div>
                   </div>
                 ) : null}
 
                 <div>
                   <h3 className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-[#9b7a3e]">Para postar hoje</h3>
                   {todayItems.length ? (
-                    <div className="grid gap-3 lg:grid-cols-2">{todayItems.map(renderItem)}</div>
+                    <div className="grid gap-3 lg:grid-cols-2">{todayItems.map((item) => renderItem(item, true))}</div>
                   ) : (
                     <p className="text-sm text-neutral-500">Nada agendado para hoje.</p>
                   )}
@@ -831,7 +898,7 @@ export default function CentralPage() {
                         <div key={day} className="grid gap-2 border-t border-black/10 pt-3 lg:grid-cols-[8rem_1fr]">
                           <p className="text-sm font-semibold capitalize text-[#111]">{formatDay(day)}</p>
                           {dayItems.length ? (
-                            <div className="grid gap-3 lg:grid-cols-2">{dayItems.map(renderItem)}</div>
+                            <div className="grid gap-3 lg:grid-cols-2">{dayItems.map((item) => renderItem(item))}</div>
                           ) : (
                             <p className="text-xs text-neutral-400">Sem post</p>
                           )}

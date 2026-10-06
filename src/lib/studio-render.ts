@@ -26,14 +26,29 @@ const GOLD = "#d6b46a";
 const GOLD_LIGHT = "#f0d89a";
 const FONT = "Inter, 'Helvetica Neue', Arial, sans-serif";
 
-export function loadImage(src: string): Promise<HTMLImageElement> {
+function loadImageOnce(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.crossOrigin = "anonymous";
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error(`Falha ao carregar imagem: ${src.slice(0, 80)}`));
+    image.onerror = () => reject(new Error("Não foi possível carregar a foto do produto. Tente de novo em alguns segundos."));
     image.src = src;
   });
+}
+
+// Tenta de novo quando a foto ainda está sendo preparada no servidor (primeiro acesso pode demorar).
+export async function loadImage(src: string, attempts = 3): Promise<HTMLImageElement> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const url = attempt === 0 || src.startsWith("data:") ? src : `${src}${src.includes("?") ? "&" : "?"}r=${attempt}`;
+      return await loadImageOnce(url);
+    } catch (error) {
+      lastError = error;
+      await new Promise((resolve) => setTimeout(resolve, 2500 * (attempt + 1)));
+    }
+  }
+  throw lastError;
 }
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {

@@ -54,3 +54,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "image_failed" }, { status: 502 });
   }
 }
+
+// O Estúdio consulta se a geração de imagens está ativada (sem expor nenhuma chave).
+export async function GET() {
+  return NextResponse.json({ configured: Boolean(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN) });
+}

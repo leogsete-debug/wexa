@@ -148,6 +148,8 @@ export default function StudioPage() {
   const [prompt, setPrompt] = useState("");
   const [aiImage, setAiImage] = useState<string | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
+  const [imageAiReady, setImageAiReady] = useState<boolean | null>(null);
+  const [artError, setArtError] = useState("");
   const [aiError, setAiError] = useState("");
   const [secondsPerSlide, setSecondsPerSlide] = useState(2.5);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -189,6 +191,13 @@ export default function StudioPage() {
         setStrategyDate(latest.created_at);
         if (latest.profile && Object.keys(latest.profile).length) setProfile({ ...defaultProfile, ...(latest.profile as Partial<Profile>) });
       });
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/conteudo/imagem", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((data: { configured?: boolean }) => setImageAiReady(Boolean(data.configured)))
+      .catch(() => setImageAiReady(false));
   }, []);
 
   useEffect(() => {
@@ -264,10 +273,13 @@ export default function StudioPage() {
     buildSlide(main, group, mode, mode === "real" ? null : aiImage)
       .then((slide) => {
         if (cancelled) return;
+        setArtError("");
         const ctx = canvas.getContext("2d");
         if (ctx) drawArt(ctx, slide, 0);
       })
-      .catch(() => undefined);
+      .catch((error) => {
+        if (!cancelled) setArtError(error instanceof Error ? error.message : "Falha ao montar a arte.");
+      });
 
     return () => {
       cancelled = true;
@@ -746,6 +758,7 @@ export default function StudioPage() {
             {tab === "arte" ? (
               <div className="grid gap-6 xl:grid-cols-[1fr_24rem]">
                 <div className={card}>
+                  {artError ? <p className="mb-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700">{artError}</p> : null}
                   <div className="mx-auto w-full max-w-[26rem]">
                     <canvas ref={previewRef} className="h-auto w-full rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.25)]" />
                   </div>
@@ -765,6 +778,7 @@ export default function StudioPage() {
                         <button
                           key={value}
                           type="button"
+                          disabled={value !== "real" && imageAiReady === false}
                           onClick={() => {
                             setMode(value);
                             if (value !== "real") setSelected((current) => current.slice(0, 1));
@@ -772,7 +786,9 @@ export default function StudioPage() {
                           className={`rounded-2xl border p-3 text-left transition ${mode === value ? "border-[#d6b46a] bg-[#d6b46a]/10" : "border-black/10 bg-white hover:border-[#d6b46a]/60"}`}
                         >
                           <span className="block text-sm font-bold text-[#111]">{modeLabels[value].title}</span>
-                          <span className="block text-xs leading-5 text-neutral-500">{modeLabels[value].hint}</span>
+                          <span className="block text-xs leading-5 text-neutral-500">
+                            {value !== "real" && imageAiReady === false ? "Desativado: falta ativar a Cloudflare (chave CLOUDFLARE_API_TOKEN na Vercel)." : modeLabels[value].hint}
+                          </span>
                         </button>
                       ))}
                     </div>

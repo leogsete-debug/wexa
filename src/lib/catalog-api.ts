@@ -108,7 +108,7 @@ async function getAllPhotos(): Promise<Record<string, string>> {
   }
 
   // Todas as fotos vêm numa resposta só (~13 MB); evita buscar em paralelo.
-  photosRequest ??= callCatalog<Record<string, string>>("catFotos", 45_000)
+  photosRequest ??= callCatalog<Record<string, string>>("catFotos", 50_000)
     .then((value) => {
       photosCache = { at: Date.now(), value };
       return value;
@@ -121,7 +121,9 @@ async function getAllPhotos(): Promise<Record<string, string>> {
     return await photosRequest;
   } catch (error) {
     console.error("[catalog-api] catFotos falhou:", error instanceof Error ? error.message : error);
-    return photosCache?.value ?? {};
+    if (photosCache) return photosCache.value;
+    // Sem nenhuma cópia: falha temporária (não é "foto inexistente")
+    throw new Error("catalog_photos_unavailable");
   }
 }
 

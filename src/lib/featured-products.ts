@@ -33,7 +33,7 @@ export async function getFeaturedProducts(locale: "pt" | "zh"): Promise<Featured
   const snapshot = await getCatalogSnapshot();
 
   const fromCatalog = (snapshot?.items ?? [])
-    .filter((item) => item.isFeatured && item.balesAvailable > 0)
+    .filter((item) => item.isFeatured && item.status === "estoque" && item.balesAvailable > 0)
     .map((item) => ({
       key: item.key,
       name: item.name,

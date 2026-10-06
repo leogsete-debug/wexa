@@ -172,7 +172,7 @@ export default function CentralPage() {
     setReports(reportsResult.error ? [] : ((reportsResult.data ?? []) as ManagerReport[]));
     setContentItems(itemsResult.error ? [] : ((itemsResult.data ?? []) as ContentItem[]));
     setStrategyData((strategyResult.data?.[0]?.strategy as StrategySummary | undefined) ?? null);
-    setCatalogList(productsResult.items ?? []);
+    setCatalogList((productsResult.items ?? []).filter((item) => (item as { status?: string }).status !== "encomenda"));
     setLoadedAt(new Date());
     setIsLoading(false);
   }, [days]);

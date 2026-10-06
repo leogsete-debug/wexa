@@ -40,7 +40,7 @@ async function getAgentProducts(): Promise<{ products: AgentProduct[]; stockDate
       fromCatalog: true,
       stockDate: snapshot.stockDate,
       products: snapshot.items
-        .filter((item) => item.balesAvailable > 0)
+        .filter((item) => (item.status === "estoque" && item.balesAvailable > 0) || item.status === "chegando")
         .map((item) => ({
           id: item.key,
           name: item.name,
@@ -48,9 +48,12 @@ async function getAgentProducts(): Promise<{ products: AgentProduct[]; stockDate
           image: item.photoCount > 0 ? catalogPhotoUrl(item.key) : "/images/produto-1.jpeg",
           details: [
             `${item.piecesPerBale} pç/fardo`,
-            `${item.balesAvailable} fardos disponíveis (${item.piecesAvailable.toLocaleString("pt-BR")} peças)`,
+            item.status === "estoque" ? `${item.balesAvailable} fardos disponíveis (${item.piecesAvailable.toLocaleString("pt-BR")} peças)` : null,
             item.suggestedPrice > 0 ? `preço sugerido ${money.format(item.suggestedPrice)}/peça` : null,
             item.isNew ? "novidade" : null,
+            item.status === "chegando"
+              ? `A CAMINHO, ainda não em estoque${item.incomingBales ? `: ${item.incomingBales} fardos` : ""}${item.forecast ? `, previsão ${item.forecast}` : ""}`
+              : null,
             item.balesAvailable <= 50 ? "últimos fardos" : null,
           ]
             .filter(Boolean)
@@ -126,6 +129,7 @@ COMO ATENDER:
 
 REGRAS IMPORTANTES (nunca quebre):
 - Preço: você SÓ pode informar o "preço sugerido por peça" que está no catálogo abaixo, sempre dizendo que é sugerido e que o cliente faz a própria proposta no catálogo online. NUNCA dê desconto, NUNCA diga que aceita um valor, NUNCA invente outro preço.
+- Produtos marcados "A CAMINHO" ainda não estão em estoque: diga que estão chegando (com a previsão, se houver) e que o cliente pode reservar pelo catálogo; nunca diga que estão disponíveis para entrega imediata.
 - Estoque: informe em fardos conforme o catálogo${parts.stockDate ? ` (estoque de ${parts.stockDate})` : ""}. NUNCA reserve nem garanta estoque; os pedidos são conferidos por ordem de solicitação.
 - NUNCA invente prazos, pedido mínimo, frete, certificações ou condições de pagamento: diga que a equipe comercial confirma no pedido.
 - NUNCA invente características de um produto. Use só o que está no catálogo.

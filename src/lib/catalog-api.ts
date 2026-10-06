@@ -18,6 +18,10 @@ export type CatalogItem = {
   isNew: boolean;
   isFeatured: boolean;
   photoCount: number;
+  // "estoque" = pronta entrega; "chegando" = em carga a caminho; "encomenda" = abaixo do mínimo/sob encomenda
+  status: "estoque" | "chegando" | "encomenda";
+  incomingBales: number;
+  forecast: string | null;
 };
 
 export type CatalogSnapshot = {
@@ -35,21 +39,22 @@ type RawCatalogProduct = {
   novidade?: unknown;
   destaque?: unknown;
   nFotos?: unknown;
+  status?: unknown;
+  chegando?: unknown;
+  previsao?: unknown;
 };
 
 const dataTtlMs = 5 * 60 * 1000;
 const photosTtlMs = 30 * 60 * 1000;
 
 let dataCache: { at: number; value: CatalogSnapshot } | null = null;
-let photosCache: { at: number; value: Record<string, string> } | null = null;
-let photosRequest: Promise<Record<string, string>> | null = null;
 
-async function callCatalog<T>(fn: string, timeoutMs: number): Promise<T> {
+async function callCatalog<T>(fn: string, timeoutMs: number, args: unknown[] = []): Promise<T> {
   const response = await fetch(CATALOG_API_URL, {
     method: "POST",
     redirect: "follow",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({ fn, args: [] }),
+    body: JSON.stringify({ fn, args }),
     cache: "no-store",
     signal: AbortSignal.timeout(timeoutMs),
   });
@@ -90,6 +95,9 @@ export async function getCatalogSnapshot(): Promise<CatalogSnapshot | null> {
           isNew: product.novidade === true,
           isFeatured: product.destaque === true,
           photoCount: toNumber(product.nFotos),
+          status: product.status === "chegando" || product.status === "encomenda" ? product.status : "estoque",
+          incomingBales: toNumber(product.chegando),
+          forecast: typeof product.previsao === "string" && product.previsao ? product.previsao : null,
         })),
     };
 
@@ -102,36 +110,34 @@ export async function getCatalogSnapshot(): Promise<CatalogSnapshot | null> {
   }
 }
 
-async function getAllPhotos(): Promise<Record<string, string>> {
-  if (photosCache && Date.now() - photosCache.at < photosTtlMs) {
-    return photosCache.value;
-  }
+const photoCache = new Map<string, { at: number; dataUrl: string | null }>();
 
-  // Todas as fotos vêm numa resposta só (~13 MB); evita buscar em paralelo.
-  photosRequest ??= callCatalog<Record<string, string>>("catFotos", 50_000)
-    .then((value) => {
-      photosCache = { at: Date.now(), value };
-      return value;
-    })
-    .finally(() => {
-      photosRequest = null;
-    });
-
-  try {
-    return await photosRequest;
-  } catch (error) {
-    console.error("[catalog-api] catFotos falhou:", error instanceof Error ? error.message : error);
-    if (photosCache) return photosCache.value;
-    // Sem nenhuma cópia: falha temporária (não é "foto inexistente")
-    throw new Error("catalog_photos_unavailable");
-  }
-}
-
+// Uma foto por vez (rota catFoto do Apps Script, ~2 s). Guarda em memória por 30 min;
+// a CDN da Vercel guarda a resposta por 24 h.
 export async function getCatalogPhoto(key: string, index = 1) {
-  const photos = await getAllPhotos();
-  const dataUrl = photos[index > 1 ? `${key}#${index}` : key];
-  const match = typeof dataUrl === "string" ? dataUrl.match(/^data:(image\/[a-z+]+);base64,(.+)$/) : null;
+  const cacheKey = `${key}#${index}`;
+  const cached = photoCache.get(cacheKey);
+  let dataUrl: string | null;
 
+  if (cached && Date.now() - cached.at < photosTtlMs) {
+    dataUrl = cached.dataUrl;
+  } else {
+    try {
+      dataUrl = await callCatalog<string | null>("catFoto", 30_000, [key, index]);
+    } catch (error) {
+      console.error("[catalog-api] catFoto falhou:", error instanceof Error ? error.message : error);
+      if (cached) {
+        dataUrl = cached.dataUrl;
+      } else {
+        // Falha temporária (não é "foto inexistente")
+        throw new Error("catalog_photos_unavailable");
+      }
+    }
+    photoCache.set(cacheKey, { at: Date.now(), dataUrl });
+    if (photoCache.size > 400) photoCache.delete(photoCache.keys().next().value as string);
+  }
+
+  const match = typeof dataUrl === "string" ? dataUrl.match(/^data:(image\/[a-z+]+);base64,(.+)$/) : null;
   if (!match) return null;
 
   return { contentType: match[1], bytes: Buffer.from(match[2], "base64") };
@@ -160,7 +166,9 @@ export async function checkCatalogHealth(): Promise<CatalogHealth> {
 
   try {
     const data = await callCatalog<{ estoqueData?: unknown; produtos?: RawCatalogProduct[] }>("catDados", 20_000);
-    const products = data.produtos ?? [];
+    const all = data.produtos ?? [];
+    // Desde a versão 22 o catDados traz também produtos chegando e sob encomenda
+    const products = all.filter((product) => !product.status || product.status === "estoque");
 
     return {
       online: true,

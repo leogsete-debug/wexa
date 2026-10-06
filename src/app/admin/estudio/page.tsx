@@ -17,6 +17,7 @@ type CatalogItem = {
   isNew: boolean;
   isFeatured: boolean;
   photoCount: number;
+  status?: "estoque" | "chegando" | "encomenda";
 };
 
 type Tab = "estrategia" | "arte" | "video" | "legenda";
@@ -204,7 +205,8 @@ export default function StudioPage() {
     fetch("/api/catalogo/produtos", { cache: "no-store" })
       .then((response) => response.json())
       .then((data: { items?: CatalogItem[] }) => {
-        const list = (data.items ?? []).filter((item) => item.photoCount > 0);
+        // Conteúdo só de produtos em estoque ou chegando (nunca sob encomenda)
+        const list = (data.items ?? []).filter((item) => item.photoCount > 0 && item.status !== "encomenda");
         setItems(list);
         const first = list.find((item) => item.isFeatured) ?? list[0];
         if (first) setSelected([first.key]);

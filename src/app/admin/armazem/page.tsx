@@ -9,7 +9,17 @@ import { supabase } from "@/lib/supabase";
 
 type Tab = "conferencia" | "conteineres" | "estoque";
 
-type CatalogItem = { key: string; name: string; piecesPerBale: number; balesAvailable: number; piecesAvailable: number; isFeatured: boolean };
+type CatalogItem = {
+  key: string;
+  name: string;
+  piecesPerBale: number;
+  balesAvailable: number;
+  piecesAvailable: number;
+  isFeatured: boolean;
+  status?: "estoque" | "chegando" | "encomenda";
+  incomingBales?: number;
+  forecast?: string | null;
+};
 
 type Receipt = {
   id: string;
@@ -465,9 +475,20 @@ export default function WarehousePage() {
                       <td className="py-2 text-[#111]">{item.name}</td>
                       <td className="py-2 text-neutral-600">{item.piecesPerBale}</td>
                       <td className="py-2 font-semibold">{item.balesAvailable.toLocaleString("pt-BR")}</td>
-                      <td className="py-2 text-neutral-600">{inTransit[item.name] ? `+${inTransit[item.name]}` : "-"}</td>
+                      <td className="py-2 text-neutral-600">
+                        {inTransit[item.name] || item.incomingBales ? `+${(inTransit[item.name] ?? 0) || item.incomingBales}` : "-"}
+                        {item.forecast ? <span className="block text-[0.65rem]">prev. {new Date(`${item.forecast}T12:00:00`).toLocaleDateString("pt-BR")}</span> : null}
+                      </td>
                       <td className="py-2 text-xs">
-                        {item.balesAvailable <= 50 ? <span className="text-amber-700">Últimos fardos</span> : <span className="text-emerald-700">Ok</span>}
+                        {item.status === "encomenda" ? (
+                          <span className="text-neutral-500">Sob encomenda</span>
+                        ) : item.status === "chegando" ? (
+                          <span className="text-blue-700">Chegando</span>
+                        ) : item.balesAvailable <= 50 ? (
+                          <span className="text-amber-700">Últimos fardos</span>
+                        ) : (
+                          <span className="text-emerald-700">Pronta entrega</span>
+                        )}
                       </td>
                     </tr>
                   ))}
